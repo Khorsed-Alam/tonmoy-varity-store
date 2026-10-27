@@ -1,0 +1,38 @@
+{
+  "name": "tonmoy-varity-store",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "postinstall": "node -e \"const fs=require('fs'); if(fs.existsSync('node_modules/@rollup/wasm-node')) { fs.cpSync('node_modules/@rollup/wasm-node/dist/wasm-node', 'node_modules/rollup/dist/wasm-node', {recursive:true}); fs.copyFileSync('node_modules/@rollup/wasm-node/dist/native.js', 'node_modules/rollup/dist/native.js'); }\""
+  },
+  "overrides": {
+    "rollup": "npm:@rollup/wasm-node@^4.65.1"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-router-dom": "^6.22.1"
+  },
+  "devDependencies": {
+    "@rollup/wasm-node": "^4.65.1",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.0"
+  }
+}
