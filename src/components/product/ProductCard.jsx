@@ -43,80 +43,109 @@ export default function ProductCard({ product }) {
   }
 
   return (
-    <Link to={`/product/${product.id}`} className="block product-card animate-fade-in">
-      {/* Image */}
-      <div className="relative overflow-hidden bg-brand-mint aspect-square">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={product.name_bn || product.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-5xl">🛒</div>
-        )}
+    <Link to={`/product/${product.id}`} className="block bg-surface-container-lowest rounded-xl p-2.5 sm:p-3 flex flex-col justify-between shadow-[0_1px_6px_rgba(25,51,40,0.05)] hover:shadow-card-hover transition-all group border border-outline-variant/30 h-full">
+      {/* Top Image Container */}
+      <div>
+        <div className="relative w-full aspect-square bg-surface-container-low rounded-lg overflow-hidden flex items-center justify-center">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={product.name_bn || product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-4xl">🛒</div>
+          )}
 
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {isOutOfStock && (
-            <span className="badge bg-red-100 text-red-700 text-xs">
-              {t('স্টক নেই', 'Out of Stock')}
+          {/* Unit Badge (e.g. 1 কেজি) */}
+          {product.unit && (
+            <span className="absolute top-2 left-2 bg-surface-container-lowest/90 backdrop-blur-sm text-primary font-medium text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded shadow-sm">
+              {product.unit}
             </span>
           )}
-          {isLowStock && (
-            <span className="badge bg-orange-100 text-orange-700 text-xs">
-              {t('সীমিত', 'Low Stock')}
+
+          {/* Discount / Status Badges */}
+          <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+            {isOutOfStock ? (
+              <span className="bg-error text-on-error text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full">
+                {t('স্টক নেই', 'Out')}
+              </span>
+            ) : product.original_price && product.original_price > product.price ? (
+              <span className="bg-error text-on-error text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full">
+                ৳{product.original_price - product.price} {t('ছাড়', 'OFF')}
+              </span>
+            ) : isLowStock ? (
+              <span className="bg-amber-100 text-amber-800 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full">
+                {t('সীমিত স্টক', 'Low')}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="pt-2">
+          {!isOutOfStock && (
+            <span className="inline-block text-[9px] sm:text-[10px] text-secondary font-medium bg-secondary-container/40 px-1.5 py-0.5 rounded mb-1">
+              {t('স্টকে আছে', 'In Stock')}
             </span>
           )}
-          {product.is_featured && (
-            <span className="badge bg-yellow-100 text-yellow-700 text-xs">⭐</span>
-          )}
+          <h4 className="font-bold text-on-surface text-xs sm:text-sm leading-snug line-clamp-2 h-8 sm:h-10 group-hover:text-primary transition-colors">
+            {t(product.name_bn || product.name, product.name)}
+          </h4>
+          <p className="text-[10px] sm:text-[11px] text-on-surface-variant line-clamp-1 mt-0.5">
+            {product.name_bn ? product.name : (product.categories?.name_bn || product.categories?.name || '')}
+          </p>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-3">
-        <div className="text-xs text-brand-muted mb-1 truncate">
-          {product.categories?.name_bn || product.categories?.name}
-        </div>
-        <h3 className="font-semibold text-brand-dark text-sm leading-tight mb-1 line-clamp-2">
-          {t(product.name_bn || product.name, product.name)}
-        </h3>
-        <div className="text-xs text-brand-muted mb-3">
-          {product.unit && <span>/{product.unit}</span>}
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-brand-dark font-bold text-base">
+      {/* Price & Cart Actions */}
+      <div className="pt-2 mt-1">
+        <div className="flex items-baseline gap-1.5 mb-2">
+          <span className="text-primary font-bold text-base md:text-lg">
             {formatCurrency(product.price)}
           </span>
-
-          {cartItem ? (
-            <div className="flex items-center gap-1.5" onClick={e => e.preventDefault()}>
-              <button onClick={handleDecrease} className="qty-btn w-7 h-7 text-xs">
-                <Minus className="w-3 h-3" />
-              </button>
-              <span className="text-sm font-semibold w-6 text-center">{cartItem.quantity}</span>
-              <button
-                onClick={handleIncrease}
-                disabled={cartItem.quantity >= product.stock_quantity}
-                className="qty-btn w-7 h-7 text-xs disabled:opacity-40"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={handleAddToCart}
-              disabled={isOutOfStock}
-              className="w-8 h-8 rounded-xl gradient-brand flex items-center justify-center text-white
-                         hover:opacity-90 transition-opacity active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+          {product.original_price && product.original_price > product.price && (
+            <span className="text-xs text-outline line-through">
+              {formatCurrency(product.original_price)}
+            </span>
           )}
         </div>
+
+        {cartItem ? (
+          <div
+            className="flex items-center justify-between bg-surface-container rounded-lg h-9 px-1"
+            onClick={e => e.preventDefault()}
+          >
+            <button
+              onClick={handleDecrease}
+              className="w-7 h-7 rounded bg-surface-container-lowest text-primary flex items-center justify-center font-bold active:scale-90 shadow-xs"
+              aria-label="Decrease quantity"
+            >
+              -
+            </button>
+            <span className="text-sm font-bold text-primary px-1">
+              {cartItem.quantity}
+            </span>
+            <button
+              onClick={handleIncrease}
+              disabled={cartItem.quantity >= product.stock_quantity}
+              className="w-7 h-7 rounded bg-surface-container-lowest text-primary flex items-center justify-center font-bold active:scale-90 shadow-xs disabled:opacity-40"
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            className="w-full h-9 bg-primary text-on-primary rounded-lg text-xs font-semibold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-xs hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+            <span>{t('কার্টে যোগ', 'Add')}</span>
+          </button>
+        )}
       </div>
     </Link>
   )

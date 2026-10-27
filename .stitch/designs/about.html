@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html lang="bn"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Noto+Sans+Bengali:wght@400;600;700&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base {html, body {width: 100vw; margin: 0; padding: 0; min-height: 100vh;} body {overscroll-behavior-y: none;} .pb-safe {padding-bottom: env(safe-area-inset-bottom, 0px);} .pt-safe {padding-top: env(safe-area-inset-top, 0px);} main > :first-child {margin-top: 0 !important;} main > :last-child {margin-bottom: 0 !important;}} ::-webkit-scrollbar {display: none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "secondary-fixed": "#9af6b8", "on-primary": "#ffffff", "surface-bright": "#e7fff1", "error": "#ba1a1a", "primary-container": "#176b3a", "secondary-container": "#97f3b5", "surface-container-low": "#dcfbea", "on-error-container": "#93000a", "inverse-on-surface": "#d9f8e7", "background": "#e7fff1", "on-secondary": "#ffffff", "outline-variant": "#bfc9bd", "surface-container": "#d7f5e4", "surface-variant": "#cbe9d9", "on-secondary-fixed": "#00210f", "outline": "#707a6f", "on-tertiary-fixed": "#131e19", "tertiary-fixed": "#d9e5dd", "inverse-primary": "#88d89c", "tertiary-fixed-dim": "#bdc9c1", "tertiary": "#3d4842", "on-background": "#052016", "on-secondary-container": "#047240", "primary": "#005128", "error-container": "#ffdad6", "on-secondary-fixed-variant": "#00522d", "surface-container-high": "#d1efde", "on-surface-variant": "#404940", "on-error": "#ffffff", "primary-fixed": "a3f5b6", "primary-fixed-dim": "#88d89c", "surface-dim": "#c3e1d1", "on-tertiary": "#ffffff", "on-tertiary-container": "#cedad1", "secondary-fixed-dim": "#7ed99e", "surface": "#e7fff1", "surface-tint": "#196c3b", "on-primary-fixed-variant": "#005228", "on-primary-fixed": "#00210d", "inverse-surface": "#1b352a", "surface-container-highest": "#cbe9d9", "secondary": "#006d3d", "on-primary-container": "#98e9ab", "on-surface": "#052016", "tertiary-container": "#556059", "surface-container-lowest": "#ffffff", "on-tertiary-fixed-variant": "#3e4943" }, borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" }, spacing: { "space-sm": "0.5rem", margin: "1rem", gutter: "1rem", "space-lg": "1.25rem", "space-xs": "0.25rem", "space-md": "0.875rem", "space-xl": "2rem" }, fontFamily: { "headline-sm": ["Noto Sans", "Noto Sans Bengali"], "price-md": ["Inter"], "body-sm": ["Inter", "Noto Sans Bengali"], "price-lg": ["Inter"], "label-lg": ["Inter", "Noto Sans Bengali"], "body-lg": ["Inter", "Noto Sans Bengali"], "headline-lg": ["Noto Sans", "Noto Sans Bengali"], "headline-md": ["Noto Sans", "Noto Sans Bengali"], "label-sm": ["Inter", "Noto Sans Bengali"], "body-md": ["Inter", "Noto Sans Bengali"], display: ["Noto Sans", "Noto Sans Bengali"], "label-md": ["Inter", "Noto Sans Bengali"] }, fontSize: { "headline-sm": ["18px", { lineHeight: "26px", letterSpacing: "0", fontWeight: "600" }], "price-md": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "700" }], "body-sm": ["12px", { lineHeight: "18px", letterSpacing: "0", fontWeight: "400" }], "price-lg": ["22px", { lineHeight: "28px", letterSpacing: "-0.02em", fontWeight: "700" }], "label-lg": ["15px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }], "body-lg": ["16px", { lineHeight: "26px", letterSpacing: "0", fontWeight: "400" }], "headline-lg": ["26px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }], "headline-md": ["22px", { lineHeight: "30px", letterSpacing: "0", fontWeight: "600" }], "label-sm": ["11px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "22px", letterSpacing: "0", fontWeight: "400" }], display: ["32px", { lineHeight: "42px", letterSpacing: "-0.01em", fontWeight: "700" }], "label-md": ["13px", { lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-primary text-on-primary px-margin py-1 text-center flex items-center justify-between font-label-sm text-label-sm"><div class="flex items-center gap-space-xs truncate"><span class="material-symbols-outlined text-[15px]">electric_moped</span><span class="truncate">🛵 আশেপাশের এলাকায় ৬০ মিনিটে ফ্রি ডেলিভারি! | Free Delivery ৳500+</span></div><a class="flex items-center gap-1 font-label-sm text-label-sm bg-primary-container px-space-xs py-0.5 rounded text-on-primary whitespace-nowrap hover:opacity-90" href="tel:01700000000"><span class="">📞 ০১৭XX-XXXXXX</span></a></div><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><img alt="Tonmoy Varity Store Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD69WH5rdKXfXpq-uFSkWHcQI3tpPNCJVA0SLLIEJrQQlTESuYm8GQtHN47HJ9V7j9jWLUty4Qsu2M7ByM1ZfFVHHi2DsHH4Gz_jx0v20gxVmc3Pxv3BcCPmbGPKoXkntvU7XRBEuu6l05Rk7ykELlAFhwVRI046VjB2M2u-o0ZbLGiHTXca-AjCv5T7PighM0fM7sBiJOfticpfCPmLHdfnVhd9OwR28bLGQJDprDkjUsHFkOjsrPmAQ"/><div class="flex flex-col truncate"><span class="font-headline-sm text-headline-sm text-primary leading-tight truncate">তন্ময় ভ্যারাইটি স্টোর</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-none truncate">Tonmoy Varity Store</span></div></div><div class="flex items-center gap-space-xs flex-shrink-0"><div class="flex items-center bg-surface-container-high p-0.5 rounded-full"><button class="px-2 py-0.5 rounded-full bg-surface-container-lowest text-primary font-label-sm text-label-sm shadow-[0_1px_2px_rgba(0,0,0,0.06)]" type="button">বাং</button><button class="px-2 py-0.5 rounded-full text-on-surface-variant font-label-sm text-label-sm hover:text-on-surface" type="button">EN</button></div><a class="relative w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container" data-path="cart" href="#"><span class="material-symbols-outlined text-[24px]">shopping_bag</span><span class="absolute top-1 right-1 bg-error text-on-error font-label-sm text-label-sm rounded-full w-4 h-4 flex items-center justify-center text-[10px]">৩</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div><div class="px-margin pb-2 flex items-center justify-between"><button class="flex items-center gap-1 bg-surface-container-lowest px-space-sm py-1 rounded-full text-primary font-label-sm text-label-sm shadow-[0_1px_4px_rgba(0,0,0,0.04)]" type="button"><span class="material-symbols-outlined text-[16px] text-primary">location_on</span><span class="font-label-sm text-label-sm text-on-surface">মিরপুর-২, ঢাকা</span><span class="material-symbols-outlined text-[16px] text-outline">keyboard_arrow_down</span></button><span class="font-label-sm text-label-sm text-on-surface-variant">Home</span></div></header><main class="flex flex-col relative w-full pt-32 pb-24 bg-surface flex-grow"><div class="flex flex-col w-full">
+<div class="px-margin flex flex-col gap-space-lg">
+<!-- Hero Card & Introduction -->
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-wrap items-center justify-between gap-space-xs">
+<div class="inline-flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">store</span>
+<span>পাড়ার আপন মুদিখানা</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">মিরপুর-২, ঢাকা</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h1 class="font-headline-lg text-headline-lg text-primary leading-tight">
+          আমাদের সম্পর্কে <span class="font-headline-sm text-headline-sm text-on-surface-variant font-normal">• About Us</span>
+</h1>
+<p class="font-label-lg text-label-lg text-secondary">
+          সততা ও আন্তরিকতার কেনাকাটা — আপনার পরিবারের বিশ্বস্ত সাথী
+        </p>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+        তন্ময় ভ্যারাইটি স্টোর মিরপুর-২ এলাকার পরিবারগুলোর নিত্যদিনের রান্নার প্রয়োজনীয় রসদ পৌঁছে দিতে একান্তভাবে নিবেদিত। চাল, ডাল, সরিষার তেল, আটা থেকে শুরু করে খাঁটি গুঁড়া মশলা—আমাদের লক্ষ্য কেবল বেচাকেনা নয়, বরং প্রতিটি পরিবারের সাথে গড়ে তোলা এক আন্তরিক বিশ্বাস ও ভালোবাসার সম্পর্ক।
+      </p>
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px] flex-shrink-0 mt-0.5">verified_user</span>
+<p class="font-body-sm text-body-sm text-on-surface leading-normal">
+<strong class="font-label-md text-label-md text-primary">আমাদের আন্তরিক অঙ্গীকার:</strong> আমাদের পাড়ার প্রতিটি পরিবারের রান্নাঘরে সেরা মানের ফ্রেশ নিত্যপ্রয়োজনীয় পণ্য পৌঁছে দেওয়া এবং ন্যায্য দামে সততার সাথে সেবা দেওয়া।
+        </p>
+</div>
+</section>
+<!-- Visual Mudikhana Counter Photo Placeholder -->
+<section class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col">
+<div class="relative w-full aspect-[16/10] bg-surface-container-high overflow-hidden">
+<img alt="তন্ময় ভ্যারাইটি স্টোর কাউন্টার" class="w-full h-full object-cover" data-alt="A clean, vibrant, and well-organized traditional Bangladeshi neighborhood grocery store (mudikhana) in Mirpur, Dhaka. Neatly stacked jute sacks filled with aromatic Miniket and Nazirshail rice, orderly shelves arranged with branded cooking oils, glass jars of vibrant turmeric and cumin spices, and a polished stainless steel digital weighing scale sitting prominently on the front wooden counter under bright warm daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgRxh-SBPD2oDeT8qUzYS6QIyPhMUtcD4_5dJpcwamtWfofn8W_2CfSYEn0GEJGXGwVnI3bhmbrHN1I8I2dpUxIaSmzYDJHnKSUt4sb034n6I-tLsyFnWjuUusGLkygX4LtecOwtiQVchS7UqUoRTjwLXNKI2FCtaq_Q5Jox2MMIbEWGf9Hu3XN7hUuyFetYz8-Itr2QVM_YDRCHZ6JCOYi0c1fsMpUEbxsMoAQvpeysHn9dzWUPKQAQ"/>
+<div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-inverse-surface/80 via-inverse-surface/40 to-transparent p-space-md flex items-end">
+<div class="flex items-center gap-1.5 text-on-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary-fixed">place</span>
+<span>মিরপুর-২ • বায়তুল আমান জামে মসজিদের কাছে</span>
+</div>
+</div>
+</div>
+<div class="p-space-md bg-surface-container-lowest flex items-center justify-between gap-space-sm">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">তন্ময় ভ্যারাইটি স্টোর কাউন্টার</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">সরাসরি দোকানে এসে দেখে নেওয়ার সুযোগ</span>
+</div>
+<div class="flex items-center gap-1 text-primary font-label-sm text-label-sm bg-surface-container-low px-space-sm py-1 rounded-full flex-shrink-0">
+<span class="material-symbols-outlined text-[16px]">how_to_reg</span>
+<span>তন্ময় ভাই</span>
+</div>
+</div>
+</section>
+<!-- Core Principles / আমাদের সেবার মূলনীতি -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-primary">আমাদের সেবার মূলনীতি</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">যে কারণে পাড়ার গৃহিণীরা আমাদের বিশ্বাস করেন</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-[26px]">handshake</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Principle 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-start gap-space-md">
+<div class="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center flex-shrink-0 text-primary">
+<span class="material-symbols-outlined text-[24px]">scale</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-label-lg text-label-lg text-on-surface">সঠিক ওজন ও নিখুঁত পরিমাপ</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+              প্রতিটি পণ্যের ডিজিটাল স্কেলে নিখুঁত পরিমাপ ও সিলগালা স্বাস্থ্যসম্মত প্যাকেজিং। প্রতি গ্রামে শতভাগ সততা নিশ্চিত।
+            </p>
+</div>
+</div>
+<!-- Principle 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-start gap-space-md">
+<div class="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center flex-shrink-0 text-primary">
+<span class="material-symbols-outlined text-[24px]">sell</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-label-lg text-label-lg text-on-surface">ন্যায্য বাজারদর ও স্বচ্ছতা</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+              দৈনন্দিন সঠিক পাইকারি ও খুচরা বাজারমূল্য অনুসরণ করা হয়। কোনো কৃত্রিম মূল্যবৃদ্ধি বা লুকানো ডেলিভারি চার্জ নেই।
+            </p>
+</div>
+</div>
+<!-- Principle 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-start gap-space-md">
+<div class="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center flex-shrink-0 text-primary">
+<span class="material-symbols-outlined text-[24px]">eco</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-label-lg text-label-lg text-on-surface">যাচাইকৃত ফ্রেশ ও খাঁটি পণ্য</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+              চাল, ডাল, তেল ও আস্ত মশলা সরাসরি নামকরা চাতাল, মিল ও অনুমোদিত ডিস্ট্রিবিউটর থেকে সংগ্রহ করা হয়।
+            </p>
+</div>
+</div>
+<!-- Principle 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-start gap-space-md">
+<div class="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center flex-shrink-0 text-primary">
+<span class="material-symbols-outlined text-[24px]">moped</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-label-lg text-label-lg text-on-surface">৬০ মিনিটে পাড়ায় হোম ডেলিভারি</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+              রান্না করতে গিয়ে তেল বা মশলা ফুরিয়ে গেছে? ফোন বা অ্যাপে অর্ডার দিলেই আশেপাশের গলিতে দ্রুত পৌঁছে যাই।
+            </p>
+</div>
+</div>
+<!-- Principle 5 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-start gap-space-md">
+<div class="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center flex-shrink-0 text-primary">
+<span class="material-symbols-outlined text-[24px]">assignment_return</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-label-lg text-label-lg text-on-surface">ক্যাশ অন ডেলিভারি ও সহজ পরিবর্তন</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+              পণ্য হাতে পেয়ে দেখে মূল্য পরিশোধের সুবিধা। কোনো পণ্য পছন্দ না হলে বা গরমিল পেলে হাসিমুখে সঙ্গে সঙ্গে বদল।
+            </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Grocery Categories & Offerings -->
+<section class="flex flex-col gap-space-md">
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-primary">আমাদের প্রধান পণ্যসমগ্রী</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">রান্নাঘরের প্রয়োজনীয় সব উপাদান এক ছাদের নিচে</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Category 1 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-low text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[20px]">grain</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">চাল ও ডাল</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">মিনিকেট, নাজিরশাইল, পোলাও চাল, মসুর ডাল</span>
+</div>
+</div>
+<!-- Category 2 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-low text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[20px]">water_drop</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">ভোজ্য তেল ও ঘি</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">ঘানির সরিষার তেল, সয়াবিন ও খাঁটি গাওয়া ঘি</span>
+</div>
+</div>
+<!-- Category 3 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-low text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[20px]">bakery_dining</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">আটা, ময়দা ও সুজি</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">প্যাকেট আটা, ময়দা, সুজি ও বেসন</span>
+</div>
+</div>
+<!-- Category 4 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-low text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[20px]">nutrition</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">খাঁটি গুঁড়া মশলা</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">হলুদ, মরিচ, ধনিয়া, জিরা ও গরম মশলা</span>
+</div>
+</div>
+<!-- Category 5 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-low text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[20px]">coffee</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">চিনি, লবণ ও চা</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">দেশি চিনি, আয়োডিন লবণ, প্রিমিয়াম চা পাতা</span>
+</div>
+</div>
+<!-- Category 6 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-low text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[20px]">soap</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">গৃহস্থালি সামগ্রী</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">সাবান, ডিটারজেন্ট ও নিত্যব্যবহার্য প্রসাধন</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Physical Location & Contact Info -->
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-primary">দোকানের ঠিকানা ও যোগাযোগ</h2>
+<span class="material-symbols-outlined text-primary text-[24px]">storefront</span>
+</div>
+<!-- Address Details -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px] flex-shrink-0 mt-0.5">location_on</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">দোকানের পূর্ণ ঠিকানা:</span>
+<p class="font-body-md text-body-md text-on-surface-variant leading-snug">
+              বাসা #১২, রোড #৪, ব্লক-সি, সেকশন-২, মিরপুর, ঢাকা-১২১৬<br/>
+<span class="font-body-sm text-body-sm text-secondary font-medium">(বায়তুল আমান জামে মসজিদের পূর্ব পাশে)</span>
+</p>
+</div>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px] flex-shrink-0 mt-0.5">schedule</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">খোলা থাকার সময়সূচি:</span>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              প্রতিদিন সকাল ০৭:৩০ থেকে রাত ১১:০০ টা পর্যন্ত (সপ্তাহের ৭ দিন খোলা)
+            </p>
+</div>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px] flex-shrink-0 mt-0.5">call</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">সরাসরি ফোন কল:</span>
+<a class="font-body-md text-body-md text-primary font-semibold hover:underline" href="tel:01711000000">
+              ০১৭১১-XXXXXX (তন্ময় বাবু)
+            </a>
+</div>
+</div>
+</div>
+<!-- Map Display Placeholder -->
+<div class="w-full h-36 bg-surface-container-high rounded-lg overflow-hidden relative shadow-inner flex items-center justify-center" data-location="Baitul Aman Jame Masjid, Block C, Section 2, Mirpur, Dhaka, Bangladesh" style="">
+<div class="bg-surface-container-lowest/90 backdrop-blur-sm px-space-md py-space-xs rounded-full flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">near_me</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">মিরপুর-২ মোড় থেকে ২ মিনিটের পথ</span>
+</div>
+</div>
+<!-- Call & Map Action Buttons -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<a class="h-11 rounded-lg bg-surface-container-high hover:bg-surface-container flex items-center justify-center gap-1.5 text-primary font-label-md text-label-md transition-colors" href="tel:01711000000">
+<span class="material-symbols-outlined text-[18px]">phone</span>
+<span>কল করুন</span>
+</a>
+<a class="h-11 rounded-lg bg-surface-container-high hover:bg-surface-container flex items-center justify-center gap-1.5 text-primary font-label-md text-label-md transition-colors" href="https://maps.google.com/?q=Mirpur-2+Dhaka" rel="noopener noreferrer" target="_blank">
+<span class="material-symbols-outlined text-[18px]">explore</span>
+<span>ম্যাপে দেখুন</span>
+</a>
+</div>
+</section>
+<!-- Bottom Call to Action Card -->
+<section class="bg-primary text-on-primary rounded-xl p-space-lg shadow-md flex flex-col gap-space-md text-center items-center">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[28px]">shopping_basket</span>
+</div>
+<div class="flex flex-col gap-1 max-w-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-primary font-bold">
+          আজকের তাজা মুদিপণ্য কেনাকাটা শুরু করুন
+        </h2>
+<p class="font-body-sm text-body-sm text-on-primary-container">
+          ঘরে বসেই সম্পূর্ণ কেনাকাটা করুন অথবা হাতে লেখা ফর্দ আমাদের হোয়াটসঅ্যাপে পাঠিয়ে দিন!
+        </p>
+</div>
+<div class="flex flex-col w-full gap-space-sm pt-space-xs">
+<a class="h-11 w-full rounded-lg bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center gap-2 font-label-lg text-label-lg font-bold shadow hover:opacity-95 active:scale-[0.98] transition-all" data-path="shop" href="#">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span>মুদি বাজারে যান (Browse Catalog)</span>
+</a>
+<a class="h-11 w-full rounded-lg bg-primary-container text-on-primary flex items-center justify-center gap-2 font-label-lg text-label-lg hover:bg-primary-container/80 transition-colors" href="https://wa.me/8801711000000" rel="noopener noreferrer" target="_blank">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+<span>হোয়াটসঅ্যাপে ফর্দ পাঠান</span>
+</a>
+</div>
+<div class="flex items-center justify-center gap-1 text-on-primary-container font-label-sm text-label-sm pt-1">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span>মিরপুর এলাকায় ৬০ মিনিটে দ্রুত হোম ডেলিভারি</span>
+</div>
+</section>
+<!-- Warm Footer Sign-off Note -->
+<div class="py-space-md text-center flex flex-col items-center gap-1">
+<p class="font-label-md text-label-md text-on-surface-variant">
+        "আপনাদের সন্তুষ্টি ও দোয়া-ই আমাদের দোকানের মূল শক্তি।"
+      </p>
+<span class="font-label-sm text-label-sm text-secondary">
+        — তন্ময় কুমার ও পরিবার, মিরপুর-২
+      </span>
+</div>
+</div>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)]" data-active-classes="text-primary font-bold"><div class="flex justify-around items-center h-16 px-space-xs"><a class="flex flex-col items-center justify-center w-14 h-14 text-on-surface-variant transition-colors hover:text-on-surface" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">storefront</span><span class="font-label-sm text-label-sm mt-0.5">হোম</span></a><a class="flex flex-col items-center justify-center w-14 h-14 text-on-surface-variant transition-colors hover:text-on-surface" data-path="shop" href="#"><span class="material-symbols-outlined text-[22px]">category</span><span class="font-label-sm text-label-sm mt-0.5">মুদি বাজার</span></a><a class="flex flex-col items-center justify-center w-14 h-14 text-on-surface-variant transition-colors hover:text-on-surface" data-path="cart" href="#"><div class="relative flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">shopping_cart</span><span class="absolute -top-1 -right-2 bg-primary text-on-primary font-label-sm text-label-sm text-[9px] px-1 rounded-full">৳৫৪০</span></div><span class="font-label-sm text-label-sm mt-0.5">কার্ট</span></a><a class="flex flex-col items-center justify-center w-14 h-14 text-on-surface-variant transition-colors hover:text-on-surface" data-path="orders" href="#"><span class="material-symbols-outlined text-[22px]">receipt_long</span><span class="font-label-sm text-label-sm mt-0.5">অর্ডার</span></a><a class="flex flex-col items-center justify-center w-14 h-14 text-on-surface-variant transition-colors hover:text-on-surface" data-path="admin-dashboard" href="#"><span class="material-symbols-outlined text-[22px]">space_dashboard</span><span class="font-label-sm text-label-sm mt-0.5">দোকান</span></a></div></nav>
+</body></html>

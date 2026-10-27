@@ -16,22 +16,25 @@ export default function Footer() {
                 ত
               </div>
               <div>
-                <div className="text-xs text-white/70">{t('তন্ময়', 'Tonmoy')}</div>
+                <div className="text-xs text-white/70">{t('মেসার্স তন্ময়', 'M/S Tonmoy')}</div>
                 <div className="font-bold">{t('ভ্যারাইটি স্টোর', 'Varity Store')}</div>
               </div>
             </div>
             <p className="text-white/70 text-sm leading-relaxed">
               {t(
-                'আপনার আস্থার মুদিখানা। তাজা শাকসবজি, মুদিপণ্য এবং দৈনন্দিন প্রয়োজনীয় সামগ্রী।',
-                'Your trusted neighborhood grocery store. Fresh vegetables, groceries, and daily essentials.'
+                'এখানে চাল-ডাল তেল আটা চিনি সহ সকল প্রকার নিত্য প্রয়োজনীয় দ্রব্য সুলভ মূল্যে পাওয়া যায়।',
+                'All kinds of daily essentials including rice, dal, oil, flour, sugar available at fair wholesale prices.'
               )}
             </p>
+            <div className="mt-3 text-xs text-white/80 bg-white/10 p-2 rounded-lg inline-block">
+              <strong>{t('প্রোপাইটার:', 'Proprietor:')}</strong> {t('মোঃ তৌহিদুল ইসলাম বিন্দু', 'Md. Touhidul Islam Bindu')}
+            </div>
             <div className="flex gap-3 mt-4">
-              <a href="#" className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
-                <Facebook className="w-4 h-4" />
+              <a href="https://wa.me/8801717999460" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+                <Phone className="w-4 h-4" />
               </a>
               <a href="#" className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
-                <Instagram className="w-4 h-4" />
+                <Facebook className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -52,28 +55,28 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-white mb-4">{t('ডেলিভারি তথ্য', 'Delivery Info')}</h3>
             <ul className="space-y-2 text-sm text-white/70">
-              <li>{t('হোম ডেলিভারি: ৳৫০', 'Home Delivery: ৳50')}</li>
-              <li>{t('৳৫০০+ এর উপরে ফ্রি ডেলিভারি', 'Free delivery over ৳500')}</li>
-              <li>{t('স্টোর পিকআপ উপলব্ধ', 'Store Pickup available')}</li>
+              <li>{t('হোম ডেলিভারি: ৩০-৬০ মিনিট', 'Home Delivery: 30-60 min')}</li>
+              <li>{t('৳৫০০+ অর্ডারে ফ্রি ডেলিভারি', 'Free delivery over ৳500')}</li>
+              <li>{t('দোকান থেকে সহজ পিকআপ', 'Store Pickup available')}</li>
               <li>{t('ক্যাশ অন ডেলিভারি', 'Cash on Delivery')}</li>
-              <li>{t('স্টোরে পেমেন্ট', 'Pay at Store')}</li>
+              <li>{t('দোকানে এসে নগদ পেমেন্ট', 'Pay at Store Counter')}</li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h3 className="font-semibold text-white mb-4">{t('যোগাযোগ', 'Contact')}</h3>
+            <h3 className="font-semibold text-white mb-4">{t('দোকানের ঠিকানা', 'Store Address')}</h3>
             <ul className="space-y-3 text-sm text-white/70">
               <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{t('ঢাকা, বাংলাদেশ', 'Dhaka, Bangladesh')}</span>
+                <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-secondary-fixed" />
+                <span>{t('হাজি ইউসুফ আলী মার্কেট, নারুয়ামালা হাট, গাবতলী, বগুড়া।', 'Haji Yusuf Ali Market, Naruamala Haat, Gabtoli, Bogura.')}</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 shrink-0" />
-                <span>+880 1XXX-XXXXXX</span>
+                <Phone className="w-4 h-4 shrink-0 text-secondary-fixed" />
+                <a href="tel:01717999460" className="hover:underline">01717-999460 (WhatsApp)</a>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 shrink-0" />
+                <Mail className="w-4 h-4 shrink-0 text-secondary-fixed" />
                 <span>info@tonmoystore.com</span>
               </li>
             </ul>
@@ -81,8 +84,8 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/20 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/60">
-          <p>© 2024 {t('তন্ময় ভ্যারাইটি স্টোর', 'Tonmoy Varity Store')}. {t('সর্বস্বত্ব সংরক্ষিত।', 'All rights reserved.')}</p>
-          <p>{t('বাংলাদেশে তৈরি ❤️', 'Made with ❤️ in Bangladesh')}</p>
+          <p>© 2026 {t('মেসার্স তন্ময় ভ্যারাইটি স্টোর', 'M/S Tonmoy Varity Store')}. {t('সর্বস্বত্ব সংরক্ষিত।', 'All rights reserved.')}</p>
+          <p>{t('গাবতলী, বগুড়া, বাংলাদেশ ❤️', 'Gabtoli, Bogura, Bangladesh ❤️')}</p>
         </div>
       </div>
     </footer>

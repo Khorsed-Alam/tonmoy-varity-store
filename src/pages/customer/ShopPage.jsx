@@ -6,6 +6,7 @@ import { useLang } from '../../contexts/LanguageContext'
 import ProductCard from '../../components/product/ProductCard'
 import { ProductGridSkeleton } from '../../components/product/ProductSkeleton'
 import EmptyState from '../../components/ui/EmptyState'
+import { STITCH_CATEGORIES, STITCH_ESSENTIALS, STITCH_FLASH_DEALS } from '../../data/stitchMockData'
 
 const SORT_OPTIONS = [
   { value: 'created_at:desc', labelBN: 'নতুন আগে', labelEN: 'Newest First' },
@@ -19,7 +20,7 @@ export default function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { slug } = useParams()
   const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState([])
+  const [categories, setCategories] = useState(STITCH_CATEGORIES)
   const [loading, setLoading] = useState(true)
   const [totalCount, setTotalCount] = useState(0)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -35,7 +36,9 @@ export default function ShopPage() {
 
   useEffect(() => {
     supabase.from('categories').select('*').eq('is_active', true).order('sort_order')
-      .then(({ data }) => setCategories(data || []))
+      .then(({ data }) => {
+        if (data && data.length > 0) setCategories(data)
+      })
   }, [])
 
   const loadProducts = useCallback(async () => {
@@ -54,9 +57,20 @@ export default function ShopPage() {
       .range(from, from + PAGE_SIZE - 1)
 
     const { data, count, error } = await query
-    if (!error) {
-      setProducts(data || [])
+    if (!error && data && data.length > 0) {
+      setProducts(data)
       setTotalCount(count || 0)
+    } else {
+      const fallbackList = [...STITCH_ESSENTIALS, ...STITCH_FLASH_DEALS]
+      let filtered = fallbackList
+      if (q) {
+        filtered = filtered.filter(p =>
+          (p.name && p.name.toLowerCase().includes(q.toLowerCase())) ||
+          (p.name_bn && p.name_bn.includes(q))
+        )
+      }
+      setProducts(filtered)
+      setTotalCount(filtered.length)
     }
     setLoading(false)
   }, [q, featured, categorySlug, sort, page])
@@ -202,7 +216,7 @@ export default function ShopPage() {
               subtitle={t('অন্য কিছু খোঁজার চেষ্টা করুন', 'Try searching for something else')}
             />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 md:gap-4">
               {products.map(p => <ProductCard key={p.id} product={p} />)}
             </div>
           )}
