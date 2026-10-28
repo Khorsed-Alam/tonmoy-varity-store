@@ -58,33 +58,108 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
-      // Call the Edge Function for secure order processing
-      const { data, error } = await supabase.functions.invoke('place-order', {
-        body: {
+      // 1. Validate stock & get server-side prices
+      const productIds = items.map(i => i.product_id)
+      const { data: products, error: prodError } = await supabase
+        .from('products')
+        .select('id, name, name_bn, price, stock_quantity, is_active')
+        .in('id', productIds)
+
+      if (prodError) throw prodError
+
+      const productMap = Object.fromEntries((products || []).map(p => [p.id, p]))
+      let serverSubtotal = 0
+      const validatedItems = []
+
+      for (const item of items) {
+        const qty = item.quantity
+        const product = productMap[item.product_id]
+        if (!product || !product.is_active) {
+          toast.error(t('পণ্য পাওয়া যায়নি বা অনুপলব্ধ', 'Product not found or unavailable'))
+          setLoading(false)
+          return
+        }
+        if (product.stock_quantity < qty) {
+          toast.error(t(
+            `স্টক কম: ${product.name_bn || product.name} (আছে: ${product.stock_quantity})`,
+            `Low stock: ${product.name} (Available: ${product.stock_quantity})`
+          ))
+          setLoading(false)
+          return
+        }
+        serverSubtotal += product.price * qty
+        validatedItems.push({
+          product_id: product.id,
+          quantity: qty,
+          unit_price: product.price,
+          product_name: product.name,
+          product_name_bn: product.name_bn || '',
+        })
+      }
+
+      // 2. Calculate delivery fee server-side
+      const serverDeliveryFee = deliveryMethod === 'home_delivery'
+        ? (serverSubtotal >= 500 ? 0 : 50)
+        : 0
+      const totalAmount = serverSubtotal + serverDeliveryFee
+
+      // 3. Generate order number
+      const orderNumber = `TVS-${Date.now().toString(36).toUpperCase()}`
+
+      // 4. Insert order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user?.id || null,
+          order_number: orderNumber,
+          status: 'pending',
           delivery_method: deliveryMethod,
           payment_method: paymentMethod,
-          shipping_address: deliveryMethod === 'home_delivery' ? form.address : 'Store Pickup',
-          phone: form.phone,
-          full_name: form.full_name,
-          notes: form.notes,
-          items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
-        },
-      })
+          shipping_address: deliveryMethod === 'home_delivery' ? form.address.trim() : 'Store Pickup',
+          phone: form.phone.trim(),
+          full_name: form.full_name.trim(),
+          notes: form.notes.trim(),
+          subtotal: serverSubtotal,
+          delivery_fee: serverDeliveryFee,
+          total_amount: totalAmount,
+        })
+        .select()
+        .single()
 
-      if (error || data?.error) {
-        toast.error(data?.error || t('অর্ডার দেওয়া যায়নি। আবার চেষ্টা করুন।', 'Order failed. Please try again.'))
-        setLoading(false)
-        return
+      if (orderError) throw orderError
+
+      // 5. Insert order items
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(validatedItems.map(item => ({
+          order_id: order.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          product_name_bn: item.product_name_bn,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        })))
+
+      if (itemsError) throw itemsError
+
+      // 6. Decrement stock
+      for (const item of validatedItems) {
+        await supabase.rpc('decrement_stock', {
+          p_product_id: item.product_id,
+          p_quantity: item.quantity,
+        })
       }
 
       clearCart()
       toast.success(t('অর্ডার সফল হয়েছে! 🎉', 'Order placed successfully! 🎉'))
-      navigate(`/order-confirmation/${data.order_id}`)
+      navigate(`/order-confirmation/${order.id}`)
     } catch (err) {
+      console.error('Order error:', err)
       toast.error(t('একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'Something went wrong. Please try again.'))
       setLoading(false)
     }
   }
+
 
   return (
     <div className="page-container py-6 animate-fade-in">

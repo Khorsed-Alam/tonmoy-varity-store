@@ -29,12 +29,23 @@ export default function LoginPage() {
     const { error } = await signIn({ email: form.email, password: form.password })
     setLoading(false)
     if (error) {
-      toast.error(t('ইমেইল বা পাসওয়ার্ড ভুল।', 'Invalid email or password.'))
+      const code = error?.code || error?.message || ''
+      if (code.includes('email_not_confirmed') || code.includes('Email not confirmed')) {
+        toast.error(t('ইমেইল কনফার্ম করুন। আপনার ইনবক্স চেক করুন।', 'Please confirm your email first. Check your inbox.'), { duration: 5000 })
+      } else if (code.includes('invalid_credentials') || code.includes('Invalid login credentials')) {
+        toast.error(t('ইমেইল বা পাসওয়ার্ড ভুল।', 'Invalid email or password.'))
+      } else if (code.includes('too_many_requests') || code.includes('rate limit')) {
+        toast.error(t('অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।', 'Too many attempts. Please try again later.'))
+      } else {
+        toast.error(t('লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।', 'Login failed. Please try again.'))
+        console.error('Login error:', error)
+      }
     } else {
       toast.success(t('স্বাগতম! 👋', 'Welcome back! 👋'))
       navigate('/')
     }
   }
+
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
