@@ -27,6 +27,8 @@ import AdminCategories from './pages/admin/AdminCategories'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminOrderDetail from './pages/admin/AdminOrderDetail'
 import AdminInventory from './pages/admin/AdminInventory'
+import AdminCustomers from './pages/admin/AdminCustomers'
+import AdminReports from './pages/admin/AdminReports'
 import AdminSettings from './pages/admin/AdminSettings'
 
 // Guards
@@ -74,6 +76,8 @@ export default function App() {
         <Route path="orders" element={<AdminOrders />} />
         <Route path="orders/:orderId" element={<AdminOrderDetail />} />
         <Route path="inventory" element={<AdminInventory />} />
+        <Route path="customers" element={<AdminCustomers />} />
+        <Route path="reports" element={<AdminReports />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
