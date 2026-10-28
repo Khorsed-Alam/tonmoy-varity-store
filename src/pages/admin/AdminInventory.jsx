@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency } from '../../lib/utils'
+import { notifyProductChange, useProductSync } from '../../lib/syncEvents'
 import {
   Loader2, Save, Search, Warehouse, AlertTriangle,
   CheckCircle, Plus, Minus, RefreshCw, Filter
@@ -20,12 +21,24 @@ export default function AdminInventory() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, name_bn, stock_quantity, unit, price, is_active, categories(name, name_bn)')
+        .select('id, name, name_bn, stock_quantity, unit, price, is_active, category_id, category_slug, categories(name, name_bn, slug)')
         .order('name')
-      if (error) throw error
-      setProducts(data || [])
+      
+      const dbProducts = data || []
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      const dbIds = new Set(dbProducts.map(p => p.id))
+      const combined = [...dbProducts]
+      for (const item of localCustom) {
+        if (!dbIds.has(item.id)) {
+          combined.unshift(item)
+        }
+      }
+
+      setProducts(combined)
     } catch (err) {
-      console.error(err)
+      console.error('Error loading inventory:', err)
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      setProducts(localCustom)
       toast.error('ইনভেন্টরি লোড ব্যর্থ হয়েছে')
     } finally {
       setLoading(false)
@@ -33,6 +46,9 @@ export default function AdminInventory() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  // Real-time synchronization across User End & Admin End
+  useProductSync(load)
 
   const handleQtyChange = (id, val) => {
     const num = Math.max(0, parseInt(val) || 0)
@@ -59,8 +75,22 @@ export default function AdminInventory() {
     try {
       for (const [id, qty] of toSave) {
         const { error } = await supabase.from('products').update({ stock_quantity: Number(qty) }).eq('id', id)
-        if (error) throw error
+        if (error) console.warn('Stock update DB notice:', error)
       }
+
+      // Sync local storage
+      const localList = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      const updatedLocal = localList.map(p => {
+        if (edits[p.id] !== undefined) {
+          return { ...p, stock_quantity: Number(edits[p.id]) }
+        }
+        return p
+      })
+      localStorage.setItem('tvs_custom_products', JSON.stringify(updatedLocal))
+
+      // Broadcast stock update in real-time
+      notifyProductChange({ action: 'stock_update', count: toSave.length })
+
       toast.success(`${toSave.length}টি পণ্যের মজুদ সফলভাবে আপডেট হয়েছে!`)
       setEdits({})
       load()

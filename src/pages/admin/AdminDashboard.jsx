@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatDate } from '../../lib/utils'
+import { notifyProductChange, useProductSync, useOrderSync } from '../../lib/syncEvents'
 import OrderStatusBadge from '../../components/ui/OrderStatusBadge'
 import { useAuth } from '../../contexts/AuthContext'
 import {
@@ -110,6 +111,10 @@ export default function AdminDashboard() {
     loadData()
   }, [])
 
+  // Real-time synchronization across User End & Admin End
+  useProductSync(loadData)
+  useOrderSync(loadData)
+
   // Create fast product
   const handleCreateProduct = async (e) => {
     e.preventDefault()
@@ -124,20 +129,64 @@ export default function AdminDashboard() {
 
     setSavingProduct(true)
     try {
+      const selectedCategory = categories.find(c => c.id === newProduct.category_id)
+      const validCategoryId = newProduct.category_id && newProduct.category_id.trim() !== '' ? newProduct.category_id : null
+
       const payload = {
-        name: newProduct.name || newProduct.name_bn,
-        name_bn: newProduct.name_bn || newProduct.name,
+        name: newProduct.name?.trim() || newProduct.name_bn?.trim(),
+        name_bn: newProduct.name_bn?.trim() || newProduct.name?.trim(),
         price: Number(newProduct.price),
         stock_quantity: Number(newProduct.stock_quantity) || 50,
-        unit: newProduct.unit || '১ কেজি',
-        category_id: newProduct.category_id || (categories[0]?.id || null),
+        unit: newProduct.unit?.trim() || '১ কেজি',
+        category_id: validCategoryId,
+        category_slug: selectedCategory?.slug || '',
         is_active: true,
+        image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
       }
 
-      const { error } = await supabase.from('products').insert([payload])
-      if (error) throw error
+      let { data, error } = await supabase
+        .from('products')
+        .insert([payload])
+        .select('*, categories(name, name_bn, slug)')
 
-      toast.success('নতুন পণ্য সফলভাবে ইনভেন্টরিতে যোগ করা হয়েছে!')
+      if (error) {
+        console.warn('Dashboard product insert DB notice, trying standard fields:', error)
+        const standardPayload = {
+          name: payload.name,
+          name_bn: payload.name_bn,
+          price: payload.price,
+          stock_quantity: payload.stock_quantity,
+          unit: payload.unit,
+          is_active: payload.is_active,
+          image_url: payload.image_url,
+          category_id: payload.category_id,
+        }
+        const retryRes = await supabase.from('products').insert([standardPayload]).select('*')
+        if (retryRes.data) {
+          data = retryRes.data
+          error = null
+        }
+      }
+
+      const createdRecord = data?.[0] || {
+        id: `prod-${Date.now()}`,
+        ...payload,
+        categories: selectedCategory,
+        created_at: new Date().toISOString()
+      }
+
+      // Sync local storage
+      const localList = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      localStorage.setItem('tvs_custom_products', JSON.stringify([createdRecord, ...localList.filter(p => p.id !== createdRecord.id)]))
+
+      // Broadcast change in real-time across User End & Admin End
+      notifyProductChange({ action: 'create', product: createdRecord })
+
+      if (error) {
+        toast('নতুন পণ্য সেভ হয়েছে (লোকাল ক্যাশে সংরক্ষিত, DB: ' + error.message + ')', { icon: '⚠️' })
+      } else {
+        toast.success('নতুন পণ্য সফলভাবে ডাটাবেসে যোগ করা হয়েছে!')
+      }
       setShowAddModal(false)
       setNewProduct({
         name: '',

@@ -383,9 +383,9 @@ VALUES
     150.00,
     90,
     'প্যাকেট',
-    'https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=600&q=80',
+    '/images/wheel-detergent-powder.jpg',
     true,
-    false
+    true
   ),
   (
     'p1000000-0000-0000-0000-000000000024',
@@ -423,11 +423,11 @@ INSERT INTO public.shop_settings (
   'default',
   'Tonmoy Varity Store',
   'তন্ময় ভ্যারাইটি স্টোর',
-  '+880 1712-345678',
-  'House 12, Road 4, Dhanmondi, Dhaka-1205',
+  '০১৭১৭-৯৯৯৪৬০',
+  'হাজী ইউসুফ আলী মার্কেট, নারুয়ামালা হাট, গাবতলী, বগুড়া',
   50.00,
   500.00,
-  'শনি – বৃহস্পতিবার: সকাল ৮টা – রাত ১০টা',
+  'শনিবার – শুক্রবার: সকাল ৭:৩০ – রাত ১০:৩০',
   true,
   true,
   true,
@@ -446,11 +446,16 @@ INSERT INTO public.shop_settings (
   pay_at_store_enabled = EXCLUDED.pay_at_store_enabled;
 
 -- =====================================================================
--- ADMIN ACCOUNT SETUP INSTRUCTIONS:
--- 1. Create a user via Supabase Dashboard -> Authentication -> Users (or register in the web app)
--- 2. Run the query below with your user email to promote to admin:
+-- ADMIN ACCOUNT SETUP (মোঃ তৌহিদুল ইসলাম বিন্দু - Tohidul Islam Bindu):
+-- 1. Create a user via Supabase Dashboard -> Authentication -> Users (e.g. admin@tonmoystore.com or tohidul@tonmoystore.com)
+-- 2. Run the query below with your user email to promote to Super Admin:
 --
 --    UPDATE public.profiles
---    SET role = 'admin'
---    WHERE id = (SELECT id FROM auth.users WHERE email = 'your-admin-email@example.com');
+--    SET role = 'admin',
+--        full_name = 'মোঃ তৌহিদুল ইসলাম বিন্দু',
+--        phone = '০১৭১৭-৯৯৯৪৬০',
+--        address = 'হাজী ইউসুফ আলী মার্কেট, নারুয়ামালা হাট, গাবতলী, বগুড়া',
+--        city = 'বগুড়া',
+--        area = 'নারুয়ামালা'
+--    WHERE id = (SELECT id FROM auth.users WHERE email = 'admin@tonmoystore.com');
 -- =====================================================================

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useSearchParams, useParams, Link, useNavigate } from 'react-router-dom'
 import {
   Search,
@@ -31,6 +31,7 @@ import {
   STITCH_ESSENTIALS,
   STITCH_FLASH_DEALS
 } from '../../data/stitchMockData'
+import { useProductSync } from '../../lib/syncEvents'
 import toast from 'react-hot-toast'
 
 export default function ShopPage() {
@@ -51,7 +52,7 @@ export default function ShopPage() {
 
   // Query Params
   const q = searchParams.get('q') || ''
-  const categorySlug = slug || searchParams.get('category') || 'rice-dal'
+  const categorySlug = slug || searchParams.get('category') || 'all'
   const subcategory = searchParams.get('subcat') || 'সকল'
   const sort = searchParams.get('sort') || 'popular'
 
@@ -70,64 +71,115 @@ export default function ShopPage() {
   }, [])
 
   // Load Categories & Products from Supabase or Fallback
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true)
-      try {
-        // Fetch categories from DB if available
-        const { data: catData } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order')
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      // Fetch categories from DB if available
+      const { data: catData } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order')
 
-        if (catData && catData.length > 0) {
-          // Merge with Stitch categories to retain rich icons and subcategories
-          const merged = STITCH_CATEGORIES.map(sc => {
-            const match = catData.find(c => c.slug === sc.slug)
-            return match ? { ...sc, ...match, subcategories: sc.subcategories || ['সকল'] } : sc
+      if (catData && catData.length > 0) {
+        const seenSlugs = new Set()
+        const mergedList = []
+        for (const c of catData) {
+          seenSlugs.add(c.slug)
+          const stitchMatch = STITCH_CATEGORIES.find(sc => sc.slug === c.slug)
+          mergedList.push({
+            ...c,
+            icon_name: c.icon_name || stitchMatch?.icon_name || 'inventory_2',
+            subcategories: c.subcategories && c.subcategories.length > 0 ? c.subcategories : (stitchMatch?.subcategories || ['সকল'])
           })
-          setCategories(merged)
-        } else {
-          setCategories(STITCH_CATEGORIES)
         }
-
-        // Fetch products from DB
-        const { data: prodData } = await supabase
-          .from('products')
-          .select('*, categories!inner(name, name_bn, slug)')
-          .eq('is_active', true)
-
-        if (prodData && prodData.length > 0) {
-          setDbProducts(prodData)
-        } else {
-          setDbProducts(STITCH_SHOP_PRODUCTS)
+        for (const sc of STITCH_CATEGORIES) {
+          if (!seenSlugs.has(sc.slug)) {
+            mergedList.push(sc)
+          }
         }
-      } catch (err) {
-        console.warn('Using Stitch Mock Products fallback:', err)
-        setDbProducts(STITCH_SHOP_PRODUCTS)
-      } finally {
-        setLoading(false)
+        setCategories(mergedList)
+      } else {
+        setCategories(STITCH_CATEGORIES)
       }
+
+      // Fetch products from DB
+      const { data: prodData } = await supabase
+        .from('products')
+        .select('*, categories(name, name_bn, slug)')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]').filter(p => p.is_active !== false)
+      const dbItems = prodData || []
+      const customIds = new Set(localCustom.map(p => p.id))
+      const combined = [...localCustom]
+
+      for (const item of dbItems) {
+        if (!customIds.has(item.id)) {
+          combined.push(item)
+          customIds.add(item.id)
+        }
+      }
+
+      for (const mockItem of STITCH_SHOP_PRODUCTS) {
+        if (!customIds.has(mockItem.id) && !combined.some(p => (p.name || '').toLowerCase().trim() === (mockItem.name || '').toLowerCase().trim())) {
+          combined.push(mockItem)
+        }
+      }
+
+      setDbProducts(combined)
+    } catch (err) {
+      console.warn('Using fallback products:', err)
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      setDbProducts([...localCustom, ...STITCH_SHOP_PRODUCTS])
+    } finally {
+      setLoading(false)
     }
-    fetchData()
   }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // Real-time synchronization across User End & Admin End
+  useProductSync(fetchData)
 
   // Selected Category Info
   const selectedCat = useMemo(() => {
+    if (categorySlug === 'all') {
+      return {
+        slug: 'all',
+        name: 'All Products',
+        name_bn: 'সকল মুদি পণ্য',
+        description_bn: 'তন্ময় ভ্যারাইটি স্টোরের সকল খাঁটি ও তাজা মুদিপণ্য সামগ্রী',
+        icon_name: 'storefront',
+        subcategories: ['সকল'],
+        item_count: dbProducts.length
+      }
+    }
     return categories.find(c => c.slug === categorySlug) || categories[0] || STITCH_CATEGORIES[0]
-  }, [categories, categorySlug])
+  }, [categories, categorySlug, dbProducts.length])
 
   // Filtered & Sorted Products
   const displayedProducts = useMemo(() => {
     const source = dbProducts.length > 0 ? dbProducts : STITCH_SHOP_PRODUCTS
     let filtered = [...source]
 
-    // 1. Category Filter
-    if (categorySlug && categorySlug !== 'all') {
+    // 1. Category Filter (Show all if 'all' OR if searching)
+    if (categorySlug && categorySlug !== 'all' && !q.trim()) {
       filtered = filtered.filter(p => {
-        const pSlug = p.category_slug || (p.categories && p.categories.slug)
-        return pSlug === categorySlug
+        const pSlug = p.category_slug || (p.categories && p.categories.slug) || (categories.find(c => c.id === p.category_id)?.slug)
+        if (pSlug === categorySlug) return true
+        if (p.category_id === categorySlug) return true
+        if ((categorySlug === 'rice-dal' || categorySlug === 'rice-atta-grains') && (pSlug === 'rice-dal' || pSlug === 'rice-atta-grains')) return true
+        if ((categorySlug === 'edible-oil' || categorySlug === 'oil-ghee') && (pSlug === 'edible-oil' || pSlug === 'oil-ghee')) return true
+        if ((categorySlug === 'spices' || categorySlug === 'spices-masala') && (pSlug === 'spices' || pSlug === 'spices-masala')) return true
+        if ((categorySlug === 'snacks-tea' || categorySlug === 'snacks-bakery' || categorySlug === 'tea-beverages') && (pSlug === 'snacks-tea' || pSlug === 'snacks-bakery' || pSlug === 'tea-beverages')) return true
+        if ((categorySlug === 'soap-cleaning' || categorySlug === 'cleaning-household') && (pSlug === 'soap-cleaning' || pSlug === 'cleaning-household')) return true
+        if (categorySlug === 'essentials' && (pSlug === 'essentials' || (p.name_bn || '').includes('চিনি') || (p.name_bn || '').includes('লবণ'))) return true
+        if (categorySlug === 'flour' && (pSlug === 'flour' || (p.name_bn || '').includes('আটা') || (p.name_bn || '').includes('ময়দা'))) return true
+        return false
       })
     }
 
@@ -151,17 +203,23 @@ export default function ShopPage() {
       filtered = filtered.filter(p => (p.stock_quantity ?? 1) > 0)
     }
 
-    // 5. Sorting
+    // 5. Sorting (Newest & custom products on top by default)
     filtered.sort((a, b) => {
       if (sort === 'price-asc') return a.price - b.price
       if (sort === 'price-desc') return b.price - a.price
-      if (sort === 'newest') return (b.id || '').localeCompare(a.id || '')
-      // 'popular' / default
-      return 0
+      if (sort === 'newest') {
+        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0
+        return bTime - aTime
+      }
+      // default: custom products and newest products stay prominently on top
+      const aTime = a.created_at ? new Date(a.created_at).getTime() : (String(a.id).startsWith('prod-') ? 9999999999999 : 0)
+      const bTime = b.created_at ? new Date(b.created_at).getTime() : (String(b.id).startsWith('prod-') ? 9999999999999 : 0)
+      return bTime - aTime
     })
 
     return filtered
-  }, [dbProducts, categorySlug, subcategory, q, stockOnly, sort])
+  }, [dbProducts, categories, categorySlug, subcategory, q, stockOnly, sort])
 
   // Helper to update query params
   const updateParam = (updates) => {
@@ -413,6 +471,43 @@ export default function ShopPage() {
       <div className="max-w-7xl mx-auto w-full flex flex-1 min-h-[calc(100vh-210px)]">
         {/* Left Sidebar: Sticky Category Navigator (Tactile mudikhana style) */}
         <aside className="w-[84px] sm:w-28 md:w-36 lg:w-44 flex-shrink-0 bg-surface-container-low/70 py-2 sm:py-3 flex flex-col items-center gap-1.5 sm:gap-2 sticky top-[138px] md:top-[146px] h-[calc(100vh-160px)] overflow-y-auto no-scrollbar border-r border-outline-variant/30">
+          {/* All Products Option (সকল পণ্য) */}
+          <button
+            type="button"
+            onClick={() => {
+              updateParam({ category: 'all', subcat: 'সকল' })
+            }}
+            className={`w-[74px] sm:w-[98px] md:w-[130px] lg:w-[156px] flex flex-col items-center justify-center p-2 rounded-2xl transition-all relative group ${
+              categorySlug === 'all'
+                ? 'bg-surface-container-lowest shadow-sm text-primary font-bold'
+                : 'text-on-surface-variant hover:bg-surface-container'
+            }`}
+          >
+            {categorySlug === 'all' && (
+              <div className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-full" />
+            )}
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-transform group-hover:scale-105 ${
+                categorySlug === 'all'
+                  ? 'bg-secondary-container/60 text-primary'
+                  : 'bg-surface-container text-outline'
+              }`}
+            >
+              <span
+                className="material-symbols-outlined text-[22px]"
+                style={{ fontVariationSettings: categorySlug === 'all' ? "'FILL' 1" : "'FILL' 0" }}
+              >
+                storefront
+              </span>
+            </div>
+            <span className="font-label-sm text-[12px] text-center leading-tight">
+              {t('সকল পণ্য', 'All Products')}
+            </span>
+            <span className="text-[9px] text-outline mt-0.5">
+              {dbProducts.length} {t('পণ্য', 'items')}
+            </span>
+          </button>
+
           {categories.map((cat) => {
             const isActive = categorySlug === cat.slug
             return (

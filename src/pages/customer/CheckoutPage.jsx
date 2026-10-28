@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useLang } from '../../contexts/LanguageContext'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency, calculateDeliveryFee, getProductImageUrl, DELIVERY_FEE } from '../../lib/utils'
+import { notifyOrderChange, notifyProductChange } from '../../lib/syncEvents'
 import { Truck, Store, MapPin, Phone, User, CreditCard, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import EmptyState from '../../components/ui/EmptyState'
@@ -149,6 +150,10 @@ export default function CheckoutPage() {
           p_quantity: item.quantity,
         })
       }
+
+      // Broadcast order creation and stock decrement across User End & Admin End
+      notifyOrderChange({ orderId: order.id, orderNumber })
+      notifyProductChange({ action: 'stock_decrement', items: validatedItems })
 
       clearCart()
       toast.success(t('অর্ডার সফল হয়েছে! 🎉', 'Order placed successfully! 🎉'))

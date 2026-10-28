@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useLang } from '../../contexts/LanguageContext'
 import { useCart } from '../../contexts/CartContext'
+import { useProductSync } from '../../lib/syncEvents'
 import ProductCard from '../../components/product/ProductCard'
 import { ProductGridSkeleton } from '../../components/product/ProductSkeleton'
 import MarketListModal from '../../components/common/MarketListModal'
@@ -38,28 +39,57 @@ export default function HomePage() {
   }, [])
 
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [catRes, featRes, newRes] = await Promise.all([
-          supabase.from('categories').select('*').eq('is_active', true).order('sort_order').limit(8),
-          supabase.from('products').select('*, categories(name, name_bn)').eq('is_featured', true).eq('is_active', true).order('created_at', { ascending: false }).limit(10),
-          supabase.from('products').select('*, categories(name, name_bn)').eq('is_active', true).order('created_at', { ascending: false }).limit(8),
-        ])
+  const load = useCallback(async () => {
+    try {
+      const [catRes, featRes, newRes] = await Promise.all([
+        supabase.from('categories').select('*').eq('is_active', true).order('sort_order').limit(10),
+        supabase.from('products').select('*, categories(name, name_bn, slug)').eq('is_featured', true).eq('is_active', true).order('created_at', { ascending: false }).limit(10),
+        supabase.from('products').select('*, categories(name, name_bn, slug)').eq('is_active', true).order('created_at', { ascending: false }).limit(10),
+      ])
 
-        setCategories(catRes.data && catRes.data.length > 0 ? catRes.data : STITCH_CATEGORIES)
-        setFeaturedProducts(featRes.data && featRes.data.length > 0 ? featRes.data : STITCH_ESSENTIALS)
-        setNewProducts(newRes.data && newRes.data.length > 0 ? newRes.data : STITCH_ESSENTIALS)
-      } catch (err) {
-        setCategories(STITCH_CATEGORIES)
-        setFeaturedProducts(STITCH_ESSENTIALS)
-        setNewProducts(STITCH_ESSENTIALS)
-      } finally {
-        setLoading(false)
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]').filter(p => p.is_active !== false)
+      const customFeatured = localCustom.filter(p => p.is_featured)
+
+      // Merge for New Products
+      const dbNew = newRes.data || []
+      const newIds = new Set(dbNew.map(p => p.id))
+      const combinedNew = [...localCustom.filter(p => !newIds.has(p.id)), ...dbNew]
+      for (const item of STITCH_ESSENTIALS) {
+        if (!newIds.has(item.id) && !combinedNew.some(p => (p.name || '').toLowerCase() === (item.name || '').toLowerCase())) {
+          combinedNew.push(item)
+        }
       }
+
+      // Merge for Featured Products (New/custom products prioritized so newly added items show up immediately)
+      const dbFeat = featRes.data || []
+      const featIds = new Set(dbFeat.map(p => p.id))
+      const combinedFeat = [...localCustom.filter(p => !featIds.has(p.id)), ...dbFeat]
+      for (const item of STITCH_ESSENTIALS) {
+        if (!featIds.has(item.id) && !combinedFeat.some(p => (p.name || '').toLowerCase() === (item.name || '').toLowerCase())) {
+          combinedFeat.push(item)
+        }
+      }
+
+      setCategories(catRes.data && catRes.data.length > 0 ? catRes.data : STITCH_CATEGORIES)
+      setFeaturedProducts(combinedFeat)
+      setNewProducts(combinedNew)
+    } catch (err) {
+      console.warn('HomePage product load error:', err)
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      setCategories(STITCH_CATEGORIES)
+      setFeaturedProducts([...localCustom.filter(p => p.is_featured), ...STITCH_ESSENTIALS])
+      setNewProducts([...localCustom, ...STITCH_ESSENTIALS])
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  // Real-time synchronization across User End & Admin End
+  useProductSync(load)
 
   return (
     <div className="bg-surface font-sans text-on-surface flex flex-col min-h-screen">
@@ -258,6 +288,37 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Newly Added Products / নতুন আগমন */}
+      {newProducts.length > 0 && (
+        <section className="page-container pb-6">
+          <div className="flex items-center justify-between pb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-4 rounded-full bg-secondary" />
+              <h3 className="text-base sm:text-lg font-bold text-on-surface">
+                {t('নতুন আগমন ও সংগ্রহ', 'New Arrivals & Fresh Stock')}
+              </h3>
+              <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-bold">
+                {t('নতুন', 'NEW')}
+              </span>
+            </div>
+            <Link to="/shop?sort=newest" className="text-xs font-semibold text-primary flex items-center gap-0.5 hover:underline">
+              <span>{t('সবগুলো দেখুন', 'View All')}</span>
+              <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+            </Link>
+          </div>
+
+          {loading ? (
+            <ProductGridSkeleton count={6} />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3.5 md:gap-4">
+              {newProducts.slice(0, 12).map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Neighborhood Mudikhana Trust Badges */}
       <section className="page-container pb-6">

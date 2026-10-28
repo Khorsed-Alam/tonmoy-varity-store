@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatDate, ORDER_STATUS } from '../../lib/utils'
+import { notifyOrderChange, useOrderSync } from '../../lib/syncEvents'
 import OrderStatusBadge from '../../components/ui/OrderStatusBadge'
 import {
   Search, Eye, ChevronDown, CheckCircle, Clock, Truck,
@@ -63,6 +64,9 @@ export default function AdminOrders() {
     load()
   }, [load])
 
+  // Real-time synchronization across User End & Admin End
+  useOrderSync(load)
+
   // Quick Status change from table
   const handleQuickStatusChange = async (orderId, newStatus) => {
     setUpdatingId(orderId)
@@ -72,6 +76,10 @@ export default function AdminOrders() {
         .update({ status: newStatus })
         .eq('id', orderId)
       if (error) throw error
+
+      // Broadcast order update
+      notifyOrderChange({ orderId, status: newStatus })
+
       toast.success('অর্ডার স্ট্যাটাস আপডেট হয়েছে!')
       load()
     } catch (err) {

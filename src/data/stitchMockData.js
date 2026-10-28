@@ -211,6 +211,19 @@ export const STITCH_ESSENTIALS = [
     categories: { name: 'Soap & Wash', name_bn: 'সাবান ও ক্লিনার' },
     image_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAgTwuP5b0Mf9drDaI0Tm_Gs4pgmqWtmHa6LVfM2KBXBeQA-O2dMvicn9pj-aEtWzxdNDPlokkxtWSzcBL06GHKnhDV3bZvUtYaqmSG7vv1arRccHOYIsXc4LbCqX2N27ConSYj8_ou4tgUP3chM7oH9G6NnWc5AToa67qXa3Ca5aynEIUv4TOzonJkF7zg_oH9EAGRwk0CLjNnCE8oEOhivcPQPkfkQ2t7gFreYQp6JyP7iH1lObtEsA',
   },
+  {
+    id: 'ess-wheel',
+    name: 'Wheel 2in1 Clean & Fresh Washing Powder (1kg)',
+    name_bn: 'হুইল ২ ইন ১ ওয়াশিং পাউডার (১ কেজি)',
+    price: 140,
+    original_price: 155,
+    unit: '১ কেজি',
+    stock_quantity: 60,
+    categories: { name: 'Soap & Wash', name_bn: 'ক্লিনিং', slug: 'soap-cleaning' },
+    image_url: '/images/wheel-detergent-powder.jpg',
+    is_active: true,
+    is_featured: true,
+  },
 ]
 
 export const STITCH_SHOP_PRODUCTS = [
@@ -409,5 +422,21 @@ export const STITCH_SHOP_PRODUCTS = [
     stock_quantity: 30,
     categories: { name: 'Soap & Wash', name_bn: 'ক্লিনিং', slug: 'soap-cleaning' },
     image_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAgTwuP5b0Mf9drDaI0Tm_Gs4pgmqWtmHa6LVfM2KBXBeQA-O2dMvicn9pj-aEtWzxdNDPlokkxtWSzcBL06GHKnhDV3bZvUtYaqmSG7vv1arRccHOYIsXc4LbCqX2N27ConSYj8_ou4tgUP3chM7oH9G6NnWc5AToa67qXa3Ca5aynEIUv4TOzonJkF7zg_oH9EAGRwk0CLjNnCE8oEOhivcPQPkfkQ2t7gFreYQp6JyP7iH1lObtEsA',
+  },
+  {
+    id: 'shop-wheel-1',
+    name: 'Wheel 2in1 Clean & Fresh Washing Powder (1kg)',
+    name_bn: 'হুইল ২ ইন ১ ডিটারজেন্ট পাউডার (১ কেজি)',
+    category_slug: 'soap-cleaning',
+    subcategory: 'কাপড় ধোয়া',
+    price: 140,
+    original_price: 155,
+    unit: '১ কেজি',
+    tag: 'লেমন ফ্রেশ',
+    stock_quantity: 60,
+    categories: { name: 'Soap & Wash', name_bn: 'ক্লিনিং', slug: 'soap-cleaning' },
+    image_url: '/images/wheel-detergent-powder.jpg',
+    is_active: true,
+    is_featured: true,
   },
 ]

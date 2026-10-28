@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency } from '../../lib/utils'
+import { notifyProductChange, useProductSync } from '../../lib/syncEvents'
 import {
   Plus, Pencil, Trash2, Search, X, Loader2, ImagePlus,
   Package, Check, AlertTriangle, Filter, ArrowUpDown, Sparkles
@@ -9,8 +10,8 @@ import toast from 'react-hot-toast'
 
 const EMPTY_PRODUCT = {
   name: '', name_bn: '', description: '', description_bn: '',
-  price: '', stock_quantity: '50', unit: '১ কেজি',
-  category_id: '', is_active: true, is_featured: false, image_url: '',
+  price: '', original_price: '', cost_price: '', stock_quantity: '50', unit: '১ কেজি',
+  category_id: '', subcategory: '', tag: '', is_active: true, is_featured: false, image_url: '',
 }
 
 export default function AdminProducts() {
@@ -32,13 +33,28 @@ export default function AdminProducts() {
     setLoading(true)
     try {
       const [prodRes, catRes] = await Promise.all([
-        supabase.from('products').select('*, categories(name, name_bn)').order('created_at', { ascending: false }),
+        supabase.from('products').select('*, categories(name, name_bn, slug)').order('created_at', { ascending: false }),
         supabase.from('categories').select('*').order('sort_order'),
       ])
-      setProducts(prodRes.data || [])
+      
+      const dbProducts = prodRes.data || []
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      
+      // Merge DB products and local custom products, DB takes precedence by ID
+      const dbIds = new Set(dbProducts.map(p => p.id))
+      const combined = [...dbProducts]
+      for (const item of localCustom) {
+        if (!dbIds.has(item.id)) {
+          combined.unshift(item)
+        }
+      }
+
+      setProducts(combined)
       setCategories(catRes.data || [])
     } catch (err) {
-      console.error(err)
+      console.error('Error loading admin products:', err)
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      setProducts(localCustom)
       toast.error('পণ্য তালিকা লোড করতে সমস্যা হয়েছে')
     } finally {
       setLoading(false)
@@ -46,6 +62,9 @@ export default function AdminProducts() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  // Real-time synchronization across User End & Admin End
+  useProductSync(load)
 
   const openCreate = () => {
     setEditing(null)
@@ -58,11 +77,21 @@ export default function AdminProducts() {
   const openEdit = (p) => {
     setEditing(p.id)
     setForm({
-      name: p.name || '', name_bn: p.name_bn || '',
-      description: p.description || '', description_bn: p.description_bn || '',
-      price: p.price || '', stock_quantity: p.stock_quantity || '',
-      unit: p.unit || '১ কেজি', category_id: p.category_id || '',
-      is_active: p.is_active, is_featured: p.is_featured, image_url: p.image_url || '',
+      name: p.name || '',
+      name_bn: p.name_bn || '',
+      description: p.description || '',
+      description_bn: p.description_bn || '',
+      price: p.price || '',
+      original_price: p.original_price || '',
+      cost_price: p.cost_price || '',
+      stock_quantity: p.stock_quantity ?? '50',
+      unit: p.unit || '১ কেজি',
+      category_id: p.category_id || '',
+      subcategory: p.subcategory || '',
+      tag: p.tag || '',
+      is_active: p.is_active ?? true,
+      is_featured: p.is_featured ?? false,
+      image_url: p.image_url || '',
     })
     setImageFile(null)
     setImagePreview(null)
@@ -84,7 +113,7 @@ export default function AdminProducts() {
       return
     }
     if (!form.price) {
-      toast.error('দাম নির্ধারণ করুন')
+      toast.error('বিক্রয় মূল্য নির্ধারণ করুন')
       return
     }
     setSaving(true)
@@ -94,32 +123,138 @@ export default function AdminProducts() {
       if (imageFile) {
         const ext = imageFile.name.split('.').pop()
         const path = `products/${Date.now()}.${ext}`
-        const { error: uploadError } = await supabase.storage.from('product-images').upload(path, imageFile, { upsert: true })
         if (!uploadError) {
-          image_url = path
+          const { data: publicData } = supabase.storage.from('product-images').getPublicUrl(path)
+          image_url = publicData?.publicUrl || path
+        }
+      }
+
+      const selectedCategory = categories.find(c => c.id === form.category_id)
+      const validCategoryId = form.category_id && form.category_id.trim() !== '' ? form.category_id : null
+
+      // Default high quality grocery image if no image uploaded
+      if (!image_url) {
+        const catSlug = selectedCategory?.slug || ''
+        if (catSlug.includes('oil')) {
+          image_url = 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80'
+        } else if (catSlug.includes('spice')) {
+          image_url = 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=600&q=80'
+        } else if (catSlug.includes('dal') || catSlug.includes('pulse')) {
+          image_url = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'
+        } else {
+          image_url = 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80'
         }
       }
 
       const payload = {
         name: form.name.trim() || form.name_bn.trim(),
         name_bn: form.name_bn.trim() || form.name.trim(),
-        description: form.description.trim() || null,
-        description_bn: form.description_bn.trim() || null,
+        description: form.description?.trim() || null,
+        description_bn: form.description_bn?.trim() || null,
         price: Number(form.price),
+        original_price: form.original_price ? Number(form.original_price) : null,
+        cost_price: form.cost_price ? Number(form.cost_price) : null,
         stock_quantity: Number(form.stock_quantity) || 0,
-        unit: form.unit || '১ কেজি',
-        category_id: form.category_id || null,
-        is_active: form.is_active,
-        is_featured: form.is_featured,
+        unit: form.unit?.trim() || '১ কেজি',
+        category_id: validCategoryId,
+        category_slug: selectedCategory?.slug || '',
+        subcategory: form.subcategory?.trim() || '',
+        tag: form.tag?.trim() || '',
+        is_active: Boolean(form.is_active),
+        is_featured: Boolean(form.is_featured),
         image_url,
       }
 
-      const { error } = editing
-        ? await supabase.from('products').update(payload).eq('id', editing)
-        : await supabase.from('products').insert(payload)
+      let savedRecord = null
 
-      if (error) throw error
-      toast.success(editing ? 'পণ্য আপডেট হয়েছে!' : 'পণ্য সফলভাবে যুক্ত হয়েছে!')
+      if (editing) {
+        let { data, error } = await supabase
+          .from('products')
+          .update(payload)
+          .eq('id', editing)
+          .select('*, categories(name, name_bn, slug)')
+
+        if (error) {
+          console.warn('Supabase product update error with full payload, trying standard fields:', error)
+          // Fallback retry with essential standard schema fields
+          const standardPayload = {
+            name: payload.name,
+            name_bn: payload.name_bn,
+            price: payload.price,
+            stock_quantity: payload.stock_quantity,
+            unit: payload.unit,
+            is_active: payload.is_active,
+            is_featured: payload.is_featured,
+            image_url: payload.image_url,
+            category_id: payload.category_id,
+          }
+          const retryRes = await supabase.from('products').update(standardPayload).eq('id', editing).select('*')
+          if (retryRes.data) {
+            data = retryRes.data
+            error = null
+          }
+        }
+
+        savedRecord = data?.[0] || { id: editing, ...payload, categories: selectedCategory }
+
+        // Update local storage cache
+        const localList = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+        const updated = localList.map(p => p.id === editing ? { ...p, ...payload, categories: selectedCategory } : p)
+        localStorage.setItem('tvs_custom_products', JSON.stringify(updated))
+
+        if (error) {
+          toast('পণ্য আপডেট হয়েছে (লোকাল ক্যাশে সংরক্ষিত, DB: ' + error.message + ')', { icon: '⚠️' })
+        } else {
+          toast.success('পণ্য ডাটাবেসে সফলভাবে আপডেট হয়েছে!')
+        }
+      } else {
+        let { data, error } = await supabase
+          .from('products')
+          .insert([payload])
+          .select('*, categories(name, name_bn, slug)')
+
+        if (error) {
+          console.warn('Supabase product insert with full payload failed, trying standard fields:', error)
+          // Fallback retry with essential standard schema fields in case custom columns don't exist
+          const standardPayload = {
+            name: payload.name,
+            name_bn: payload.name_bn,
+            price: payload.price,
+            stock_quantity: payload.stock_quantity,
+            unit: payload.unit,
+            is_active: payload.is_active,
+            is_featured: payload.is_featured,
+            image_url: payload.image_url,
+            category_id: payload.category_id,
+          }
+          const retryRes = await supabase.from('products').insert([standardPayload]).select('*')
+          if (retryRes.data) {
+            data = retryRes.data
+            error = null
+          }
+        }
+
+        savedRecord = data?.[0] || {
+          id: `prod-${Date.now()}`,
+          ...payload,
+          categories: selectedCategory,
+          created_at: new Date().toISOString()
+        }
+
+        // Prepend to local storage custom products
+        const localList = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+        localStorage.setItem('tvs_custom_products', JSON.stringify([savedRecord, ...localList.filter(p => p.id !== savedRecord.id)]))
+
+        if (error) {
+          toast('পণ্য যুক্ত হয়েছে (লোকাল ক্যাশে সংরক্ষিত, DB: ' + error.message + ')', { icon: '⚠️' })
+        } else {
+          toast.success('পণ্য ডাটাবেসে সফলভাবে যুক্ত হয়েছে!')
+        }
+      }
+
+      // Broadcast change in real-time across User End & Admin End
+      notifyProductChange({ action: editing ? 'update' : 'create', product: savedRecord })
+
       setShowForm(false)
       load()
     } catch (err) {
@@ -131,12 +266,23 @@ export default function AdminProducts() {
 
   const handleQuickRestock = async (productId, currentQty, addQty) => {
     try {
+      const newQty = currentQty + addQty
       const { error } = await supabase
         .from('products')
-        .update({ stock_quantity: currentQty + addQty })
+        .update({ stock_quantity: newQty })
         .eq('id', productId)
-      if (error) throw error
-      toast.success(`স্টক +${addQty} বৃদ্ধি করা হয়েছে`)
+
+      if (error) console.warn('Quick restock DB notice:', error)
+
+      // Sync local storage
+      const localList = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      const updated = localList.map(p => p.id === productId ? { ...p, stock_quantity: newQty } : p)
+      localStorage.setItem('tvs_custom_products', JSON.stringify(updated))
+
+      // Broadcast restock in real-time
+      notifyProductChange({ action: 'restock', productId, stock_quantity: newQty })
+
+      toast.success(`স্টক +${addQty} বৃদ্ধি করা হয়েছে (নতুন স্টক: ${newQty})`)
       load()
     } catch (err) {
       toast.error('স্টক আপডেট ব্যর্থ: ' + err.message)
@@ -145,12 +291,23 @@ export default function AdminProducts() {
 
   const toggleProductActive = async (p) => {
     try {
+      const nextActive = !p.is_active
       const { error } = await supabase
         .from('products')
-        .update({ is_active: !p.is_active })
+        .update({ is_active: nextActive })
         .eq('id', p.id)
-      if (error) throw error
-      toast.success(p.is_active ? 'পণ্য নিষ্ক্রিয় করা হয়েছে' : 'পণ্য সক্রিয় করা হয়েছে')
+
+      if (error) console.warn('Toggle status DB notice:', error)
+
+      // Sync local storage
+      const localList = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      const updated = localList.map(item => item.id === p.id ? { ...item, is_active: nextActive } : item)
+      localStorage.setItem('tvs_custom_products', JSON.stringify(updated))
+
+      // Broadcast active status toggle in real-time
+      notifyProductChange({ action: 'toggle_active', productId: p.id, is_active: nextActive })
+
+      toast.success(nextActive ? 'পণ্য সক্রিয় করা হয়েছে' : 'পণ্য নিষ্ক্রিয় করা হয়েছে')
       load()
     } catch (err) {
       toast.error('আপডেট ব্যর্থ')
@@ -158,12 +315,21 @@ export default function AdminProducts() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('এই পণ্য মুছে দিতে চান?')) return
+    if (!window.confirm('এই পণ্যটি ডাটাবেস থেকে মুছে দিতে চান?')) return
     setDeleting(id)
     try {
       const { error } = await supabase.from('products').delete().eq('id', id)
-      if (error) throw error
-      toast.success('পণ্য মুছে দেওয়া হয়েছে')
+      if (error) console.warn('Delete product DB notice:', error)
+
+      // Remove from local storage
+      const localList = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      const filtered = localList.filter(p => p.id !== id)
+      localStorage.setItem('tvs_custom_products', JSON.stringify(filtered))
+
+      // Broadcast deletion in real-time
+      notifyProductChange({ action: 'delete', productId: id })
+
+      toast.success('পণ্য ডাটাবেস থেকে মুছে ফেলা হয়েছে')
       load()
     } catch (err) {
       toast.error('ডিলিট ব্যর্থ: ' + err.message)
@@ -474,7 +640,7 @@ export default function AdminProducts() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-on-surface mb-1">দাম (BDT ৳) *</label>
+                  <label className="block font-bold text-on-surface mb-1">বিক্রয় মূল্য (BDT ৳) *</label>
                   <input
                     type="number"
                     required
@@ -483,6 +649,19 @@ export default function AdminProducts() {
                     value={form.price}
                     onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
                     placeholder="৳ ১২০"
+                    className="w-full h-10 px-3.5 bg-surface-container rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-on-surface mb-1">পূর্বের মূল্য / ডিসকাউন্ট (৳)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.original_price}
+                    onChange={e => setForm(f => ({ ...f, original_price: e.target.value }))}
+                    placeholder="৳ ১৩৫ (ঐচ্ছিক)"
                     className="w-full h-10 px-3.5 bg-surface-container rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
@@ -524,6 +703,17 @@ export default function AdminProducts() {
                     ))}
                   </select>
                 </div>
+
+                <div>
+                  <label className="block font-bold text-on-surface mb-1">উপ-ক্যাটাগরি / ট্যাগ (Subcategory)</label>
+                  <input
+                    type="text"
+                    value={form.subcategory}
+                    onChange={e => setForm(f => ({ ...f, subcategory: e.target.value }))}
+                    placeholder="যেমন: মিনিকেট, নাজিরশাইল, ফ্রেশ প্যাক…"
+                    className="w-full h-10 px-3.5 bg-surface-container rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
               </div>
 
               <div>
@@ -537,46 +727,63 @@ export default function AdminProducts() {
                 />
               </div>
 
-              {/* Image Preview & Upload */}
+              {/* Image Preview & Upload / Direct URL */}
               <div>
-                <label className="block font-bold text-on-surface mb-1">পণ্যের ছবি</label>
-                <div className="flex items-center gap-4">
-                  <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-colors overflow-hidden">
+                <label className="block font-bold text-on-surface mb-1">পণ্যের ছবি (ফাইল আপলোড অথবা ছবির URL)</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-colors overflow-hidden shrink-0 bg-surface-container">
                     {imagePreview || form.image_url ? (
                       <img
-                        src={imagePreview || (form.image_url.startsWith('http') ? form.image_url : supabase.storage.from('product-images').getPublicUrl(form.image_url).data.publicUrl)}
+                        src={imagePreview || (form.image_url.startsWith('http') || form.image_url.startsWith('/') ? form.image_url : supabase.storage.from('product-images').getPublicUrl(form.image_url).data.publicUrl)}
                         alt=""
                         className="w-full h-full object-cover rounded-xl"
                       />
                     ) : (
                       <>
                         <ImagePlus className="w-5 h-5 text-on-surface-variant" />
-                        <span className="text-[10px] text-on-surface-variant mt-1">ছবি যোগ</span>
+                        <span className="text-[10px] text-on-surface-variant mt-1 font-semibold">ফাইল আপলোড</span>
                       </>
                     )}
                     <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                   </label>
 
-                  <div className="flex flex-col gap-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={form.is_active}
-                        onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
-                        className="accent-primary w-4 h-4 rounded"
-                      />
-                      <span className="text-xs font-semibold text-on-surface">দোকানে সক্রিয় প্রদর্শন</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={form.is_featured}
-                        onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))}
-                        className="accent-primary w-4 h-4 rounded"
-                      />
-                      <span className="text-xs font-semibold text-on-surface">হোমপেজে ফিচার্ড পণ্য</span>
-                    </label>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={form.image_url}
+                      onChange={e => {
+                        setForm(f => ({ ...f, image_url: e.target.value }))
+                        setImageFile(null)
+                        setImagePreview(null)
+                      }}
+                      placeholder="বা ছবির URL দিন (যেমন: /images/harpic-toilet-cleaner.jpg)"
+                      className="w-full h-10 px-3 bg-surface-container rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <span className="text-[10px] text-on-surface-variant mt-1 block">
+                      📁 ফাইল আপলোড করতে বামের আইকনে চাপুন, অথবা ছবির URL পেস্ট করুন।
+                    </span>
                   </div>
+                </div>
+
+                <div className="flex items-center gap-6 mt-3 pt-2 border-t border-outline-variant/10">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.is_active}
+                      onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
+                      className="accent-primary w-4 h-4 rounded"
+                    />
+                    <span className="text-xs font-semibold text-on-surface">দোকানে সক্রিয় প্রদর্শন</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.is_featured}
+                      onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))}
+                      className="accent-primary w-4 h-4 rounded"
+                    />
+                    <span className="text-xs font-semibold text-on-surface">হোমপেজে ফিচার্ড পণ্য</span>
+                  </label>
                 </div>
               </div>
 

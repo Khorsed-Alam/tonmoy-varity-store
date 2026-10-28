@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ShoppingCart, Plus, Minus, ArrowLeft, Package } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useCart } from '../../contexts/CartContext'
 import { useLang } from '../../contexts/LanguageContext'
 import { formatCurrency, getProductImageUrl } from '../../lib/utils'
+import { STITCH_SHOP_PRODUCTS } from '../../data/stitchMockData'
+import { useProductSync } from '../../lib/syncEvents'
 import toast from 'react-hot-toast'
 
 export default function ProductDetailPage() {
@@ -15,28 +17,46 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [related, setRelated] = useState([])
 
-  useEffect(() => {
-    async function load() {
+  const load = useCallback(async () => {
+    try {
       const { data } = await supabase
         .from('products')
         .select('*, categories(name, name_bn, slug, icon)')
         .eq('id', id)
         .single()
-      setProduct(data)
-      setLoading(false)
-      if (data?.category_id) {
-        const { data: rel } = await supabase
-          .from('products')
-          .select('*, categories(name, name_bn)')
-          .eq('category_id', data.category_id)
-          .eq('is_active', true)
-          .neq('id', id)
-          .limit(6)
-        setRelated(rel || [])
+
+      if (data) {
+        setProduct(data)
+        if (data?.category_id) {
+          const { data: rel } = await supabase
+            .from('products')
+            .select('*, categories(name, name_bn)')
+            .eq('category_id', data.category_id)
+            .eq('is_active', true)
+            .neq('id', id)
+            .limit(6)
+          setRelated(rel || [])
+        }
+      } else {
+        const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+        const found = localCustom.find(p => p.id === id) || STITCH_SHOP_PRODUCTS.find(p => p.id === id)
+        if (found) setProduct(found)
       }
+    } catch {
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      const found = localCustom.find(p => p.id === id) || STITCH_SHOP_PRODUCTS.find(p => p.id === id)
+      if (found) setProduct(found)
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [id])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  // Real-time synchronization
+  useProductSync(load)
 
   const cartItem = items.find(i => i.product_id === id)
   const imageUrl = getProductImageUrl(supabase, product?.image_url)

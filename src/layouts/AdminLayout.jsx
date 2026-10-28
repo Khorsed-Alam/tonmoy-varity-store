@@ -6,8 +6,9 @@ import {
   Warehouse, Users, BarChart3, Settings, LogOut,
   Menu, X, Bell, Search, Calendar, Store, CheckCircle, ChevronDown
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { useProductSync, useOrderSync } from '../lib/syncEvents'
 
 export default function AdminLayout() {
   const { signOut, profile } = useAuth()
@@ -20,29 +21,37 @@ export default function AdminLayout() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState([])
 
-  useEffect(() => {
-    async function fetchCounts() {
-      try {
-        const [prodRes, pendingRes, stockRes] = await Promise.all([
-          supabase.from('products').select('id', { count: 'exact', head: true }),
-          supabase.from('orders').select('id, order_number, total_amount, created_at, full_name').eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
-          supabase.from('products').select('id', { count: 'exact', head: true }).lte('stock_quantity', 5).eq('is_active', true)
-        ])
+  const fetchCounts = useCallback(async () => {
+    try {
+      const [prodRes, pendingRes, stockRes] = await Promise.all([
+        supabase.from('products').select('id', { count: 'exact', head: true }),
+        supabase.from('orders').select('id, order_number, total_amount, created_at, full_name').eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
+        supabase.from('products').select('id', { count: 'exact', head: true }).lte('stock_quantity', 5).eq('is_active', true)
+      ])
 
-        setCounts({
-          products: prodRes.count || 0,
-          pendingOrders: pendingRes.data?.length || 0,
-          lowStock: stockRes.count || 0
-        })
-        setNotifications(pendingRes.data || [])
-      } catch (err) {
-        console.error('Error fetching admin badges:', err)
-      }
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      const totalProds = (prodRes.count || 0) + localCustom.length
+
+      setCounts({
+        products: totalProds,
+        pendingOrders: pendingRes.data?.length || 0,
+        lowStock: stockRes.count || 0
+      })
+      setNotifications(pendingRes.data || [])
+    } catch (err) {
+      console.error('Error fetching admin badges:', err)
     }
+  }, [])
+
+  useEffect(() => {
     fetchCounts()
     const interval = setInterval(fetchCounts, 30000)
     return () => clearInterval(interval)
-  }, [])
+  }, [fetchCounts])
+
+  // Real-time synchronization for Admin Sidebar and Notification Badge
+  useProductSync(fetchCounts)
+  useOrderSync(fetchCounts)
 
   const handleSignOut = async () => {
     await signOut()
@@ -311,10 +320,10 @@ export default function AdminLayout() {
             <div className="flex items-center gap-2 pl-1">
               <div className="hidden sm:flex flex-col text-right">
                 <span className="text-xs font-bold text-on-surface leading-tight">
-                  {profile?.full_name || 'তন্ময় কুমার'}
+                  {profile?.full_name || 'মোঃ তৌহিদুল ইসলাম বিন্দু'}
                 </span>
                 <span className="text-[10px] text-secondary font-semibold">
-                  {profile?.role === 'admin' ? 'সুপার অ্যাডমিন' : 'ম্যানেজার'}
+                  {profile?.role === 'admin' ? 'প্রোপ্রাইটার ও সুপার অ্যাডমিন' : 'ম্যানেজার'}
                 </span>
               </div>
               <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-on-primary font-bold text-xs shadow-xs">
