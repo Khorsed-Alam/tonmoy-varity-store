@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, Send, FileText, CheckCircle2 } from 'lucide-react'
-import { useLang } from '../../contexts/LanguageContext'
+import { useLang } from '../../context/LanguageContext'
 import toast from 'react-hot-toast'
 
 export default function MarketListModal({ isOpen, onClose }) {

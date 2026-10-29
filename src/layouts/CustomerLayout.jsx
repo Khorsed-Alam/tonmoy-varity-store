@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
-import Navbar from '../components/layout/Navbar'
-import Footer from '../components/layout/Footer'
-import MobileBottomNav from '../components/layout/MobileBottomNav'
+import Navbar from '../components/common/Navbar'
+import Footer from '../components/common/Footer'
+import MobileBottomNav from '../components/common/MobileBottomNav'
 
 export default function CustomerLayout() {
   return (
