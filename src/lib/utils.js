@@ -66,10 +66,34 @@ export const slugify = (str) => {
     .replace(/^-+|-+$/g, '')
 }
 
-// Get image URL from Supabase Storage
+// Get image URL from Supabase Storage or external web URL / Base64 / Local
 export const getProductImageUrl = (supabaseClient, path) => {
   if (!path) return null
-  if (path.startsWith('http')) return path
-  const { data } = supabaseClient.storage.from('product-images').getPublicUrl(path)
-  return data?.publicUrl || null
+  if (typeof path !== 'string') return null
+
+  // If already an absolute web URL, Base64 data URL, blob, or root path
+  if (
+    path.startsWith('http://') ||
+    path.startsWith('https://') ||
+    path.startsWith('data:') ||
+    path.startsWith('blob:') ||
+    path.startsWith('/images/') ||
+    path.startsWith('/')
+  ) {
+    return path
+  }
+
+  if (path.includes('wheel-detergent-powder')) {
+    return 'https://i.chaldn.com/_mpimage/wheel-washing-powder-2-in-1-clean-fresh-1-kg?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D128372&q=best&v=1&m=400'
+  }
+  if (path.includes('harpic-toilet-cleaner')) {
+    return 'https://i.chaldn.com/_mpimage/harpic-liquid-toilet-cleaner-original-750-ml?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D169613&q=best&v=1&m=400'
+  }
+
+  // Relative storage path: check 'products' bucket first, then 'product-images'
+  const pubProducts = supabaseClient?.storage?.from('products')?.getPublicUrl(path)
+  if (pubProducts?.data?.publicUrl) return pubProducts.data.publicUrl
+
+  const pubImages = supabaseClient?.storage?.from('product-images')?.getPublicUrl(path)
+  return pubImages?.data?.publicUrl || path
 }
