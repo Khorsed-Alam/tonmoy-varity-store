@@ -45,3 +45,7 @@ desktop.ini
 
 # Coverage
 coverage/
+
+# Supabase temp
+supabase/.temp/
+
