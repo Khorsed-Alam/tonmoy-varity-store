@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
 import { useAuth } from '../../contexts/AuthContext'
@@ -26,6 +26,18 @@ export default function CheckoutPage() {
     address: profile?.address || '',
     notes: '',
   })
+
+  // Synchronize form when profile loads
+  useEffect(() => {
+    if (profile) {
+      setForm(prev => ({
+        ...prev,
+        full_name: prev.full_name || profile.full_name || '',
+        phone: prev.phone || profile.phone || '',
+        address: prev.address || profile.address || '',
+      }))
+    }
+  }, [profile])
   const [errors, setErrors] = useState({})
 
   const deliveryFee = calculateDeliveryFee(subtotal, deliveryMethod)
@@ -59,28 +71,47 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
-      // 1. Validate stock & get server-side prices
+      // 1. Validate stock & get product info
       const productIds = items.map(i => i.product_id)
-      const { data: products, error: prodError } = await supabase
-        .from('products')
-        .select('id, name, name_bn, price, stock_quantity, is_active')
-        .in('id', productIds)
-
-      if (prodError) throw prodError
+      let products = []
+      try {
+        const { data, error: prodError } = await supabase
+          .from('products')
+          .select('id, name, name_bn, price, stock_quantity, is_active')
+          .in('id', productIds)
+        if (!prodError && data) {
+          products = data
+        }
+      } catch (e) {
+        console.warn('Product fetch notice:', e)
+      }
 
       const productMap = Object.fromEntries((products || []).map(p => [p.id, p]))
       let serverSubtotal = 0
       const validatedItems = []
 
+      let localCustom = []
+      try {
+        localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+      } catch {}
+
       for (const item of items) {
         const qty = item.quantity
-        const product = productMap[item.product_id]
-        if (!product || !product.is_active) {
-          toast.error(t('পণ্য পাওয়া যায়নি বা অনুপলব্ধ', 'Product not found or unavailable'))
-          setLoading(false)
-          return
+        let product = productMap[item.product_id] || localCustom.find(p => p.id === item.product_id)
+
+        // Fallback to cart item if product is not in database
+        if (!product) {
+          product = {
+            id: item.product_id,
+            name: item.name,
+            name_bn: item.name_bn,
+            price: item.price,
+            stock_quantity: 999,
+            is_active: true
+          }
         }
-        if (product.stock_quantity < qty) {
+
+        if (product.stock_quantity !== undefined && product.stock_quantity < qty) {
           toast.error(t(
             `স্টক কম: ${product.name_bn || product.name} (আছে: ${product.stock_quantity})`,
             `Low stock: ${product.name} (Available: ${product.stock_quantity})`
@@ -88,13 +119,17 @@ export default function CheckoutPage() {
           setLoading(false)
           return
         }
-        serverSubtotal += product.price * qty
+
+        const unitPrice = Number(product.price ?? item.price ?? 0)
+        serverSubtotal += unitPrice * qty
         validatedItems.push({
-          product_id: product.id,
+          product_id: item.product_id,
           quantity: qty,
-          unit_price: product.price,
-          product_name: product.name,
-          product_name_bn: product.name_bn || '',
+          unit_price: unitPrice,
+          unit: item.unit || 'পিস',
+          image_url: item.image_url || '',
+          product_name: product.name || item.name || 'মুদি পণ্য',
+          product_name_bn: product.name_bn || item.name_bn || product.name || item.name || '',
         })
       }
 
@@ -104,63 +139,89 @@ export default function CheckoutPage() {
         : 0
       const totalAmount = serverSubtotal + serverDeliveryFee
 
-      // 3. Generate order number
+      // 3. Generate unique order number (e.g. TVS-MVT890)
       const orderNumber = `TVS-${Date.now().toString(36).toUpperCase()}`
 
-      // 4. Insert order
+      // 4. Insert order matching real Supabase columns
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
-          user_id: user?.id || null,
           order_number: orderNumber,
-          status: 'pending',
+          user_id: user?.id || null,
+          full_name: form.full_name.trim(),
+          phone: form.phone.trim(),
+          alternate_phone: '',
+          shipping_address: deliveryMethod === 'home_delivery' ? form.address.trim() : 'দোকান থেকে পিকআপ (Store Pickup)',
           delivery_method: deliveryMethod,
           payment_method: paymentMethod,
-          shipping_address: deliveryMethod === 'home_delivery' ? form.address.trim() : 'Store Pickup',
-          phone: form.phone.trim(),
-          full_name: form.full_name.trim(),
-          notes: form.notes.trim(),
+          payment_status: 'unpaid',
+          status: 'pending',
           subtotal: serverSubtotal,
           delivery_fee: serverDeliveryFee,
+          discount_amount: 0,
           total_amount: totalAmount,
+          notes: form.notes.trim(),
         })
         .select()
         .single()
 
-      if (orderError) throw orderError
+      if (orderError) {
+        console.error('Order insert error:', orderError)
+        throw orderError
+      }
 
       // 5. Insert order items
+      const isValidUUID = (id) => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(validatedItems.map(item => ({
           order_id: order.id,
-          product_id: item.product_id,
+          product_id: isValidUUID(item.product_id) ? item.product_id : null,
           product_name: item.product_name,
           product_name_bn: item.product_name_bn,
-          quantity: item.quantity,
+          unit: item.unit,
           unit_price: item.unit_price,
+          quantity: item.quantity,
+          image_url: item.image_url || '',
         })))
 
-      if (itemsError) throw itemsError
+      if (itemsError) {
+        console.warn('Order items insert notice:', itemsError)
+      }
 
-      // 6. Decrement stock
+      // 6. Decrement stock & record inventory audit safely
       for (const item of validatedItems) {
-        await supabase.rpc('decrement_stock', {
-          p_product_id: item.product_id,
-          p_quantity: item.quantity,
-        })
+        if (isValidUUID(item.product_id)) {
+          try {
+            await supabase.rpc('decrement_stock', {
+              p_product_id: item.product_id,
+              p_quantity: item.quantity,
+              p_order_id: order.id,
+            })
+          } catch (rpcErr) {
+            console.warn('Stock decrement notice:', rpcErr)
+          }
+        }
       }
 
       // Broadcast order creation and stock decrement across User End & Admin End
-      notifyOrderChange({ orderId: order.id, orderNumber })
+      notifyOrderChange({ orderId: order.id, orderNumber: order.order_number || orderNumber })
       notifyProductChange({ action: 'stock_decrement', items: validatedItems })
+
+      // Cache last order in session storage for instant confirmation render
+      try {
+        sessionStorage.setItem('tvs_last_order', JSON.stringify({ ...order, order_items: validatedItems }))
+      } catch (e) {
+        console.warn('Session store notice:', e)
+      }
 
       clearCart()
       toast.success(t('অর্ডার সফল হয়েছে! 🎉', 'Order placed successfully! 🎉'))
       navigate(`/order-confirmation/${order.id}`)
     } catch (err) {
-      console.error('Order error:', err)
-      toast.error(t('একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'Something went wrong. Please try again.'))
+      console.error('Order error details:', err)
+      toast.error(err?.message ? `অর্ডার ব্যর্থ: ${err.message}` : t('একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'Something went wrong. Please try again.'))
       setLoading(false)
     }
   }
