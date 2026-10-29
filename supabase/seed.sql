@@ -13,7 +13,8 @@ VALUES
   ('c1000000-0000-0000-0000-000000000007', 'Dairy & Eggs', 'দুধ ও ডিম', 'dairy-eggs', '🥚', 7, true),
   ('c1000000-0000-0000-0000-000000000008', 'Tea, Coffee & Beverages', 'চা, কফি ও পানীয়', 'tea-beverages', '☕', 8, true),
   ('c1000000-0000-0000-0000-000000000009', 'Snacks & Bakery', 'নাস্তা ও বিস্কুট', 'snacks-bakery', '🍪', 9, true),
-  ('c1000000-0000-0000-0000-000000000010', 'Cleaning & Household', 'গৃহস্থালি ও পরিচ্ছন্নতা', 'cleaning-household', '🧼', 10, true)
+  ('c1000000-0000-0000-0000-000000000010', 'Cleaning & Household', 'গৃহস্থালি ও পরিচ্ছন্নতা', 'cleaning-household', '🧼', 10, true),
+  ('c1000000-0000-0000-0000-000000000011', 'Sugar & Salt', 'চিনি ও লবণ', 'essentials', '☕', 11, true)
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   name_bn = EXCLUDED.name_bn,
@@ -214,7 +215,7 @@ VALUES
   ),
   (
     'p1000000-0000-0000-0000-000000000013',
-    'c1000000-0000-0000-0000-000000000004',
+    'c1000000-0000-0000-0000-000000000011',
     'ACI Pure Iodized Salt (1kg)',
     'এসিআই পিওর আয়োডিনযুক্ত লবণ (১ কেজি)',
     'Vacuum evaporated high purity iodized white edible salt.',
@@ -223,7 +224,37 @@ VALUES
     45.00,
     200,
     'প্যাকেট',
-    'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?auto=format&fit=crop&w=600&q=80',
+    'https://i.chaldn.com/_mpimage/aci-pure-salt-1-kg?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D47100&q=best&v=1&m=400',
+    true,
+    false
+  ),
+  (
+    'p1000000-0000-0000-0000-000000000041',
+    'c1000000-0000-0000-0000-000000000011',
+    'Fresh Deshi Red Sugar (1kg)',
+    'ফ্রেশ দেশি লাল চিনি (১ কেজি)',
+    'Natural unrefined brown cane sugar rich in minerals and authentic molasses flavor.',
+    'প্রাকৃতিক আখের খাঁটি লাল চিনি, রাসায়নিক মুক্ত ও স্বাস্থ্যকর মিষ্টি স্বাদে সেরা।',
+    145.00,
+    155.00,
+    80,
+    'কেজি',
+    'https://i.chaldn.com/_mpimage/fresh-refined-sugar-1-kg?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D113128&q=best&v=1&m=400',
+    true,
+    true
+  ),
+  (
+    'p1000000-0000-0000-0000-000000000042',
+    'c1000000-0000-0000-0000-000000000011',
+    'Fresh Refined White Sugar (1kg)',
+    'ফ্রেশ পরিশোধিত সাদা চিনি (১ কেজি)',
+    '100% pure crystal refined white sugar for daily tea, sweets, and family cooking.',
+    'চকচকে স্ফটিক দানা পরিশোধিত সাদা চিনি, চা ও মিষ্টি রান্নার জন্য নির্ভরযোগ্য।',
+    135.00,
+    140.00,
+    120,
+    'কেজি',
+    'https://i.chaldn.com/_mpimage/fresh-refined-sugar-1-kg?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D113128&q=best&v=1&m=400',
     true,
     false
   ),
@@ -383,7 +414,7 @@ VALUES
     150.00,
     90,
     'প্যাকেট',
-    '/images/wheel-detergent-powder.jpg',
+    'https://i.chaldn.com/_mpimage/wheel-washing-powder-2-in-1-clean-fresh-1-kg?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D128372&q=best&v=1&m=400',
     true,
     true
   ),
@@ -398,9 +429,24 @@ VALUES
     140.00,
     75,
     'বোতল',
-    'https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=600&q=80',
+    'https://i.chaldn.com/_mpimage/vim-dishwashing-liquid-free-container-500-ml?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D109537&q=best&v=1&m=400',
     true,
     false
+  ),
+  (
+    'p1000000-0000-0000-0000-000000000025',
+    'c1000000-0000-0000-0000-000000000010',
+    'Harpic Liquid Toilet Cleaner Original (750ml)',
+    'হারপিক টয়লেট ক্লিনার ওরিজিনাল (৭৫০ মিলি)',
+    'Thick liquid formula that kills 99.9% of germs and removes tough stains.',
+    'জীবাণু ধ্বংস ও বাথরুমের দাগ দূর করতে ১০০% কার্যকর হারপিক ক্লিনার।',
+    175.00,
+    190.00,
+    60,
+    'বোতল',
+    'https://i.chaldn.com/_mpimage/harpic-liquid-toilet-cleaner-original-750-ml?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D169613&q=best&v=1&m=400',
+    true,
+    true
   )
 ON CONFLICT (id) DO UPDATE SET
   category_id = EXCLUDED.category_id,

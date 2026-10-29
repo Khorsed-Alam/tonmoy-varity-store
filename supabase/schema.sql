@@ -6,11 +6,12 @@
 -- 100% Production-Grade Supabase PostgreSQL Schema, RLS Policies, Triggers & Seed Data
 -- ======================================================================================
 
--- 1. Enable required PostgreSQL extensions
+-- 0. Enable required PostgreSQL extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. Clean Reset: Drop existing tables if re-running (ensures fresh tables with all columns)
+-- Clean Reset: Drop existing tables if re-running
+DROP TABLE IF EXISTS public.inventory_transactions CASCADE;
 DROP TABLE IF EXISTS public.order_items CASCADE;
 DROP TABLE IF EXISTS public.orders CASCADE;
 DROP TABLE IF EXISTS public.products CASCADE;
@@ -19,139 +20,227 @@ DROP TABLE IF EXISTS public.profiles CASCADE;
 DROP TABLE IF EXISTS public.shop_settings CASCADE;
 
 -- ======================================================================================
--- 3. Profiles Table (Linked with Supabase auth.users)
+-- 1. CUSTOMER PROFILES
 -- ======================================================================================
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  full_name TEXT NOT NULL DEFAULT '',
-  phone TEXT NOT NULL DEFAULT '',
-  address TEXT NOT NULL DEFAULT '',
-  city TEXT NOT NULL DEFAULT 'বগুড়া',
-  area TEXT NOT NULL DEFAULT 'নারুয়ামালা',
+CREATE TABLE public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT,
+  phone TEXT,
+  address TEXT,
+  city TEXT DEFAULT 'বগুড়া',
+  area TEXT DEFAULT 'নারুয়ামালা',
   avatar_url TEXT DEFAULT '',
-  role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+  role TEXT NOT NULL DEFAULT 'customer'
+    CHECK (role IN ('customer', 'admin')),
+  preferred_language TEXT NOT NULL DEFAULT 'bn'
+    CHECK (preferred_language IN ('bn', 'en')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ======================================================================================
--- 4. Categories Table (Aligned with Stitch Design System)
+-- 2. CATEGORIES
 -- ======================================================================================
-CREATE TABLE IF NOT EXISTS public.categories (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+CREATE TABLE public.categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  name_bn TEXT NOT NULL,
+  name_bn TEXT,
   slug TEXT NOT NULL UNIQUE,
+  image_url TEXT,
   icon TEXT DEFAULT '📦',
-  icon_name TEXT DEFAULT 'inventory_2', -- Material Symbols Outlined icon name (grain, oil_barrel, soup_kitchen, etc.)
-  description_bn TEXT DEFAULT '',
-  subcategories TEXT[] DEFAULT '{}',
-  item_count INT DEFAULT 0,
-  sort_order INT DEFAULT 0,
+  description TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ======================================================================================
--- 5. Products Table (With Subcategories, Packaging Tags, Units & Cost Price)
+-- 3. PRODUCTS
 -- ======================================================================================
-CREATE TABLE IF NOT EXISTS public.products (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
+CREATE TABLE public.products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category_id UUID REFERENCES public.categories(id)
+    ON DELETE SET NULL,
   category_slug TEXT DEFAULT '',
-  subcategory TEXT DEFAULT '', -- e.g. মিনিকেট, নাজিরশাইল, সয়াবিন তেল
+  subcategory TEXT DEFAULT '',
   name TEXT NOT NULL,
-  name_bn TEXT NOT NULL,
-  description TEXT DEFAULT '',
-  description_bn TEXT DEFAULT '',
-  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
-  original_price NUMERIC(10, 2) CHECK (original_price IS NULL OR original_price >= price),
-  cost_price NUMERIC(10, 2) CHECK (cost_price IS NULL OR cost_price >= 0), -- For admin profit margin reporting
-  stock_quantity INT NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
-  unit TEXT NOT NULL DEFAULT 'কেজি', -- e.g. ২৫ কেজি, ১ কেজি, ৫০০ মিলি, ৫ লিটার
-  tag TEXT DEFAULT '', -- e.g. ফ্রেশ প্যাক, ২৫ কেজি বস্তা, সেরা মান, পোলাও স্পেশাল, ৩০ ছাড়
-  image_url TEXT DEFAULT '',
+  name_bn TEXT,
+  slug TEXT NOT NULL UNIQUE,
+  description TEXT,
+  description_bn TEXT,
+  sku TEXT UNIQUE,
+  price NUMERIC(12,2) NOT NULL CHECK (price >= 0),
+  compare_at_price NUMERIC(12,2)
+    CHECK (compare_at_price IS NULL OR compare_at_price >= 0),
+  cost_price NUMERIC(12,2) CHECK (cost_price IS NULL OR cost_price >= 0),
+  unit TEXT NOT NULL DEFAULT 'pcs',
+  stock_quantity INTEGER NOT NULL DEFAULT 0
+    CHECK (stock_quantity >= 0),
+  tag TEXT DEFAULT '',
+  image_url TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
   is_featured BOOLEAN NOT NULL DEFAULT false,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+  -- Backward-compatibility virtual column for existing components
+  original_price NUMERIC(12,2) GENERATED ALWAYS AS (compare_at_price) STORED,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ======================================================================================
--- 6. Orders Table (With Guest Checkout, TrxID, Payment Status & Time Slot)
+-- 4. ORDERS
 -- ======================================================================================
-CREATE TABLE IF NOT EXISTS public.orders (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  order_number TEXT NOT NULL UNIQUE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Nullable to allow instant guest checkout
-  full_name TEXT NOT NULL DEFAULT '',
-  phone TEXT NOT NULL DEFAULT '',
-  alternate_phone TEXT DEFAULT '',
-  shipping_address TEXT NOT NULL DEFAULT '',
-  delivery_method TEXT NOT NULL CHECK (delivery_method IN ('home_delivery', 'store_pickup')),
-  payment_method TEXT NOT NULL CHECK (payment_method IN ('cash_on_delivery', 'pay_at_store', 'bkash', 'nagad', 'rocket')),
-  payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'refunded')),
-  transaction_id TEXT DEFAULT '', -- For bKash / Nagad TrxID verification
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'processing', 'ready', 'out_for_delivery', 'delivered', 'cancelled')),
-  subtotal NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (subtotal >= 0),
-  delivery_fee NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (delivery_fee >= 0),
-  discount_amount NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (discount_amount >= 0),
-  total_amount NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (total_amount >= 0),
-  notes TEXT DEFAULT '',
-  delivery_time_slot TEXT DEFAULT '', -- e.g. ৬০ মিনিট এক্সপ্রেস ডেলিভারি
-  assigned_delivery_man TEXT DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+CREATE TABLE public.orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
+  user_id UUID REFERENCES public.profiles(id)
+    ON DELETE SET NULL,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT NOT NULL,
+  delivery_address TEXT,
+  fulfillment_type TEXT NOT NULL DEFAULT 'delivery'
+    CHECK (fulfillment_type IN ('delivery', 'pickup')),
+  payment_method TEXT NOT NULL DEFAULT 'cod'
+    CHECK (payment_method IN ('cod', 'store_pickup', 'cash_on_delivery', 'pay_at_store', 'bkash', 'nagad')),
+  payment_status TEXT NOT NULL DEFAULT 'unpaid'
+    CHECK (payment_status IN ('unpaid', 'paid', 'refunded')),
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN (
+      'pending', 'confirmed', 'processing',
+      'ready_for_pickup', 'shipped', 'delivered', 'cancelled'
+    )),
+  subtotal NUMERIC(12,2) NOT NULL DEFAULT 0
+    CHECK (subtotal >= 0),
+  delivery_fee NUMERIC(12,2) NOT NULL DEFAULT 0
+    CHECK (delivery_fee >= 0),
+  discount NUMERIC(12,2) NOT NULL DEFAULT 0
+    CHECK (discount >= 0),
+  total NUMERIC(12,2) NOT NULL DEFAULT 0
+    CHECK (total >= 0),
+  notes TEXT,
+  -- Backward-compatibility virtual columns for existing UI & dashboards
+  full_name TEXT GENERATED ALWAYS AS (customer_name) STORED,
+  phone TEXT GENERATED ALWAYS AS (customer_phone) STORED,
+  shipping_address TEXT GENERATED ALWAYS AS (delivery_address) STORED,
+  delivery_method TEXT GENERATED ALWAYS AS (fulfillment_type) STORED,
+  total_amount NUMERIC(12,2) GENERATED ALWAYS AS (total) STORED,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ======================================================================================
--- 7. Order Items Table (With Unit, Snapshot Price & Generated Total)
+-- 5. ORDER ITEMS
 -- ======================================================================================
-CREATE TABLE IF NOT EXISTS public.order_items (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE NOT NULL,
-  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+CREATE TABLE public.order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES public.orders(id)
+    ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id)
+    ON DELETE SET NULL,
   product_name TEXT NOT NULL,
-  product_name_bn TEXT DEFAULT '',
-  unit TEXT DEFAULT 'কেজি',
-  unit_price NUMERIC(10, 2) NOT NULL CHECK (unit_price >= 0),
-  quantity INT NOT NULL CHECK (quantity > 0),
-  image_url TEXT DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+  product_name_bn TEXT,
+  sku TEXT,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  unit_price NUMERIC(12,2) NOT NULL CHECK (unit_price >= 0),
+  line_total NUMERIC(12,2) NOT NULL CHECK (line_total >= 0),
+  -- Backward-compatibility virtual column for legacy components
+  subtotal NUMERIC(12,2) GENERATED ALWAYS AS (line_total) STORED,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ======================================================================================
--- 8. Shop Settings Table (Official Tonmoy Store Configuration)
+-- 6. INVENTORY TRANSACTIONS
 -- ======================================================================================
-CREATE TABLE IF NOT EXISTS public.shop_settings (
-  id TEXT PRIMARY KEY DEFAULT 'default',
-  store_name TEXT NOT NULL DEFAULT 'M/S Tonmoy Varity Store',
-  store_name_bn TEXT NOT NULL DEFAULT 'মেসার্স তন্ময় ভ্যারাইটি স্টোর',
-  proprietor_name TEXT NOT NULL DEFAULT 'মোঃ তৌহিদুল ইসলাম বিন্দু',
-  phone TEXT NOT NULL DEFAULT '01717-999460',
-  bkash_number TEXT NOT NULL DEFAULT '01717-999460',
-  nagad_number TEXT NOT NULL DEFAULT '01717-999460',
-  address TEXT NOT NULL DEFAULT 'হাজি ইউসুফ আলী মার্কেট, নারুয়ামালা হাট, গাবতলী, বগুড়া',
-  delivery_fee NUMERIC(10, 2) NOT NULL DEFAULT 50,
-  free_delivery_threshold NUMERIC(10, 2) NOT NULL DEFAULT 500,
-  open_hours TEXT NOT NULL DEFAULT 'প্রতিদিন: সকাল ৭টা – রাত ১১টা (সপ্তাহে ৭ দিন খোলা)',
-  announcement_banner TEXT DEFAULT '🛵 আশেপাশের এলাকায় ৬০ মিনিটে ফ্রি ডেলিভারি (৳৫০০+ অর্ডারে)!',
-  home_delivery_enabled BOOLEAN NOT NULL DEFAULT true,
-  store_pickup_enabled BOOLEAN NOT NULL DEFAULT true,
-  cod_enabled BOOLEAN NOT NULL DEFAULT true,
-  bkash_enabled BOOLEAN NOT NULL DEFAULT true,
-  pay_at_store_enabled BOOLEAN NOT NULL DEFAULT true,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+CREATE TABLE public.inventory_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES public.products(id)
+    ON DELETE SET NULL,
+  changed_by UUID REFERENCES public.profiles(id)
+    ON DELETE SET NULL,
+  transaction_type TEXT NOT NULL
+    CHECK (transaction_type IN (
+      'stock_in', 'stock_out', 'sale',
+      'sale_cancelled', 'adjustment'
+    )),
+  quantity_change INTEGER NOT NULL
+    CHECK (quantity_change <> 0),
+  stock_before INTEGER NOT NULL CHECK (stock_before >= 0),
+  stock_after INTEGER NOT NULL CHECK (stock_after >= 0),
+  order_id UUID REFERENCES public.orders(id)
+    ON DELETE SET NULL,
+  note TEXT,
+  -- Backward-compatibility virtual columns
+  quantity INTEGER GENERATED ALWAYS AS (quantity_change) STORED,
+  previous_stock INTEGER GENERATED ALWAYS AS (stock_before) STORED,
+  new_stock INTEGER GENERATED ALWAYS AS (stock_after) STORED,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ======================================================================================
--- 9. Automatic Updated At Timestamp Function & Triggers
+-- 7. SHOP SETTINGS
+-- ======================================================================================
+CREATE TABLE public.shop_settings (
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  shop_name TEXT NOT NULL DEFAULT 'Tonmoy Varity Store',
+  shop_name_bn TEXT NOT NULL DEFAULT 'তন্ময় ভ্যারাইটি স্টোর',
+  currency TEXT NOT NULL DEFAULT 'BDT',
+  delivery_fee NUMERIC(12,2) NOT NULL DEFAULT 0
+    CHECK (delivery_fee >= 0),
+  free_delivery_threshold NUMERIC(12,2)
+    CHECK (
+      free_delivery_threshold IS NULL
+      OR free_delivery_threshold >= 0
+    ),
+  pickup_enabled BOOLEAN NOT NULL DEFAULT true,
+  delivery_enabled BOOLEAN NOT NULL DEFAULT true,
+  contact_phone TEXT,
+  -- Backward-compatibility virtual columns
+  store_name TEXT GENERATED ALWAYS AS (shop_name) STORED,
+  store_name_bn TEXT GENERATED ALWAYS AS (shop_name_bn) STORED,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Initial default settings row
+INSERT INTO public.shop_settings (
+  id, shop_name, shop_name_bn, currency, delivery_fee, free_delivery_threshold, pickup_enabled, delivery_enabled, contact_phone
+)
+VALUES (
+  1,
+  'Tonmoy Varity Store',
+  'মেসার্স তন্ময় ভ্যারাইটি স্টোর',
+  'BDT',
+  50,
+  500,
+  true,
+  true,
+  '01717-999460'
+)
+ON CONFLICT (id) DO UPDATE SET
+  shop_name = EXCLUDED.shop_name,
+  shop_name_bn = EXCLUDED.shop_name_bn,
+  delivery_fee = EXCLUDED.delivery_fee,
+  free_delivery_threshold = EXCLUDED.free_delivery_threshold,
+  pickup_enabled = EXCLUDED.pickup_enabled,
+  delivery_enabled = EXCLUDED.delivery_enabled,
+  contact_phone = EXCLUDED.contact_phone;
+
+-- ======================================================================================
+-- 8. INDEXES FOR HIGH-EFFICIENCY LOOKUPS
+-- ======================================================================================
+CREATE INDEX products_category_idx ON public.products(category_id);
+CREATE INDEX products_active_idx ON public.products(is_active);
+CREATE INDEX orders_user_idx ON public.orders(user_id);
+CREATE INDEX orders_status_idx ON public.orders(status);
+CREATE INDEX orders_created_idx ON public.orders(created_at DESC);
+CREATE INDEX order_items_order_idx ON public.order_items(order_id);
+CREATE INDEX inventory_product_idx ON public.inventory_transactions(product_id);
+
+-- ======================================================================================
+-- 9. AUTOMATIC TIMESTAMP TRIGGER (updated_at)
 -- ======================================================================================
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = timezone('utc'::text, now());
+  NEW.updated_at = now();
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -159,11 +248,6 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS tr_profiles_updated_at ON public.profiles;
 CREATE TRIGGER tr_profiles_updated_at
   BEFORE UPDATE ON public.profiles
-  FOR EACH ROW EXECUTE PROCEDURE public.set_updated_at();
-
-DROP TRIGGER IF EXISTS tr_categories_updated_at ON public.categories;
-CREATE TRIGGER tr_categories_updated_at
-  BEFORE UPDATE ON public.categories
   FOR EACH ROW EXECUTE PROCEDURE public.set_updated_at();
 
 DROP TRIGGER IF EXISTS tr_products_updated_at ON public.products;
@@ -182,18 +266,19 @@ CREATE TRIGGER tr_shop_settings_updated_at
   FOR EACH ROW EXECUTE PROCEDURE public.set_updated_at();
 
 -- ======================================================================================
--- 10. Automatically Create Profile on User Sign Up (Supabase Auth Hook)
+-- 10. AUTH TRIGGER: Automatically create profile on new user sign-up
 -- ======================================================================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, phone, address, role)
+  INSERT INTO public.profiles (id, full_name, phone, address, role, preferred_language)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
     COALESCE(NEW.raw_user_meta_data->>'phone', ''),
     COALESCE(NEW.raw_user_meta_data->>'address', ''),
-    COALESCE(NEW.raw_user_meta_data->>'role', 'customer')
+    COALESCE(NEW.raw_user_meta_data->>'role', 'customer'),
+    COALESCE(NEW.raw_user_meta_data->>'preferred_language', 'bn')
   )
   ON CONFLICT (id) DO UPDATE SET
     full_name = EXCLUDED.full_name,
@@ -208,7 +293,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- ======================================================================================
--- 11. Helper Function: Check if the currently authenticated user is Admin
+-- 11. HELPER: Admin Check Function
 -- ======================================================================================
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
@@ -221,152 +306,191 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
 -- ======================================================================================
--- 12. RPC Function: Server-side Stock Decrement on Order Placed
+-- 12. RPC FUNCTION: Atomic Server-Side Stock Decrement & Transaction Audit
 -- ======================================================================================
-CREATE OR REPLACE FUNCTION public.decrement_stock(p_product_id UUID, p_quantity INT)
+CREATE OR REPLACE FUNCTION public.decrement_stock(p_product_id UUID, p_quantity INT, p_order_id UUID DEFAULT NULL)
 RETURNS VOID AS $$
+DECLARE
+  v_before INT;
+  v_after INT;
 BEGIN
-  UPDATE public.products
-  SET stock_quantity = GREATEST(0, stock_quantity - p_quantity),
-      updated_at = timezone('utc'::text, now())
-  WHERE id = p_product_id;
+  SELECT stock_quantity INTO v_before FROM public.products WHERE id = p_product_id;
+  IF FOUND THEN
+    v_after := GREATEST(0, v_before - p_quantity);
+    UPDATE public.products
+    SET stock_quantity = v_after,
+        updated_at = now()
+    WHERE id = p_product_id;
+
+    INSERT INTO public.inventory_transactions (
+      product_id, changed_by, transaction_type, quantity_change, stock_before, stock_after, order_id, note
+    ) VALUES (
+      p_product_id, auth.uid(), 'sale', -p_quantity, v_before, v_after, p_order_id, 'Customer order checkout'
+    );
+  END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ======================================================================================
--- 13. Enable Row Level Security (RLS) on all tables
+-- 13. ROW LEVEL SECURITY (RLS) POLICIES
 -- ======================================================================================
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.shop_settings ENABLE ROW LEVEL SECURITY;
+alter table public.profiles enable row level security;
+alter table public.categories enable row level security;
+alter table public.products enable row level security;
+alter table public.orders enable row level security;
+alter table public.order_items enable row level security;
+alter table public.inventory_transactions enable row level security;
+alter table public.shop_settings enable row level security;
+
+-- --------------------------------------------------------------------------------------
+-- Categories RLS
+-- --------------------------------------------------------------------------------------
+-- Public can read active categories
+drop policy if exists "Public read active categories" on public.categories;
+create policy "Public read active categories"
+on public.categories for select
+to anon, authenticated
+using (is_active = true);
+
+drop policy if exists "Admins manage all categories" on public.categories;
+create policy "Admins manage all categories"
+on public.categories for all
+to authenticated
+using (public.is_admin());
+
+-- --------------------------------------------------------------------------------------
+-- Products RLS
+-- --------------------------------------------------------------------------------------
+-- Public can read active products
+drop policy if exists "Public read active products" on public.products;
+create policy "Public read active products"
+on public.products for select
+to anon, authenticated
+using (is_active = true);
+
+drop policy if exists "Admins manage all products" on public.products;
+create policy "Admins manage all products"
+on public.products for all
+to authenticated
+using (public.is_admin());
+
+-- --------------------------------------------------------------------------------------
+-- Profiles RLS
+-- --------------------------------------------------------------------------------------
+-- Customers can read their own profile
+drop policy if exists "Read own profile" on public.profiles;
+create policy "Read own profile"
+on public.profiles for select
+to authenticated
+using (id = (select auth.uid()));
+
+drop policy if exists "Admins read all profiles" on public.profiles;
+create policy "Admins read all profiles"
+on public.profiles for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "Users can insert own profile" on public.profiles;
+create policy "Users can insert own profile"
+on public.profiles for insert
+to authenticated
+with check (id = (select auth.uid()));
+
+drop policy if exists "Users can update own profile" on public.profiles;
+create policy "Users can update own profile"
+on public.profiles for update
+to authenticated
+using (id = (select auth.uid()) or public.is_admin());
+
+-- --------------------------------------------------------------------------------------
+-- Orders RLS
+-- --------------------------------------------------------------------------------------
+-- Customers can read their own orders
+drop policy if exists "Read own orders" on public.orders;
+create policy "Read own orders"
+on public.orders for select
+to authenticated
+using (user_id = (select auth.uid()));
+
+drop policy if exists "Admins read all orders" on public.orders;
+create policy "Admins read all orders"
+on public.orders for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "Anyone can create orders" on public.orders;
+create policy "Anyone can create orders"
+on public.orders for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Admins can update orders" on public.orders;
+create policy "Admins can update orders"
+on public.orders for update
+to authenticated
+using (public.is_admin());
+
+-- --------------------------------------------------------------------------------------
+-- Order Items RLS
+-- --------------------------------------------------------------------------------------
+-- Customers can read items from their own orders
+drop policy if exists "Read own order items" on public.order_items;
+create policy "Read own order items"
+on public.order_items for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.orders o
+    where o.id = order_items.order_id
+      and o.user_id = (select auth.uid())
+  )
+);
+
+drop policy if exists "Admins read all order items" on public.order_items;
+create policy "Admins read all order items"
+on public.order_items for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "Anyone can insert order items" on public.order_items;
+create policy "Anyone can insert order items"
+on public.order_items for insert
+to anon, authenticated
+with check (true);
+
+-- --------------------------------------------------------------------------------------
+-- Inventory Transactions RLS
+-- --------------------------------------------------------------------------------------
+drop policy if exists "Admins can view inventory transactions" on public.inventory_transactions;
+create policy "Admins can view inventory transactions"
+on public.inventory_transactions for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "System can insert inventory transactions" on public.inventory_transactions;
+create policy "System can insert inventory transactions"
+on public.inventory_transactions for insert
+with check (true);
+
+-- --------------------------------------------------------------------------------------
+-- Shop Settings RLS
+-- --------------------------------------------------------------------------------------
+-- Public can read shop settings
+drop policy if exists "Public read shop settings" on public.shop_settings;
+create policy "Public read shop settings"
+on public.shop_settings for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Admins can update shop settings" on public.shop_settings;
+create policy "Admins can update shop settings"
+on public.shop_settings for all
+to authenticated
+using (public.is_admin());
 
 -- ======================================================================================
--- 14. Profiles RLS Policies
--- ======================================================================================
-DROP POLICY IF EXISTS "Users can view own profile or admins view all" ON public.profiles;
-CREATE POLICY "Users can view own profile or admins view all"
-  ON public.profiles FOR SELECT
-  USING (auth.uid() = id OR public.is_admin());
-
-DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
-CREATE POLICY "Users can insert own profile"
-  ON public.profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
-
-DROP POLICY IF EXISTS "Users can update own profile or admins update all" ON public.profiles;
-CREATE POLICY "Users can update own profile or admins update all"
-  ON public.profiles FOR UPDATE
-  USING (auth.uid() = id OR public.is_admin())
-  WITH CHECK (
-    (auth.uid() = id AND role = (SELECT role FROM public.profiles WHERE id = auth.uid()))
-    OR public.is_admin()
-  );
-
--- ======================================================================================
--- 15. Categories RLS Policies
--- ======================================================================================
-DROP POLICY IF EXISTS "Anyone can view active categories or admins view all" ON public.categories;
-CREATE POLICY "Anyone can view active categories or admins view all"
-  ON public.categories FOR SELECT
-  USING (is_active = true OR public.is_admin());
-
-DROP POLICY IF EXISTS "Admins can insert categories" ON public.categories;
-CREATE POLICY "Admins can insert categories"
-  ON public.categories FOR INSERT
-  WITH CHECK (public.is_admin());
-
-DROP POLICY IF EXISTS "Admins can update categories" ON public.categories;
-CREATE POLICY "Admins can update categories"
-  ON public.categories FOR UPDATE
-  USING (public.is_admin());
-
-DROP POLICY IF EXISTS "Admins can delete categories" ON public.categories;
-CREATE POLICY "Admins can delete categories"
-  ON public.categories FOR DELETE
-  USING (public.is_admin());
-
--- ======================================================================================
--- 16. Products RLS Policies
--- ======================================================================================
-DROP POLICY IF EXISTS "Anyone can view active products or admins view all" ON public.products;
-CREATE POLICY "Anyone can view active products or admins view all"
-  ON public.products FOR SELECT
-  USING (true);
-
-DROP POLICY IF EXISTS "Admins can insert products" ON public.products;
-CREATE POLICY "Admins can insert products"
-  ON public.products FOR INSERT
-  WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Admins can update products" ON public.products;
-CREATE POLICY "Admins can update products"
-  ON public.products FOR UPDATE
-  USING (true);
-
-DROP POLICY IF EXISTS "Admins can delete products" ON public.products;
-CREATE POLICY "Admins can delete products"
-  ON public.products FOR DELETE
-  USING (true);
-
--- ======================================================================================
--- 17. Orders RLS Policies (Allows Guest Checkout without Login!)
--- ======================================================================================
-DROP POLICY IF EXISTS "Anyone can create orders" ON public.orders;
-CREATE POLICY "Anyone can create orders"
-  ON public.orders FOR INSERT
-  WITH CHECK (true); -- Allows both logged-in users and anonymous guests to checkout
-
-DROP POLICY IF EXISTS "Users can view own orders or guest orders by id or admins view all" ON public.orders;
-CREATE POLICY "Users can view own orders or guest orders by id or admins view all"
-  ON public.orders FOR SELECT
-  USING (
-    user_id = auth.uid()
-    OR auth.uid() IS NULL -- Guest order tracking
-    OR public.is_admin()
-  );
-
-DROP POLICY IF EXISTS "Admins can update orders" ON public.orders;
-CREATE POLICY "Admins can update orders"
-  ON public.orders FOR UPDATE
-  USING (public.is_admin());
-
--- ======================================================================================
--- 18. Order Items RLS Policies (Allows Guest Order Item Insertion)
--- ======================================================================================
-DROP POLICY IF EXISTS "Anyone can insert order items" ON public.order_items;
-CREATE POLICY "Anyone can insert order items"
-  ON public.order_items FOR INSERT
-  WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Users can view items of own orders or admins view all" ON public.order_items;
-CREATE POLICY "Users can view items of own orders or admins view all"
-  ON public.order_items FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.orders
-      WHERE orders.id = order_items.order_id
-        AND (orders.user_id = auth.uid() OR auth.uid() IS NULL OR public.is_admin())
-    )
-  );
-
--- ======================================================================================
--- 19. Shop Settings RLS Policies
--- ======================================================================================
-DROP POLICY IF EXISTS "Anyone can read shop settings" ON public.shop_settings;
-CREATE POLICY "Anyone can read shop settings"
-  ON public.shop_settings FOR SELECT
-  USING (true);
-
-DROP POLICY IF EXISTS "Admins can update shop settings" ON public.shop_settings;
-CREATE POLICY "Admins can update shop settings"
-  ON public.shop_settings FOR ALL
-  USING (public.is_admin());
-
--- ======================================================================================
--- 20. Supabase Storage Bucket Setup for Product Images
+-- 14. SUPABASE STORAGE BUCKET FOR PRODUCT IMAGES
 -- ======================================================================================
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('products', 'products', true)
@@ -380,86 +504,44 @@ CREATE POLICY "Public can view product images"
 DROP POLICY IF EXISTS "Admins can upload product images" ON storage.objects;
 CREATE POLICY "Admins can upload product images"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'products' AND public.is_admin());
+  WITH CHECK (bucket_id = 'products');
 
 DROP POLICY IF EXISTS "Admins can update product images" ON storage.objects;
 CREATE POLICY "Admins can update product images"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'products' AND public.is_admin());
+  USING (bucket_id = 'products');
 
 DROP POLICY IF EXISTS "Admins can delete product images" ON storage.objects;
 CREATE POLICY "Admins can delete product images"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'products' AND public.is_admin());
+  USING (bucket_id = 'products');
 
 -- ======================================================================================
--- 21. Indexes for Maximum Performance & Instant Search
--- ======================================================================================
-CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category_id);
-CREATE INDEX IF NOT EXISTS idx_products_category_slug ON public.products(category_slug);
-CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products(is_active);
-CREATE INDEX IF NOT EXISTS idx_products_is_featured ON public.products(is_featured);
-CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
-CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
-CREATE INDEX IF NOT EXISTS idx_orders_order_number ON public.orders(order_number);
-CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON public.order_items(order_id);
-
--- ======================================================================================
--- 22. Initial Seed Data (Tonmoy Store Official Categories, Settings & Authentic Products)
+-- 15. INITIAL SEED DATA (Bangladeshi Grocery Categories & Authentic Products)
 -- ======================================================================================
 
--- Default Shop Settings
-INSERT INTO public.shop_settings (
-  id, store_name, store_name_bn, proprietor_name, phone, bkash_number, nagad_number,
-  address, delivery_fee, free_delivery_threshold, open_hours, announcement_banner
-)
-VALUES (
-  'default',
-  'M/S Tonmoy Varity Store',
-  'মেসার্স তন্ময় ভ্যারাইটি স্টোর',
-  'মোঃ তৌহিদুল ইসলাম বিন্দু',
-  '01717-999460',
-  '01717-999460',
-  '01717-999460',
-  'হাজি ইউসুফ আলী মার্কেট, নারুয়ামালা হাট, গাবতলী, বগুড়া',
-  50,
-  500,
-  'প্রতিদিন: সকাল ৭টা – রাত ১১টা (সপ্তাহে ৭ দিন খোলা)',
-  '🛵 আশেপাশের এলাকায় ৬০ মিনিটে ফ্রি ডেলিভারি (৳৫০০+ অর্ডারে)!'
-)
-ON CONFLICT (id) DO UPDATE SET
-  store_name = EXCLUDED.store_name,
-  store_name_bn = EXCLUDED.store_name_bn,
-  proprietor_name = EXCLUDED.proprietor_name,
-  phone = EXCLUDED.phone,
-  bkash_number = EXCLUDED.bkash_number,
-  nagad_number = EXCLUDED.nagad_number,
-  address = EXCLUDED.address;
-
--- Initial 7 Stitch Grocery Categories
-INSERT INTO public.categories (id, name, name_bn, slug, icon, icon_name, description_bn, subcategories, item_count, sort_order)
+-- 7 Categories
+INSERT INTO public.categories (id, name, name_bn, slug, icon, description, sort_order, is_active)
 VALUES
-  ('c1000000-0000-0000-0000-000000000001', 'Rice & Dal', 'চাল ও ডাল', 'rice-dal', '🌾', 'grain', 'তাজা খাঁটি মানের চাল ও পুষ্টিকর দেশি ডাল', ARRAY['সকল', 'মিনিকেট', 'নাজিরশাইল', 'পোলাও চাল', 'মসুর ডাল', 'মুগ ডাল', 'ছোলা বুট'], 18, 1),
-  ('c1000000-0000-0000-0000-000000000002', 'Edible Oils', 'তেল ও ঘি', 'edible-oil', '🛢️', 'oil_barrel', '১০০% খাঁটি সরিষার তেল ও পুষ্টিকর সয়াবিন তেল', ARRAY['সকল', 'সয়াবিন তেল', 'সরিষার তেল', 'ঘি'], 12, 2),
-  ('c1000000-0000-0000-0000-000000000003', 'Pure Spices', 'মসলাপাতি', 'spices', '🧂', 'soup_kitchen', 'ভেজালমুক্ত খাঁটি গুঁড়া ও আস্ত রান্নার মসলা', ARRAY['সকল', 'হলুদ গুঁড়া', 'মরিচ গুঁড়া', 'জিরা', 'গরম মসলা'], 24, 3),
-  ('c1000000-0000-0000-0000-000000000004', 'Atta & Flour', 'আটা-ময়দা', 'flour', '🌾', 'bakery_dining', 'মিল ফ্রেশ পুষ্টিকর আটা, ময়দা ও সুজি', ARRAY['সকল', 'প্যাকেট আটা', 'খোলা আটা', 'ময়দা', 'সুজি'], 9, 4),
-  ('c1000000-0000-0000-0000-000000000005', 'Sugar & Salt', 'চিনি ও লবণ', 'essentials', '☕', 'kettle', 'দৈনন্দিন রান্নার রিফাইন চিনি ও আয়োডাইজড লবণ', ARRAY['সকল', 'সাদা চিনি', 'দেশি লাল চিনি', 'আয়োডিন লবণ'], 7, 5),
-  ('c1000000-0000-0000-0000-000000000006', 'Biscuits & Tea', 'চা ও বিস্কুট', 'snacks-tea', '🍪', 'coffee', 'সকালের নাস্তা ও বিকেলের চায়ের সেরা আয়োজন', ARRAY['সকল', 'চা পাতা', 'টোস্ট', 'ক্র্যাকার্স', 'নুডলস'], 31, 6),
-  ('c1000000-0000-0000-0000-000000000007', 'Soap & Wash', 'ক্লিনিং', 'soap-cleaning', '🧼', 'sanitizer', 'ঘরের পরিচ্ছন্নতায় বিশ্বস্ত ডিটারজেন্ট ও সাবান', ARRAY['সকল', 'কাপড় ধোয়া', 'বাসন মাজা', 'গায়ে মাখা সাবান'], 15, 7)
+  ('c1000000-0000-0000-0000-000000000001', 'Rice & Dal', 'চাল ও ডাল', 'rice-dal', '🌾', 'তাজা খাঁটি মানের চাল ও পুষ্টিকর দেশি ডাল', 1, true),
+  ('c1000000-0000-0000-0000-000000000002', 'Edible Oils', 'তেল ও ঘি', 'edible-oil', '🛢️', '১০০% খাঁটি সরিষার তেল ও পুষ্টিকর সয়াবিন তেল', 2, true),
+  ('c1000000-0000-0000-0000-000000000003', 'Pure Spices', 'মসলাপাতি', 'spices', '🧂', 'ভেজালমুক্ত খাঁটি গুঁড়া ও আস্ত রান্নার মসলা', 3, true),
+  ('c1000000-0000-0000-0000-000000000004', 'Atta & Flour', 'আটা-ময়দা', 'flour', '🌾', 'মিল ফ্রেশ পুষ্টিকর আটা, ময়দা ও সুজি', 4, true),
+  ('c1000000-0000-0000-0000-000000000005', 'Sugar & Salt', 'চিনি ও লবণ', 'essentials', '☕', 'দৈনন্দিন রান্নার রিফাইন চিনি ও আয়োডাইজড লবণ', 5, true),
+  ('c1000000-0000-0000-0000-000000000006', 'Biscuits & Tea', 'চা ও বিস্কুট', 'snacks-tea', '🍪', 'সকালের নাস্তা ও বিকেলের চায়ের সেরা আয়োজন', 6, true),
+  ('c1000000-0000-0000-0000-000000000007', 'Soap & Wash', 'ক্লিনিং', 'soap-cleaning', '🧼', 'ঘরের পরিচ্ছন্নতায় বিশ্বস্ত ডিটারজেন্ট ও সাবান', 7, true)
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
   name_bn = EXCLUDED.name_bn,
   icon = EXCLUDED.icon,
-  icon_name = EXCLUDED.icon_name,
-  description_bn = EXCLUDED.description_bn,
-  subcategories = EXCLUDED.subcategories,
-  item_count = EXCLUDED.item_count,
+  description = EXCLUDED.description,
   sort_order = EXCLUDED.sort_order;
 
--- Initial Authentic Products from Stitch MCP Design
+-- Initial Products
 INSERT INTO public.products (
-  id, category_id, category_slug, subcategory, name, name_bn, description, description_bn,
-  price, original_price, cost_price, stock_quantity, unit, tag, is_featured, is_active, image_url
+  id, category_id, category_slug, subcategory, name, name_bn, slug, sku,
+  description, description_bn, price, compare_at_price, cost_price, stock_quantity,
+  unit, tag, is_featured, is_active, image_url
 )
 VALUES
   (
@@ -469,6 +551,8 @@ VALUES
     'মিনিকেট',
     'Deshi Miniket Rice Sack (25kg)',
     'দেশি মিনিকেট চাল ২৫ কেজি বস্তা',
+    'deshi-miniket-rice-sack-25kg',
+    'TVS-RIC-001',
     'Premium clean Deshi Miniket rice sealed 25kg woven sack, wholesale price',
     'ঝরঝরে ও সুস্বাদু ২৫ কেজির প্রিমিয়াম দেশি মিনিকেট চালের বস্তা। পারিবারিক ব্যবহারের সেরা চাল।',
     1750.00,
@@ -488,6 +572,8 @@ VALUES
     'নাজিরশাইল',
     'Nazirshail Rice Premium (5kg)',
     'নাজিরশাইল প্রিমিয়াম চাল ৫ কেজি',
+    'nazirshail-rice-premium-5kg',
+    'TVS-RIC-002',
     'Slender grain premium white Najirshail rice 5kg pack',
     'চিকন ও লম্বা দানার ফ্রেশ প্রিমিয়াম নাজিরশাইল চাল। রান্নায় ঝরঝরে ও সুস্বাদু।',
     380.00,
@@ -507,6 +593,8 @@ VALUES
     'পোলাও চাল',
     'Chashi Chinigura Aromatic Rice (1kg)',
     'চাষী সুগন্ধি চিনিগুঁড়া চাল ১ কেজি',
+    'chashi-chinigura-aromatic-rice-1kg',
+    'TVS-RIC-003',
     'Chashi aromatic fragrant Chinigura rice for biryani & polao',
     'পোলাও, বিরিয়ানি ও ক্ষীরের জন্য খাঁটি সুগন্ধি চাষী চিনিগুঁড়া চাল।',
     150.00,
@@ -526,6 +614,8 @@ VALUES
     'মসুর ডাল',
     'Deshi Small Masoor Dal (1kg)',
     'দেশি ছোট মসুর ডাল ১ কেজি',
+    'deshi-small-masoor-dal-1kg',
+    'TVS-DAL-001',
     'Vibrant natural small red lentils (Deshi Masoor Dal)',
     'দ্রুত সিদ্ধ হওয়া খাঁটি দেশি ছোট দানার মসুর ডাল। ওজনে ও মানে শতভাগ খাঁটি।',
     135.00,
@@ -545,6 +635,8 @@ VALUES
     'মুগ ডাল',
     'Deshi Moong Dal Premium (1kg)',
     'দেশি মুগ ডাল প্রিমিয়াম ১ কেজি',
+    'deshi-moong-dal-premium-1kg',
+    'TVS-DAL-002',
     'Golden yellow roasted Moong dal mung beans',
     'ভাজা সুবাস ও প্রিমিয়াম স্বাদের সোনালী দেশি মুগ ডাল।',
     160.00,
@@ -564,6 +656,8 @@ VALUES
     'ছোলা বুট',
     'Fresh Chickpeas / Chhola Boot (1kg)',
     'ছোলা বুট ফ্রেশ ১ কেজি',
+    'fresh-chickpeas-chhola-boot-1kg',
+    'TVS-DAL-003',
     'Wholesome clean brown whole chickpeas',
     'আমদানি করা বড় দানার পরিষ্কার পুষ্টিকর ছোলা বুট। রান্নায় নরম ও সুস্বাদু।',
     110.00,
@@ -583,6 +677,8 @@ VALUES
     'সয়াবিন তেল',
     'Rupchanda Fortified Soybean Oil (5L)',
     'রূপচাঁদা ফর্টিফাইড সয়াবিন তেল ৫ লিটার',
+    'rupchanda-fortified-soybean-oil-5l',
+    'TVS-OIL-001',
     'Vitamin A fortified premium Rupchanda soybean oil 5L bottle',
     'ভিটামিন এ সমৃদ্ধ খাঁটি রূপচাঁদা সয়াবিন তেল ৫ লিটার বোতল।',
     820.00,
@@ -602,6 +698,8 @@ VALUES
     'সরিষার তেল',
     'Pran Pure Mustard Oil (500ml)',
     'প্রাণ খাঁটি সরিষার তেল ৫০০ মিলি',
+    'pran-pure-mustard-oil-500ml',
+    'TVS-OIL-002',
     'Authentic sharp pungent pure mustard oil Pran 500ml',
     'কড়া ঝাঁঝ ও খাঁটি স্বাদের প্রাণ সরিষার তেল ৫০০ মিলি। ভর্তা ও রান্নায় অতুলনীয়।',
     140.00,
@@ -621,6 +719,8 @@ VALUES
     'প্যাকেট আটা',
     'Teer Atta Packet (2kg)',
     'তীর প্যাকেট আটা ২ কেজি',
+    'teer-atta-packet-2kg',
+    'TVS-FLR-001',
     'Teer branded whole wheat flour 2kg hygienic sealed packet',
     'নরম ও স্বাস্থ্যকর লাল আটার রুটির জন্য তীর প্যাকেট আটা ২ কেজি।',
     125.00,
@@ -640,6 +740,8 @@ VALUES
     'হলুদ গুঁড়া',
     'Radhuni Turmeric Powder (200g)',
     'রাঁধুনী খাঁটি হলুদ গুঁড়া ২০০ গ্রাম',
+    'radhuni-turmeric-powder-200g',
+    'TVS-SPC-001',
     'Radhuni pure turmeric powder 200g foil pack',
     'গাঢ় সোনালী রঙ ও খাঁটি ঘ্রাণের রাঁধুনী হলুদ গুঁড়া ২০০ গ্রাম।',
     85.00,
@@ -659,6 +761,8 @@ VALUES
     'দেশি লাল চিনি',
     'Fresh Deshi Red Sugar (1kg)',
     'দেশি লাল চিনি ১ কেজি',
+    'fresh-deshi-red-sugar-1kg',
+    'TVS-SGR-001',
     'Natural unrefined deshi brown sugar 1kg pack',
     'ভেজাল ও রাসায়নিকমুক্ত প্রাকৃতিক দেশি লাল চিনি ১ কেজি। পুষ্টিকর ও সুস্বাদু।',
     140.00,
@@ -678,6 +782,8 @@ VALUES
     'চা পাতা',
     'Ispahani Mirzapore Tea (400g)',
     'ইস্পাহানি মির্জাপুর চা পাতা ৪০০ গ্রাম',
+    'ispahani-mirzapore-tea-400g',
+    'TVS-TEA-001',
     'Ispahani Mirzapore strong blend premium tea 400g pack',
     'কড়া লিকার ও চমৎকার স্বাদের সেরা ইস্পাহানি মির্জাপুর চা পাতা ৪০০ গ্রাম।',
     220.00,
@@ -697,6 +803,8 @@ VALUES
     'গায়ে মাখা সাবান',
     'Lifebuoy Total Soap (100g)',
     'লাইফবয় সাবান ১০০ গ্রাম',
+    'lifebuoy-total-soap-100g',
+    'TVS-SOP-001',
     'Lifebuoy germ protection total soap 100g',
     'জীবাণু থেকে সুরক্ষা ও সতেজতার জন্য লাইফবয় টোটাল সাবান ১০০ গ্রাম।',
     45.00,
@@ -716,6 +824,8 @@ VALUES
     'কাপড় ধোয়া',
     'Rin Power White Detergent (1kg)',
     'রিন ডিটারজেন্ট পাউডার ১ কেজি',
+    'rin-power-white-detergent-1kg',
+    'TVS-DET-001',
     'Rin Power White bright washing powder 1kg packet',
     'কাপড়ের উজ্জ্বল শুভ্রতা ও ময়লা দূরীকরণে রিন পাওয়ার হোয়াইট ডিটারজেন্ট ১ কেজি।',
     160.00,
@@ -728,19 +838,15 @@ VALUES
     true,
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAgTwuP5b0Mf9drDaI0Tm_Gs4pgmqWtmHa6LVfM2KBXBeQA-O2dMvicn9pj-aEtWzxdNDPlokkxtWSzcBL06GHKnhDV3bZvUtYaqmSG7vv1arRccHOYIsXc4LbCqX2N27ConSYj8_ou4tgUP3chM7oH9G6NnWc5AToa67qXa3Ca5aynEIUv4TOzonJkF7zg_oH9EAGRwk0CLjNnCE8oEOhivcPQPkfkQ2t7gFreYQp6JyP7iH1lObtEsA'
   )
-ON CONFLICT (id) DO UPDATE SET
+ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
   name_bn = EXCLUDED.name_bn,
   description = EXCLUDED.description,
   description_bn = EXCLUDED.description_bn,
   price = EXCLUDED.price,
-  original_price = EXCLUDED.original_price,
+  compare_at_price = EXCLUDED.compare_at_price,
   cost_price = EXCLUDED.cost_price,
   stock_quantity = EXCLUDED.stock_quantity,
   unit = EXCLUDED.unit,
   tag = EXCLUDED.tag,
   image_url = EXCLUDED.image_url;
-
--- ======================================================================================
--- 23. Complete!
--- ======================================================================================
