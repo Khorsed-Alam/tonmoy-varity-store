@@ -5,8 +5,8 @@ import { supabase } from '../../lib/supabase'
 import { useCart } from '../../contexts/CartContext'
 import { useLang } from '../../contexts/LanguageContext'
 import { formatCurrency, getProductImageUrl } from '../../lib/utils'
-import { STITCH_SHOP_PRODUCTS } from '../../data/stitchMockData'
 import { useProductSync } from '../../lib/syncEvents'
+import { DEFAULT_CATEGORIES, LEGACY_CATEGORY_MAP } from '../../data/categories'
 import toast from 'react-hot-toast'
 
 export default function ProductDetailPage() {
@@ -21,7 +21,7 @@ export default function ProductDetailPage() {
     try {
       const { data } = await supabase
         .from('products')
-        .select('*, categories(name, name_bn, slug, icon)')
+        .select('*, categories(name, name_bn, slug, image_url)')
         .eq('id', id)
         .single()
 
@@ -39,12 +39,12 @@ export default function ProductDetailPage() {
         }
       } else {
         const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
-        const found = localCustom.find(p => p.id === id) || STITCH_SHOP_PRODUCTS.find(p => p.id === id)
+        const found = localCustom.find(p => p.id === id)
         if (found) setProduct(found)
       }
     } catch {
       const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
-      const found = localCustom.find(p => p.id === id) || STITCH_SHOP_PRODUCTS.find(p => p.id === id)
+      const found = localCustom.find(p => p.id === id)
       if (found) setProduct(found)
     } finally {
       setLoading(false)
@@ -104,28 +104,63 @@ export default function ProductDetailPage() {
   return (
     <div className="animate-fade-in">
       <div className="page-container py-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-brand-muted mb-6">
-          <Link to="/" className="hover:text-brand-dark">{t('হোম', 'Home')}</Link>
-          <span>/</span>
-          <Link to="/shop" className="hover:text-brand-dark">{t('দোকান', 'Shop')}</Link>
-          {product.categories && (
-            <>
+        {/* Breadcrumb Hierarchy */}
+        {(() => {
+          const matchedCat = product.categories ||
+            DEFAULT_CATEGORIES.find(c => c.id === product.category_id || c.slug === product.category_slug) ||
+            (product.category_slug ? DEFAULT_CATEGORIES.find(c => c.slug === LEGACY_CATEGORY_MAP[product.category_slug]?.mainSlug) : null)
+          const catSlug = matchedCat?.slug || product.category_slug || ''
+          const catNameBn = matchedCat?.name_bn || matchedCat?.name || ''
+          const catNameEn = matchedCat?.name || ''
+
+          return (
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-brand-muted mb-6 flex-wrap">
+              <Link to="/" className="hover:text-brand-dark">{t('হোম', 'Home')}</Link>
               <span>/</span>
-              <Link to={`/shop/category/${product.categories.slug}`} className="hover:text-brand-dark">
-                {t(product.categories.name_bn || product.categories.name, product.categories.name)}
-              </Link>
-            </>
-          )}
-          <span>/</span>
-          <span className="text-brand-dark truncate max-w-[120px]">{t(product.name_bn || product.name, product.name)}</span>
-        </div>
+              <Link to="/shop" className="hover:text-brand-dark">{t('দোকান', 'Shop')}</Link>
+              {catSlug && (
+                <>
+                  <span>/</span>
+                  <Link to={`/shop/category/${catSlug}`} className="hover:text-primary font-medium text-brand-dark">
+                    {t(catNameBn, catNameEn)}
+                  </Link>
+                </>
+              )}
+              {product.subcategory && product.subcategory !== 'সকল' && (
+                <>
+                  <span>/</span>
+                  <Link
+                    to={`/shop/category/${catSlug || 'all'}?subcat=${encodeURIComponent(product.subcategory)}`}
+                    className="hover:text-primary text-brand-dark"
+                  >
+                    {product.subcategory}
+                  </Link>
+                </>
+              )}
+              {product.child_subcategory && (
+                <>
+                  <span>/</span>
+                  <Link
+                    to={`/shop/category/${catSlug || 'all'}?subcat=${encodeURIComponent(product.subcategory || '')}&item=${encodeURIComponent(product.child_subcategory)}`}
+                    className="hover:text-primary text-secondary font-medium"
+                  >
+                    {product.child_subcategory}
+                  </Link>
+                </>
+              )}
+              <span>/</span>
+              <span className="text-brand-dark font-bold truncate max-w-[150px] sm:max-w-xs">
+                {t(product.name_bn || product.name, product.name)}
+              </span>
+            </div>
+          )
+        })()}
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image */}
           <div className="rounded-2xl overflow-hidden bg-brand-mint aspect-square relative shadow-card">
             {imageUrl ? (
-              <img src={imageUrl} alt={product.name_bn || product.name} className="w-full h-full object-cover" />
+              <img src={imageUrl} alt={product.name_bn || product.name} className="w-full h-full object-contain p-4" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-8xl">🛒</div>
             )}

@@ -9,11 +9,10 @@ import ProductCard from '../../components/product/ProductCard'
 import { ProductGridSkeleton } from '../../components/product/ProductSkeleton'
 import MarketListModal from '../../components/common/MarketListModal'
 import {
-  STITCH_CATEGORIES,
-  STITCH_ESSENTIALS,
   MUDIKHANA_DOKAN_BANNER,
   HERO_BANNERS,
 } from '../../data/stitchMockData'
+import { DEFAULT_CATEGORIES, ALLOWED_MAIN_SLUGS } from '../../data/categories'
 import toast from 'react-hot-toast'
 
 export default function HomePage() {
@@ -21,7 +20,7 @@ export default function HomePage() {
   const { addItem } = useCart()
   const navigate = useNavigate()
 
-  const [categories, setCategories] = useState([])
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [newProducts, setNewProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -42,43 +41,50 @@ export default function HomePage() {
   const load = useCallback(async () => {
     try {
       const [catRes, featRes, newRes] = await Promise.all([
-        supabase.from('categories').select('*').eq('is_active', true).order('sort_order').limit(10),
-        supabase.from('products').select('*, categories(name, name_bn, slug)').eq('is_featured', true).eq('is_active', true).order('created_at', { ascending: false }).limit(10),
-        supabase.from('products').select('*, categories(name, name_bn, slug)').eq('is_active', true).order('created_at', { ascending: false }).limit(10),
+        supabase.from('categories').select('*').order('sort_order').limit(16),
+        supabase.from('products').select('*, categories(name, name_bn, slug)').eq('is_featured', true).or('is_active.eq.true,is_active.is.null').order('created_at', { ascending: false }).limit(12),
+        supabase.from('products').select('*, categories(name, name_bn, slug)').or('is_active.eq.true,is_active.is.null').order('created_at', { ascending: false }).limit(12),
       ])
 
       const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]').filter(p => p.is_active !== false)
-      const customFeatured = localCustom.filter(p => p.is_featured)
 
       // Merge for New Products
-      const dbNew = newRes.data || []
+      const dbNew = (newRes.data || []).filter(p => p.is_active !== false)
       const newIds = new Set(dbNew.map(p => p.id))
       const combinedNew = [...localCustom.filter(p => !newIds.has(p.id)), ...dbNew]
-      for (const item of STITCH_ESSENTIALS) {
-        if (!newIds.has(item.id) && !combinedNew.some(p => (p.name || '').toLowerCase() === (item.name || '').toLowerCase())) {
-          combinedNew.push(item)
-        }
-      }
 
-      // Merge for Featured Products (New/custom products prioritized so newly added items show up immediately)
-      const dbFeat = featRes.data || []
+      // Merge for Featured Products (Custom products always take top priority so newly added products are immediately visible on the home page)
+      const dbFeat = (featRes.data || []).filter(p => p.is_active !== false)
       const featIds = new Set(dbFeat.map(p => p.id))
-      const combinedFeat = [...localCustom.filter(p => !featIds.has(p.id)), ...dbFeat]
-      for (const item of STITCH_ESSENTIALS) {
-        if (!featIds.has(item.id) && !combinedFeat.some(p => (p.name || '').toLowerCase() === (item.name || '').toLowerCase())) {
-          combinedFeat.push(item)
+      const combinedFeat = [
+        ...localCustom.filter(p => !featIds.has(p.id)),
+        ...dbFeat
+      ]
+
+      // Always strictly use the 7 official main categories
+      let mainCats = DEFAULT_CATEGORIES
+      if (catRes.data && catRes.data.length > 0) {
+        const filtered = catRes.data.filter(c =>
+          ALLOWED_MAIN_SLUGS.includes(c.slug) && (!c.level || c.level === 1)
+        )
+        if (filtered.length >= 7) {
+          mainCats = filtered.sort((a, b) => {
+            const idxA = ALLOWED_MAIN_SLUGS.indexOf(a.slug)
+            const idxB = ALLOWED_MAIN_SLUGS.indexOf(b.slug)
+            return (idxA !== -1 ? idxA : 99) - (idxB !== -1 ? idxB : 99)
+          })
         }
       }
 
-      setCategories(catRes.data && catRes.data.length > 0 ? catRes.data : STITCH_CATEGORIES)
+      setCategories(mainCats)
       setFeaturedProducts(combinedFeat)
       setNewProducts(combinedNew)
     } catch (err) {
       console.warn('HomePage product load error:', err)
-      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
-      setCategories(STITCH_CATEGORIES)
-      setFeaturedProducts([...localCustom.filter(p => p.is_featured), ...STITCH_ESSENTIALS])
-      setNewProducts([...localCustom, ...STITCH_ESSENTIALS])
+      const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]').filter(p => p.is_active !== false)
+      setCategories(DEFAULT_CATEGORIES)
+      setFeaturedProducts(localCustom.filter(p => p.is_featured))
+      setNewProducts(localCustom)
     } finally {
       setLoading(false)
     }
@@ -239,23 +245,32 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Category Grid: 4 cols on phone, 8 cols on tablet/desktop */}
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-2 sm:gap-2.5">
-          {categories.map((cat) => (
+        {/* Category Grid: Responsive 4 cols on mobile, 7 cols on tablet & desktop */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 gap-2 sm:gap-2.5 md:gap-3">
+          {categories.slice(0, 7).map((cat) => (
             <Link
               key={cat.id || cat.slug}
               to={`/shop/category/${cat.slug}`}
-              className="flex flex-col items-center bg-surface-container-lowest rounded-xl p-2 sm:p-2.5 text-center group active:scale-95 transition-all shadow-[0_1px_4px_rgba(0,0,0,0.03)] border border-outline-variant/30 hover:border-primary/40"
+              className="flex flex-col items-center bg-surface-container-lowest rounded-2xl p-2.5 sm:p-3 text-center group active:scale-95 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-outline-variant/30 hover:border-emerald-600 hover:shadow-md hover:-translate-y-0.5"
             >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-secondary-fixed transition-colors">
-                <span className="material-symbols-outlined text-[20px] sm:text-[24px]">
-                  {cat.icon_name || 'shopping_bag'}
-                </span>
+              {/* Circular Icon Container matching Tonmoy / Chaldal style */}
+              <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full bg-emerald-50 text-emerald-800 flex items-center justify-center group-hover:bg-emerald-100 group-hover:scale-105 transition-all mb-1.5 shadow-xs">
+                {cat.icon && !cat.icon_name ? (
+                  <span className="text-[22px] sm:text-[26px]">{cat.icon}</span>
+                ) : (
+                  <span className="material-symbols-outlined text-[22px] sm:text-[26px] text-emerald-700">
+                    {cat.icon_name || 'shopping_bag'}
+                  </span>
+                )}
               </div>
-              <span className="text-[11px] sm:text-xs font-semibold text-on-surface mt-1.5 leading-tight line-clamp-1">
+
+              {/* Bengali Name (Primary Title) */}
+              <span className="text-[11px] sm:text-xs font-bold text-on-surface leading-tight line-clamp-1 group-hover:text-emerald-700 transition-colors">
                 {t(cat.name_bn || cat.name, cat.name)}
               </span>
-              <span className="text-[9px] sm:text-[10px] text-on-surface-variant line-clamp-1">
+
+              {/* English Subtitle */}
+              <span className="text-[9px] sm:text-[10px] text-on-surface-variant font-medium line-clamp-1 mt-0.5">
                 {cat.name}
               </span>
             </Link>
@@ -280,6 +295,10 @@ export default function HomePage() {
 
         {loading ? (
           <ProductGridSkeleton count={6} />
+        ) : featuredProducts.length === 0 ? (
+          <div className="text-center py-8 bg-surface-container-lowest rounded-2xl border border-outline-variant/30 text-xs text-on-surface-variant">
+            {t('বর্তমানে কোনো পণ্য পাওয়া যায়নি। নতুন পণ্য যোগ করুন।', 'No featured products found yet.')}
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3.5 md:gap-4">
             {featuredProducts.map((p) => (
