@@ -1,0 +1,422 @@
+================================================================================
+          TONMOY VARIETY STORE - CATEGORY & SUBCATEGORY DIRECTORY
+                     (চিন্ময় ও তন্ময় ভ্যারাইটি স্টোর)
+================================================================================
+Stitch / Chaldal E-Commerce Architecture (2-Tier Standardized System)
+Level 1: Main Category (প্রধান ক্যাটাগরি)
+Level 2: Subcategory & Items (উপ-ক্যাটাগরি ও পণ্যের তালিকা)
+Generated on: 2026-10-29
+================================================================================
+
+
+1. DAIRY & EGGS (দুধ ও ডিম)
+   Icon: 🥛 | Slug: dairy-eggs
+   Description: তাজা খাঁটি দুধ, ঘি, মাখন, পনির ও পুষ্টিকর ডিম
+--------------------------------------------------------------------------------
+   [1.1] Milk (দুধ)
+         • Full Cream Milk (ফুল ক্রিম দুধ)
+         • Low-Fat Milk (লো-ফ্যাট দুধ)
+         • UHT Milk (ইউএইচটি দুধ)
+         • Powdered Milk (গুঁড়ো দুধ)
+         • Flavored Milk (ফ্লেভার্ড মিল্ক)
+         • Condensed Milk (কনডেন্সড মিল্ক)
+
+   [1.2] Yogurt (দই)
+         • Plain Yogurt (টক দই)
+         • Sweetened Yogurt (মিষ্টি দই)
+         • Greek-Style Yogurt (গ্রিক ইয়োগার্ট)
+         • Flavored Yogurt (ফ্লেভার্ড দই)
+
+   [1.3] Butter & Ghee (মাখন ও ঘি)
+         • Salted Butter (সল্টেড বাটার)
+         • Unsalted Butter (আনসল্টেড বাটার)
+         • Dairy Ghee (গাওয়া ঘি)
+         • Pure Ghee (খাঁটি ঘি)
+
+   [1.4] Cheese (পনির ও চিজ)
+         • Sliced Cheese (স্লাইসড চিজ)
+         • Cheese Blocks (চিজ ব্লক)
+         • Cheese Spread (চিজ স্প্রেড)
+         • Mozzarella (মোজারেলা চিজ)
+         • Processed Cheese (প্রসেসড চিজ)
+
+   [1.5] Cream (ক্রিম)
+         • Fresh Cream (ফ্রেশ ক্রিম)
+         • Whipping Cream (হুইপিং ক্রিম)
+         • Cooking Cream (কুকিং ক্রিম)
+
+   [1.6] Eggs (ডিম)
+         • Chicken Eggs (মুরগির ডিম)
+         • Duck Eggs (হাঁসের ডিম)
+         • Quail Eggs (কোয়েলের ডিম)
+
+
+2. COOKING ESSENTIALS (রান্নার সামগ্রী)
+   Icon: 🌾 | Slug: cooking-essentials
+   Description: চাল, ডাল, আটা, তেল, চিনি, লবণ ও খাঁটি মসলাপাতি
+--------------------------------------------------------------------------------
+   [2.1] Rice (চাল)
+         • Miniket Rice (মিনিকেট চাল)
+         • Nazirshail Rice (নাজিরশাইল চাল)
+         • Basmati Rice (বাসমতী চাল)
+         • Brown Rice (ব্রাউন রাইস / লাল চাল)
+         • Parboiled Rice (সিদ্ধ চাল)
+         • Aromatic Rice (সুগন্ধি পোলাও চাল)
+
+   [2.2] Lentils & Pulses (ডাল ও ডালজাতীয়)
+         • Masoor Dal (মসুর ডাল)
+         • Moong Dal (মুগ ডাল)
+         • Chana Dal (ছোলার ডাল)
+         • Urad Dal (মাষকলাই ডাল)
+         • Chickpeas (ছোলা বুট)
+         • Dried Peas (মটর ডাল)
+
+   [2.3] Flour (আটা ও ময়দা)
+         • Atta (আটা)
+         • Maida (ময়দা)
+         • Whole Wheat Flour (লাল আটা)
+         • Rice Flour (চালের গুঁড়া)
+         • Besan (বেসন)
+         • Semolina (Suji) (সুজি)
+
+   [2.4] Cooking Oil (ভোজ্য তেল)
+         • Soybean Oil (সয়াবিন তেল)
+         • Mustard Oil (সরিষার তেল)
+         • Sunflower Oil (সূর্যমুখী তেল)
+         • Olive Oil (অলিভ অয়েল)
+         • Rice Bran Oil (রাইস ব্রান তেল)
+         • Coconut Oil (নারকেল তেল)
+
+   [2.5] Salt & Sugar (লবণ ও চিনি)
+         • Iodized Salt (আয়োডিনযুক্ত লবণ)
+         • Rock Salt (সৈন্ধব লবণ / বিট লবণ)
+         • White Sugar (সাদা চিনি)
+         • Brown Sugar (দেশি লাল চিনি)
+         • Powdered Sugar (আইসিং সুগার)
+         • Sugar Substitutes (জিরো ক্যালরি সুগার)
+
+   [2.6] Spices (মসলাপাতি)
+         • Turmeric Powder (হলুদ গুঁড়া)
+         • Chili Powder (মরিচ গুঁড়া)
+         • Coriander Powder (ধনে গুঁড়া)
+         • Cumin (জিরা)
+         • Garam Masala (গরম মসলা)
+         • Whole Spices (আস্ত মসলা)
+         • Spice Mixes (রেডি মসলা মিক্স)
+
+   [2.7] Sauces & Condiments (সস ও আচার)
+         • Tomato Ketchup (টমেটো সস)
+         • Soy Sauce (সয়া সস)
+         • Chili Sauce (মরিচ সস)
+         • Mayonnaise (মেয়োনিজ)
+         • Mustard (সরিষার কাসুন্দি)
+         • Vinegar (ভিনেগার)
+         • Pickles (আচার)
+         • Chutney (চাটনি)
+
+
+3. SNACKS & BEVERAGES (নাস্তা ও পানীয়)
+   Icon: 🍪 | Slug: snacks-beverages
+   Description: বিস্কুট, চিপস, চকলেট, চা, কফি, জুস ও কোমল পানীয়
+--------------------------------------------------------------------------------
+   [3.1] Chips & Savory Snacks (চিপস ও চানাচুর)
+         • Potato Chips (আলু চিপস)
+         • Corn Chips (কর্ন চিপস)
+         • Chanachur (চানাচুর)
+         • Nuts & Seeds (বাদাম ও বীজ)
+         • Popcorn (পপকর্ন)
+         • Crackers (নোনতা ক্র্যাকার্স)
+
+   [3.2] Biscuits & Cookies (বিস্কুট ও কুকিজ)
+         • Sweet Biscuits (মিষ্টি বিস্কুট)
+         • Salty Biscuits (নোনতা বিস্কুট)
+         • Cream Biscuits (ক্রিম বিস্কুট)
+         • Cookies (কুকিজ)
+         • Wafers (ওয়েফার)
+         • Crackers (টোস্ট ও ক্র্যাকার্স)
+
+   [3.3] Chocolates & Candy (চকলেট ও ক্যান্ডি)
+         • Chocolate Bars (চকলেট বার)
+         • Boxed Chocolates (বক্স চকলেট)
+         • Toffees (টফি)
+         • Lollipops (ললিপপ)
+         • Chewing Gum (চুয়িংগাম)
+         • Mints (মিন্ট ক্যান্ডি)
+
+   [3.4] Tea & Coffee (চা ও কফি)
+         • Black Tea (ব্ল্যাক টি / পাতা চা)
+         • Green Tea (গ্রিন টি)
+         • Tea Bags (টি ব্যাগ)
+         • Instant Coffee (ইনস্ট্যান্ট কফি)
+         • Ground Coffee (গ্রাউন্ড কফি)
+         • Coffee Mixes (কফি মিক্স)
+         • Milk Tea Mix (দুধ চা মিক্স)
+
+   [3.5] Juice (জুস ও পানীয়)
+         • Fruit Juice (ফলের জুস)
+         • Juice Drinks (জুস ড্রিংকস)
+         • Coconut Water (ডাবের পানি)
+         • Concentrated Juice (কনসেনট্রেটেড স্কোয়াশ)
+
+   [3.6] Soft Drinks (কোমল পানীয়)
+         • Cola (কোলা)
+         • Lemon-Lime Drinks (লেমন-লাইম ড্রিংক)
+         • Orange Drinks (অরেঞ্জ ড্রিংক)
+         • Soda Water (সোডা ওয়াটার)
+         • Energy Drinks (এনার্জি ড্রিংক)
+         • Malt Drinks (মল্ট ড্রিংকস)
+
+   [3.7] Water (খাবার পানি)
+         • Mineral Water (মিনারেল ওয়াটার)
+         • Purified Drinking Water (বিশুদ্ধ পানি)
+         • Sparkling Water (স্পার্কলিং ওয়াটার)
+         • Large Water Bottles (বড় পানির জার)
+
+
+4. BABY CARE (শিশুর যত্ন)
+   Icon: 👶 | Slug: baby-care
+   Description: ডায়াপার, বেবি ওয়াইপস, শিশুর পুষ্টিকর খাবার ও লোশন
+--------------------------------------------------------------------------------
+   [4.1] Diapers (ডায়াপার)
+         • Newborn Diapers (নবজাতকের ডায়াপার)
+         • Small Size (এস সাইজ)
+         • Medium Size (এম সাইজ)
+         • Large Size (এল সাইজ)
+         • Extra-Large Size (এক্সএল সাইজ)
+         • Diaper Pants (প্যান্ট ডায়াপার)
+         • Cloth Diapers (কাপড়ের ডায়াপার)
+
+   [4.2] Baby Wipes (বেবি ওয়াইপস)
+         • Sensitive-Skin Wipes (সেনসিটিভ স্কিন ওয়াইপস)
+         • Fragrance-Free Wipes (সুগন্ধিমুক্ত ওয়াইপস)
+         • Water-Based Wipes (ওয়াটার বেসড ওয়াইপস)
+         • Travel Pack Wipes (ট্রাভেল প্যাক ওয়াইপস)
+
+   [4.3] Baby Food & Formula (শিশুর খাবার ও ফর্মুলা)
+         • Infant Formula (ইনফ্যান্ট ফর্মুলা দুধ)
+         • Follow-On Formula (ফলো-অন ফর্মুলা)
+         • Growing-Up Milk (গ্রোয়িং-আপ মিল্ক)
+         • Baby Cereal (সেরেল্যাক / বেবি সিরিয়াল)
+         • Baby Puree (বেবি পিউরি)
+         • Baby Snacks (শিশুর নাস্তা)
+         • Baby Food Pouches (ফুড পাউচ)
+
+   [4.4] Baby Bath & Skin Care (শিশুর গোসল ও ত্বক)
+         • Baby Shampoo (বেবি শ্যাম্পু)
+         • Baby Body Wash (বেবি বডি ওয়াশ)
+         • Baby Lotion (বেবি লোশন)
+         • Baby Oil (বেবি অয়েল)
+         • Diaper Rash Cream (র‍্যাশ ক্রিম)
+         • Baby Powder (বেবি পাউডার)
+         • Baby Soap (বেবি সোপ)
+
+   [4.5] Baby Accessories (শিশুর অনুষঙ্গ)
+         • Feeding Bottles (ফিডার বোতল)
+         • Nipples & Teats (নিপল ও টিট)
+         • Pacifiers (প্যাসিফায়ার)
+         • Bibs (শিশুর বিব)
+         • Baby Spoons & Bowls (চামচ ও বাটি)
+         • Bottle Cleaning Brushes (বোতল পরিষ্কারের ব্রাশ)
+         • Baby Nail Clippers (নেইল ক্লিপার)
+
+
+5. BEAUTY & PERSONAL CARE (সৌন্দর্য ও ব্যক্তিগত যত্ন)
+   Icon: 💄 | Slug: beauty-personal-care
+   Description: স্কিন কেয়ার, শ্যাম্পু, টুথপেস্ট, সাবান ও ব্যক্তিগত যত্ন
+--------------------------------------------------------------------------------
+   [5.1] Skin Care (ত্বকের যত্ন)
+         • Face Wash (ফেস ওয়াশ)
+         • Moisturizers (ময়েশ্চারাইজার)
+         • Sunscreen (সানস্ক্রিন)
+         • Face Cream (ফেস ক্রিম)
+         • Serums (সিরাম)
+         • Toner (টোনার)
+         • Face Masks (ফেস মাস্ক)
+         • Lip Care (লিপ কেয়ার / বাম)
+
+   [5.2] Hair Care (চুলের যত্ন)
+         • Shampoo (শ্যাম্পু)
+         • Conditioner (কন্ডিশনার)
+         • Hair Oil (চুলের তেল)
+         • Hair Serum (হেয়ার সিরাম)
+         • Hair Color (হেয়ার কালার)
+         • Hair Gel & Wax (হেয়ার জেল ও ওয়াক্স)
+         • Hair Masks (হেয়ার মাস্ক)
+
+   [5.3] Oral Care (মুখের যত্ন)
+         • Toothpaste (টুথপেস্ট)
+         • Toothbrushes (টুথব্রাশ)
+         • Mouthwash (মাউথওয়াশ)
+         • Dental Floss (ডেন্টাল ফ্লস)
+         • Toothpowder (টুথপাউডার)
+         • Tongue Cleaners (জিহ্বা পরিষ্কারক)
+
+   [5.4] Bath & Body (গোসল ও শরীর)
+         • Bath Soap (গোসলের সাবান)
+         • Body Wash (বডি ওয়াশ)
+         • Body Lotion (বডি লোশন)
+         • Body Scrub (বডি স্ক্রাব)
+         • Hand Wash (হ্যান্ড ওয়াশ)
+         • Hand Cream (হ্যান্ড ক্রিম)
+         • Talcum Powder (ট্যালকম পাউডার)
+
+   [5.5] Shaving & Grooming (শেভিং ও গ্রুমিং)
+         • Razors (রেজর / ব্লেড)
+         • Shaving Cream (শেভিং ক্রিম)
+         • Shaving Foam (শেভিং ফোম)
+         • Aftershave (আফটারশেভ)
+         • Beard Oil (দাড়ির তেল)
+         • Hair Removal Products (হেয়ার রিমুভাল ক্রিম)
+
+   [5.6] Deodorants (সুগন্ধি ও ডিওডোরেন্ট)
+         • Roll-On (রোল-অন)
+         • Spray Deodorant (বডি স্প্রে)
+         • Stick Deodorant (স্টিক ডিওডোরেন্ট)
+         • Body Mist (বডি মিস্ট)
+         • Perfume (পারফিউম / আতর)
+
+   [5.7] Feminine Care (নারীর ব্যক্তিগত যত্ন)
+         • Sanitary Pads (স্যানিটারি ন্যাপকিন)
+         • Pantyliners (প্যান্টিলাইনার)
+         • Tampons (ট্যাম্পন)
+         • Menstrual Cups (মেনস্ট্রুয়াল কাপ)
+         • Intimate Wash (ইন্টিমেট ওয়াশ)
+         • Maternity Pads (ম্যাটারনিটি প্যাড)
+
+
+6. CLEANING SUPPLIES / CLEANING & HOUSEHOLD (ক্লিনিং ও গৃহস্থালি)
+   Icon: 🧹 | Slug: cleaning-household
+   Description: ডিটারজেন্ট, ফ্লোর ক্লিনার, টয়লেট ক্লিনার, টিস্যু ও ব্যাগ
+--------------------------------------------------------------------------------
+   [6.1] Dishwashing Supplies (বাসন মাজার সামগ্রী)
+         • Dishwashing Liquid (ডিশওয়াশ লিকুইড)
+         • Dishwashing Bar (ডিশওয়াশ বার / সাবান)
+         • Dishwashing Powder (ডিশওয়াশ পাউডার)
+         • Dishwasher Tablets (ডিশওয়াশার ট্যাবলেট)
+         • Sponges & Scrubbers (স্পঞ্জ ও স্ক্রাবার)
+
+   [6.2] Laundry (লন্ড্রি ও কাপড় ধোয়া)
+         • Detergent Powder (ডিটারজেন্ট পাউডার)
+         • Liquid Detergent (লিকুইড ডিটারজেন্ট)
+         • Detergent Bars (কাপড় কাচার সাবান)
+         • Fabric Softener (ফ্যাব্রিক সফটনার)
+         • Stain Remover (দাগ দূরকারক)
+         • Bleach (ব্লিচিং পাউডার)
+         • Cloth Pegs & Clips (কাপড়ের ক্লিপ ও পিন)
+
+   [6.3] Toilet Cleaners (টয়লেট ক্লিনার)
+         • Toilet Cleaning Liquid (টয়লেট লিকুইড ক্লিনার)
+         • Toilet Cleaning Gel (টয়লেট জেল)
+         • Toilet Blocks (ফ্লাশ ব্লক)
+         • Bathroom Cleaner (বাথরুম ক্লিনার)
+         • Drain Cleaner (ড্রেন ক্লিনার)
+
+   [6.4] Napkins & Paper Products (ন্যাপকিন ও পেপার সামগ্রী)
+         • Facial Tissue (ফেসিয়াল টিস্যু)
+         • Toilet Tissue (টয়লেট টিস্যু রোল)
+         • Kitchen Paper Towels (কিচেন পেপার টাওয়েল)
+         • Paper Napkins (পেপার ন্যাপকিন)
+         • Wet Wipes (ওয়েট ওয়াইপস)
+         • Hand Towels (হ্যান্ড টাওয়েল)
+
+   [6.5] Pest Control (মশা ও কীটনাশক)
+         • Mosquito Aerosol (মশার অ্যারোসল / স্প্রে)
+         • Mosquito Coils (মশার কয়েল)
+         • Liquid Vaporizer & Refill (লিকুইড ভ্যাপোরাইজার ও রিফিল)
+         • Cockroach & Ant Killer (তেলাপোকা ও পিঁপড়া মারার স্প্রে)
+         • Rat Killer (ইঁদুর মারার বিষ / ফাঁদ)
+         • Insect Repellent Chalk (কীটনাশক চক ও পাউডার)
+
+   [6.6] Floor & Glass Cleaners (মেঝে ও গ্লাস ক্লিনার)
+         • Floor Cleaner (ফ্লোর ক্লিনার)
+         • Glass Cleaner (গ্লাস ক্লিনার)
+         • Multi-Purpose Cleaner (মাল্টি-পারপাস ক্লিনার)
+         • Disinfectant Spray (জীবাণুনাশক স্প্রে ও ফিনাইল)
+         • Kitchen Degreaser (কিচেন ক্লিনার)
+         • Furniture Polish (ফার্নিচার পলিশ)
+
+   [6.7] Cleaning Accessories (পরিষ্কারের সরঞ্জাম)
+         • Floor Mops & Wipers (ফ্লোর মপ ও ওয়াইপার)
+         • Brooms & Dustpans (ঝাড়ু ও ডাস্টপ্যান)
+         • Scrubbers & Sponges (স্ক্রাবার ও স্পঞ্জ)
+         • Cleaning Cloths & Dusters (মুছার কাপড় ও ডাস্টার)
+         • Toilet Brushes (টয়লেট ব্রাশ)
+         • Rubber Gloves (ক্লিনিং রাবার গ্লাভস)
+
+   [6.8] Air Fresheners (এয়ার ফ্রেশনার)
+         • Room Spray (রুম স্প্রে)
+         • Aerosol Freshener (অ্যারোসল ফ্রেশনার)
+         • Gel Freshener (জেল ফ্রেশনার)
+         • Toilet Fresheners / Odonil (টয়লেট ফ্রেশনার ও ওডোনিল)
+         • Electric Diffusers (ডিফিউজার ও রিফিল)
+         • Car Freshener (কার ফ্রেশনার)
+
+   [6.9] Disposables & Trash Bags (ডিসপোজেবল ও ট্র্যাশ ব্যাগ)
+         • Garbage Bags (ময়লার ব্যাগ / ট্র্যাশ ব্যাগ)
+         • Drawstring Trash Bags (ড্রস্ট্রিং ডাস্টবিন ব্যাগ)
+         • Aluminum Foil (অ্যালুমিনিয়াম ফয়েল)
+         • Cling Film / Food Wrap (ফুড র‍্যাপিং পেপার / ক্লিঙ ফিল্ম)
+         • Disposable Gloves (ডিসপোজেবল গ্লাভস)
+         • Disposable Food Boxes (ডিসপোজেবল বক্স)
+
+   [6.10] Shoe Care (জুতার যত্ন)
+         • Black Shoe Polish (কালো জুতার পলিশ)
+         • Brown Shoe Polish (বাদামী জুতার পলিশ)
+         • Shoe Shiner Sponge (ইনস্ট্যান্ট জুতার শাইনার)
+         • Liquid Shoe Polish (লিকুইড শু পলিশ)
+         • Shoe Brush (জুতার ব্রাশ)
+         • Shoe Cream (শু ক্রিম)
+
+   [6.11] Trash Bin & Basket (ডাস্টবিন ও ঝুড়ি)
+         • Pedal Trash Bins (প্যাডেল ডাস্টবিন)
+         • Open Waste Bins (ওপেন ডাস্টবিন)
+         • Bathroom Dustbins (বাথরুমের ছোট বিন)
+         • Laundry Baskets (লন্ড্রি বাস্কেট)
+         • Storage Baskets (স্টোরেজ ঝুড়ি)
+
+
+7. STATIONERY & LIFESTYLE (স্টেশনারি ও লাইফস্টাইল)
+   Icon: ✏️ | Slug: stationery-lifestyle
+   Description: খাতা, কলম, ফাইল, ব্যাটারি, লাইটার ও গৃহস্থালি টুকিটাকি
+--------------------------------------------------------------------------------
+   [7.1] Pens & Writing (কলম ও লেখার সামগ্রী)
+         • Ballpoint Pens (বলপয়েন্ট কলম)
+         • Gel Pens (জেল কলম)
+         • Pencils (পেন্সিল)
+         • Highlighters (হাইলাইটার)
+         • Permanent Markers (স্থায়ী মার্কার)
+         • Whiteboard Markers (হোয়াইটবোর্ড মার্কার)
+
+   [7.2] Notebooks & Paper (খাতা ও কাগজ)
+         • Exercise Books (খাতা)
+         • Spiral Notebooks (স্পাইরাল নোটবুক)
+         • Sticky Notes (স্টিকি নোট)
+         • A4 Paper (এ৪ পেপার)
+         • Diary & Planners (ডায়েরি ও প্ল্যানার)
+
+   [7.3] Office Supplies (অফিস সামগ্রী)
+         • Staplers & Pins (স্ট্যাপলার ও পিন)
+         • Paper Clips (পেপার ক্লিপ)
+         • Scissors & Cutters (কাঁচি ও কাটার)
+         • Glue & Adhesive Tape (আঠা ও স্কচটেপ)
+         • Calculators (ক্যালকুলেটর)
+         • Files & Folders (ফাইল ও ফোল্ডার)
+
+   [7.4] Art & Craft (আর্ট ও ক্রাফট)
+         • Color Pencils (রং পেন্সিল)
+         • Crayons (মোম রং / ক্রেয়ন)
+         • Watercolor Sets (জলরং সেট)
+         • Sketchbooks (স্কেচবুক)
+         • Craft Paper (ক্রাফট পেপার)
+
+   [7.5] Party Supplies (পার্টি সামগ্রী)
+         • Balloons (বেলুন)
+         • Birthday Candles (জন্মদিনের মোমবাতি)
+         • Party Poppers (পার্টি পপার)
+         • Disposable Plates & Cups (ডিসপোজেবল প্লেট ও কাপ)
+         • Gift Wraps & Bags (গিফট র‍্যাপ ও ব্যাগ)
+
+================================================================================
+END OF DIRECTORY - TONMOY VARIETY STORE
+================================================================================
+
