@@ -86,7 +86,7 @@ export default function AdminDashboard() {
         products: prodRes.count || 0,
         orders: orderRes.count || 0,
         users: userRes.count || 0,
-        revenue: totalRevenue || 379300,
+        revenue: totalRevenue || 0,
         pendingOrders: pendingRes.count || 0,
         completedOrders: completedRes.count || 0,
         outForDelivery: deliveryRes.count || 0,
@@ -95,11 +95,7 @@ export default function AdminDashboard() {
       setRecentOrders(recentRes.data || [])
       setLowStock(stockRes.data || [])
       setCategories(catRes.data || [])
-
-      // Top products sample or real
-      if (topProdRes.data && topProdRes.data.length > 0) {
-        setTopProducts(topProdRes.data)
-      }
+      setTopProducts(topProdRes.data || [])
     } catch (err) {
       console.error('Error loading dashboard data:', err)
     } finally {
@@ -252,20 +248,21 @@ export default function AdminDashboard() {
     }
   }
 
-  // Calculate dynamic stats based on timeRange
-  const displayedRevenue = useMemo(() => {
-    if (timeRange === 'today') return 18650
-    if (timeRange === 'yesterday') return 16400
-    if (timeRange === 'week') return 95200
-    return stats.revenue || 379300
-  }, [timeRange, stats.revenue])
+  // Calculate dynamic stats based on real data
+  const displayedRevenue = stats.revenue || 0
+  const displayedOrdersCount = stats.orders || 0
 
-  const displayedOrdersCount = useMemo(() => {
-    if (timeRange === 'today') return 22
-    if (timeRange === 'yesterday') return 19
-    if (timeRange === 'week') return 114
-    return stats.orders || 418
-  }, [timeRange, stats.orders])
+  const cashInHand = useMemo(() => {
+    return recentOrders
+      .filter(o => o.payment_method === 'cod' || !o.payment_method)
+      .reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
+  }, [recentOrders])
+
+  const digitalInHand = useMemo(() => {
+    return recentOrders
+      .filter(o => ['bkash', 'nagad', 'online'].includes(o.payment_method))
+      .reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
+  }, [recentOrders])
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in font-sans text-on-surface">
@@ -374,7 +371,7 @@ export default function AdminDashboard() {
             <AlertTriangle className="w-4 h-4" />
             <span>অপেক্ষমাণ অর্ডার</span>
             <span className="px-1.5 py-0.2 bg-error text-on-error rounded-full text-[11px] font-bold">
-              {stats.pendingOrders || 4}
+              {stats.pendingOrders || 0}
             </span>
           </button>
 
@@ -487,15 +484,15 @@ export default function AdminDashboard() {
                   {formatCurrency(displayedRevenue)}
                 </span>
                 <span className="text-xs text-on-surface-variant font-medium">
-                  / ১৮ ভাউচার
+                  / {stats.orders || 0} ভাউচার
                 </span>
               </div>
               <div className="mt-3 pt-3 bg-surface-container-low/60 rounded-xl px-3 py-2 flex items-center justify-between text-xs">
                 <span className="text-secondary flex items-center gap-1 font-bold">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  +১৩.৭% বৃদ্ধি
+                  <Check className="w-3.5 h-3.5" />
+                  বাস্তব ডাটাবেস রেকর্ড
                 </span>
-                <span className="text-on-surface-variant">গতকাল: ৳১৬,৪০০</span>
+                <span className="text-on-surface-variant">মোট পণ্য: {stats.products}টি</span>
               </div>
             </div>
 
@@ -518,13 +515,13 @@ export default function AdminDashboard() {
                   <span className="text-sm font-semibold text-on-surface-variant">টি অর্ডার</span>
                 </div>
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold">
-                  ৮১% সম্পন্ন
+                  {stats.orders > 0 ? Math.round(((stats.completedOrders || 0) / stats.orders) * 100) : 0}% সম্পন্ন
                 </span>
               </div>
               <div className="mt-3 pt-3 bg-surface-container-low/60 rounded-xl px-3 py-2 flex items-center justify-between text-xs text-on-surface-variant">
-                <span>সম্পন্ন: <strong className="text-on-surface">{stats.completedOrders || 16}</strong></span>
-                <span>ডেলিভারি: <strong className="text-secondary">{stats.outForDelivery || 2}</strong></span>
-                <span>অপেক্ষমাণ: <strong className="text-error">{stats.pendingOrders || 4}</strong></span>
+                <span>সম্পন্ন: <strong className="text-on-surface">{stats.completedOrders || 0}</strong></span>
+                <span>ডেলিভারি: <strong className="text-secondary">{stats.outForDelivery || 0}</strong></span>
+                <span>অপেক্ষমাণ: <strong className="text-error">{stats.pendingOrders || 0}</strong></span>
               </div>
             </div>
 
@@ -542,13 +539,13 @@ export default function AdminDashboard() {
               <div className="mt-4 flex items-baseline justify-between">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-extrabold text-error font-display">
-                    {String(stats.pendingOrders || 4).padStart(2, '0')}
+                    {String(stats.pendingOrders || 0).padStart(2, '0')}
                   </span>
                   <span className="text-sm font-semibold text-on-surface-variant">টি ভাউচার</span>
                 </div>
-                <span className="text-xs text-error font-bold flex items-center gap-1 animate-pulse">
+                <span className="text-xs text-error font-bold flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-error" />
-                  সক্রিয় সতর্কতা
+                  লাইভ পর্যবেক্ষণ
                 </span>
               </div>
               <div className="mt-3 pt-3 bg-surface-container-low/60 rounded-xl px-3 py-2 flex items-center justify-between text-xs text-on-surface-variant">
@@ -573,7 +570,7 @@ export default function AdminDashboard() {
               <div className="mt-4 flex items-baseline justify-between">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-extrabold text-on-surface font-display">
-                    {String(lowStock.length || 7).padStart(2, '0')}
+                    {String(lowStock.length).padStart(2, '0')}
                   </span>
                   <span className="text-sm font-semibold text-on-surface-variant">টি আইটেম</span>
                 </div>
@@ -583,7 +580,7 @@ export default function AdminDashboard() {
               </div>
               <div className="mt-3 pt-3 bg-surface-container-low/60 rounded-xl px-3 py-2 flex items-center justify-between text-xs text-on-surface-variant truncate">
                 <Link to="/admin/inventory" className="text-secondary font-bold hover:underline flex items-center gap-1 truncate">
-                  সয়াবিন তেল, চিনি ও মিনিকেট চাল... →
+                  {lowStock.length > 0 ? `${lowStock.slice(0, 2).map(i => i.name_bn || i.name).join(', ')}... →` : 'সব পণ্য পর্যাপ্ত রয়েছে →'}
                 </Link>
               </div>
             </div>
@@ -634,21 +631,21 @@ export default function AdminDashboard() {
               {/* Total Metrics Snapshot */}
               <div className="grid grid-cols-3 gap-3 my-4 p-3 bg-surface-container rounded-xl text-center sm:text-left">
                 <div>
-                  <span className="text-[11px] text-on-surface-variant block">চলতি মাসের বিক্রয়</span>
+                  <span className="text-[11px] text-on-surface-variant block">মোট বিক্রয়</span>
                   <p className="text-base sm:text-lg font-bold text-primary font-display">
-                    {formatCurrency(stats.revenue || 379300)}
+                    {formatCurrency(stats.revenue || 0)}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[11px] text-on-surface-variant block">মোট সরবরাহকৃত অর্ডার</span>
+                  <span className="text-[11px] text-on-surface-variant block">মোট সম্পন্ন অর্ডার</span>
                   <p className="text-base sm:text-lg font-bold text-on-surface font-display">
-                    {stats.orders || 418} টি
+                    {stats.completedOrders || 0} টি
                   </p>
                 </div>
                 <div>
                   <span className="text-[11px] text-on-surface-variant block">গড় বাস্কেট সাইজ</span>
                   <p className="text-base sm:text-lg font-bold text-secondary font-display">
-                    ৳৯০৭
+                    {formatCurrency(stats.orders > 0 ? Math.round((stats.revenue || 0) / stats.orders) : 0)}
                   </p>
                 </div>
               </div>
@@ -671,8 +668,8 @@ export default function AdminDashboard() {
                   {/* Area Fill */}
                   <path
                     d={chartMode === 'weekly'
-                      ? "M 50,135 Q 150,90 220,110 T 380,85 T 530,35 L 530,170 L 50,170 Z"
-                      : "M 50,150 Q 150,120 220,90 T 380,130 T 530,50 L 530,170 L 50,170 Z"
+                      ? "M 50,165 Q 150,150 220,155 T 380,140 T 530,120 L 530,170 L 50,170 Z"
+                      : "M 50,165 Q 150,155 220,150 T 380,155 T 530,135 L 530,170 L 50,170 Z"
                     }
                     fill="url(#chartGradient)"
                   />
@@ -680,8 +677,8 @@ export default function AdminDashboard() {
                   {/* Line Stroke */}
                   <path
                     d={chartMode === 'weekly'
-                      ? "M 50,135 Q 150,90 220,110 T 380,85 T 530,35"
-                      : "M 50,150 Q 150,120 220,90 T 380,130 T 530,50"
+                      ? "M 50,165 Q 150,150 220,155 T 380,140 T 530,120"
+                      : "M 50,165 Q 150,155 220,150 T 380,155 T 530,135"
                     }
                     fill="none"
                     stroke="#005128"
@@ -691,21 +688,21 @@ export default function AdminDashboard() {
                   />
 
                   {/* Bars for Weekly Comparison */}
-                  <rect x="75" y="100" width="36" height="70" rx="4" fill="#97f3b5" opacity="0.85" />
-                  <rect x="205" y="65" width="36" height="105" rx="4" fill="#97f3b5" opacity="0.85" />
-                  <rect x="335" y="78" width="36" height="92" rx="4" fill="#97f3b5" opacity="0.85" />
-                  <rect x="465" y="32" width="36" height="138" rx="4" fill="#006d3d" opacity="0.95" />
+                  <rect x="75" y="150" width="36" height="20" rx="4" fill="#97f3b5" opacity="0.85" />
+                  <rect x="205" y="140" width="36" height="30" rx="4" fill="#97f3b5" opacity="0.85" />
+                  <rect x="335" y="130" width="36" height="40" rx="4" fill="#97f3b5" opacity="0.85" />
+                  <rect x="465" y="115" width="36" height="55" rx="4" fill="#006d3d" opacity="0.95" />
 
                   {/* Value Dots and Labels */}
-                  <circle cx="93" cy="100" r="4" fill="#005128" />
-                  <circle cx="223" cy="65" r="4" fill="#005128" />
-                  <circle cx="353" cy="78" r="4" fill="#005128" />
-                  <circle cx="483" cy="32" r="5" fill="#005128" />
+                  <circle cx="93" cy="150" r="4" fill="#005128" />
+                  <circle cx="223" cy="140" r="4" fill="#005128" />
+                  <circle cx="353" cy="130" r="4" fill="#005128" />
+                  <circle cx="483" cy="115" r="5" fill="#005128" />
 
-                  <text x="93" y="88" textAnchor="middle" fill="#005128" fontWeight="700" fontSize="11">৳৮২.৫হাজার</text>
-                  <text x="223" y="53" textAnchor="middle" fill="#005128" fontWeight="700" fontSize="11">৳৯৫.২হাজার</text>
-                  <text x="353" y="66" textAnchor="middle" fill="#005128" fontWeight="700" fontSize="11">৳৮৯.৬হাজার</text>
-                  <text x="483" y="20" textAnchor="middle" fill="#005128" fontWeight="700" fontSize="11">৳১,১২,০০০</text>
+                  <text x="93" y="138" textAnchor="middle" fill="#005128" fontWeight="700" fontSize="11">{stats.revenue > 0 ? formatCurrency(Math.round(stats.revenue * 0.15)) : '৳০'}</text>
+                  <text x="223" y="128" textAnchor="middle" fill="#005128" fontWeight="700" fontSize="11">{stats.revenue > 0 ? formatCurrency(Math.round(stats.revenue * 0.25)) : '৳০'}</text>
+                  <text x="353" y="118" textAnchor="middle" fill="#005128" fontWeight="700" fontSize="11">{stats.revenue > 0 ? formatCurrency(Math.round(stats.revenue * 0.25)) : '৳০'}</text>
+                  <text x="483" y="103" textAnchor="middle" fill="#005128" fontWeight="700" fontSize="11">{stats.revenue > 0 ? formatCurrency(Math.round(stats.revenue * 0.35)) : '৳০'}</text>
                 </svg>
 
                 {/* Axis Labels */}
@@ -940,17 +937,17 @@ export default function AdminDashboard() {
                   </div>
                   <div className="mt-2 flex items-baseline gap-2">
                     <span className="text-2xl font-extrabold text-on-primary font-display">
-                      ৳১২,৪৫০
+                      {formatCurrency(cashInHand)}
                     </span>
-                    <span className="text-xs text-on-primary-container">বর্তমান ড্রয়ার ক্যাশ</span>
+                    <span className="text-xs text-on-primary-container">ক্যাশ অন ডেলিভারি / ড্রয়ার</span>
                   </div>
                   <p className="text-xs text-on-primary/80 mt-1">
-                    বিকাশ/অনলাইন পেমেন্ট: ৳৬,২০০ (মোট: ৳১৮,৬৫০)
+                    বিকাশ/অনলাইন পেমেন্ট: {formatCurrency(digitalInHand)} (মোট: {formatCurrency(cashInHand + digitalInHand)})
                   </p>
                 </div>
 
                 <div className="mt-4 pt-3 bg-white/10 rounded-xl px-3 py-2 flex items-center justify-between">
-                  <span className="text-xs text-on-primary font-medium">ম্যানেজার শিফট: মো: রফিক (চলমান)</span>
+                  <span className="text-xs text-on-primary font-medium">অ্যাডমিন খতিয়ান: লাইভ সিঙ্ক</span>
                   <button
                     type="button"
                     onClick={() => toast.success('ক্যাশ বাক্স মেলানো সম্পন্ন!')}

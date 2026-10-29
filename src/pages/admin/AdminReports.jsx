@@ -79,12 +79,12 @@ export default function AdminReports() {
     return {
       totalOrders: filteredOrders.length,
       validOrdersCount: validOrders.length,
-      totalRevenue: totalRevenue || (timeFilter === 'month' ? 379300 : 18650),
-      codRevenue: codRevenue || (timeFilter === 'month' ? 245000 : 12450),
-      digitalRevenue: digitalRevenue || (timeFilter === 'month' ? 134300 : 6200),
-      avgBasketSize: avgBasketSize || 907,
+      totalRevenue: totalRevenue || 0,
+      codRevenue: codRevenue || 0,
+      digitalRevenue: digitalRevenue || 0,
+      avgBasketSize: avgBasketSize || 0,
     }
-  }, [filteredOrders, timeFilter])
+  }, [filteredOrders])
 
   // Export to CSV
   const handleExportCSV = () => {
@@ -196,7 +196,7 @@ export default function AdminReports() {
               {formatCurrency(metrics.totalRevenue)}
             </span>
             <span className="text-xs text-secondary font-bold flex items-center gap-1 mt-1">
-              <ArrowUpRight className="w-3.5 h-3.5" /> +১৪.৫% আগের তুলনায়
+              <ArrowUpRight className="w-3.5 h-3.5" /> মোট {metrics.validOrdersCount}টি সম্পন্ন ভাউচার
             </span>
           </div>
         </div>
@@ -272,30 +272,30 @@ export default function AdminReports() {
               <div>
                 <div className="flex items-center justify-between text-xs font-bold mb-1">
                   <span className="text-on-surface">ক্যাশ অন ডেলিভারি / কাউন্টার ক্যাশ</span>
-                  <span className="text-primary">৬৫% ({formatCurrency(metrics.codRevenue)})</span>
+                  <span className="text-primary">
+                    {metrics.totalRevenue > 0 ? Math.round((metrics.codRevenue / metrics.totalRevenue) * 100) : 0}% ({formatCurrency(metrics.codRevenue)})
+                  </span>
                 </div>
                 <div className="w-full h-3 bg-surface-container rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: '65%' }} />
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${metrics.totalRevenue > 0 ? Math.round((metrics.codRevenue / metrics.totalRevenue) * 100) : 0}%` }}
+                  />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between text-xs font-bold mb-1">
-                  <span className="text-on-surface">বিকাশ / মোবাইল ব্যাংকিং</span>
-                  <span className="text-secondary">২৭% ({formatCurrency(metrics.digitalRevenue * 0.8)})</span>
+                  <span className="text-on-surface">বিকাশ ও ডিজিটাল পেমেন্ট</span>
+                  <span className="text-secondary">
+                    {metrics.totalRevenue > 0 ? Math.round((metrics.digitalRevenue / metrics.totalRevenue) * 100) : 0}% ({formatCurrency(metrics.digitalRevenue)})
+                  </span>
                 </div>
                 <div className="w-full h-3 bg-surface-container rounded-full overflow-hidden">
-                  <div className="h-full bg-secondary rounded-full transition-all" style={{ width: '27%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between text-xs font-bold mb-1">
-                  <span className="text-on-surface">নগদ / কার্ড পেমেন্ট</span>
-                  <span className="text-on-surface-variant">৮% ({formatCurrency(metrics.digitalRevenue * 0.2)})</span>
-                </div>
-                <div className="w-full h-3 bg-surface-container rounded-full overflow-hidden">
-                  <div className="h-full bg-outline-variant rounded-full transition-all" style={{ width: '8%' }} />
+                  <div
+                    className="h-full bg-secondary rounded-full transition-all"
+                    style={{ width: `${metrics.totalRevenue > 0 ? Math.round((metrics.digitalRevenue / metrics.totalRevenue) * 100) : 0}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -303,7 +303,7 @@ export default function AdminReports() {
 
           <div className="mt-6 pt-4 border-t border-outline-variant/20 flex items-center justify-between text-xs text-on-surface-variant">
             <span>সকল লেনদেন ভাউচার নম্বরসহ সংরক্ষিত</span>
-            <span className="text-secondary font-bold">অডিট সমাপ্ত</span>
+            <span className="text-secondary font-bold">লাইভ সিঙ্ক</span>
           </div>
         </div>
 
@@ -311,29 +311,28 @@ export default function AdminReports() {
         <div className="lg:col-span-6 p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col justify-between">
           <div>
             <h2 className="text-base font-bold text-on-surface font-display mb-1">
-              ক্যাটাগরি ভিত্তিক বিক্রয় অবদান
+              ক্যাটাগরি তালিকা ও অবস্থা
             </h2>
             <p className="text-xs text-on-surface-variant mb-4">
-              কোন বিভাগের মুদি পণ্য সর্বাধিক রাজস্ব এনেছে
+              দোকানের রেজিস্টার্ড পণ্য বিভাগসমূহ
             </p>
 
             <div className="grid grid-cols-2 gap-3">
-              {[
-                { name: 'চাল ও খাদ্যশস্য', pct: '৩৮%', val: '৳১,৪৪,১০০', color: 'bg-primary/10 text-primary' },
-                { name: 'ভোজ্য তেল ও ঘি', pct: '২৪%', val: '৳৯১,০০০', color: 'bg-secondary-container text-on-secondary-container' },
-                { name: 'মসলা ও রান্নার উপকরণ', pct: '১৮%', val: '৳৬৮,২৫০', color: 'bg-surface-container-high text-on-surface' },
-                { name: 'চিনি, চা ও গুঁড়া দুধ', pct: '১২%', val: '৳৪৫,৫০০', color: 'bg-surface-container text-on-surface' },
-                { name: 'স্ন্যাকস ও বিস্কুট', pct: '৫%', val: '৳১৮,৯৫০', color: 'bg-surface-container text-on-surface' },
-                { name: 'অন্যান্য পরিষ্কারক সামগ্রী', pct: '৩%', val: '৳১১,৫০০', color: 'bg-surface-container text-on-surface' },
-              ].map(c => (
-                <div key={c.name} className="p-3 bg-surface-container-low rounded-xl flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-on-surface truncate">{c.name}</span>
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${c.color}`}>{c.pct}</span>
-                  </div>
-                  <span className="text-xs font-extrabold text-primary font-display">{c.val}</span>
+              {categories.length === 0 ? (
+                <div className="col-span-2 text-center py-6 text-xs text-on-surface-variant bg-surface-container rounded-xl">
+                  কোনো ক্যাটাগরি রেকর্ড পাওয়া যায়নি
                 </div>
-              ))}
+              ) : (
+                categories.slice(0, 6).map(c => (
+                  <div key={c.id || c.name} className="p-3 bg-surface-container-low rounded-xl flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-on-surface truncate">{c.name_bn || c.name}</span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/10 text-primary">সক্রিয়</span>
+                    </div>
+                    <span className="text-[11px] text-on-surface-variant">{c.name}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

@@ -58,8 +58,8 @@ export default function App() {
         <Route path="/shop/category/:slug" element={<ShopPage />} />
         <Route path="/product/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
-        <Route path="/order-confirmation/:orderId" element={<RequireAuth><OrderConfirmationPage /></RequireAuth>} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
         <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="/orders" element={<RequireAuth><OrderHistoryPage /></RequireAuth>} />
         <Route path="/orders/:orderId" element={<RequireAuth><OrderDetailPage /></RequireAuth>} />

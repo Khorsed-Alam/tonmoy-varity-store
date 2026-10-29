@@ -43,7 +43,8 @@ export default function AdminOrders() {
 
       if (statusFilter) q = q.eq('status', statusFilter)
       if (search.trim()) {
-        q = q.or(`full_name.ilike.%${search.trim()}%,phone.ilike.%${search.trim()}%,order_number.ilike.%${search.trim()}%`)
+        const s = search.trim()
+        q = q.or(`full_name.ilike.%${s}%,phone.ilike.%${s}%,order_number.ilike.%${s}%`)
       }
 
       const from = (page - 1) * PAGE_SIZE
@@ -232,10 +233,10 @@ export default function AdminOrders() {
 
                     <td className="px-4 py-3.5">
                       <div className="flex flex-col">
-                        <span className="font-bold text-on-surface">{o.full_name || 'গ্রাহক'}</span>
-                        <span className="text-[11px] text-on-surface-variant">{o.phone || 'ফোন নেই'}</span>
+                        <span className="font-bold text-on-surface">{o.customer_name || o.full_name || 'গ্রাহক'}</span>
+                        <span className="text-[11px] text-on-surface-variant">{o.customer_phone || o.phone || 'ফোন নেই'}</span>
                         <span className="text-[10px] text-on-surface-variant/80 truncate max-w-[160px]">
-                          {o.shipping_address || 'বগুড়া সদর'}
+                          {o.delivery_address || o.shipping_address || 'বগুড়া সদর'}
                         </span>
                       </div>
                     </td>
@@ -246,13 +247,13 @@ export default function AdminOrders() {
                           {o.payment_method === 'bkash' ? 'বিকাশ' : o.payment_method === 'cod' ? 'ক্যাশ অন ডেলিভারি' : 'কাউন্টার ক্যাশ'}
                         </span>
                         <span className="text-[10px] text-on-surface-variant">
-                          {o.delivery_method === 'home_delivery' ? 'হোম ডেলিভারি' : 'দোকান পিকআপ'}
+                          {o.fulfillment_type === 'delivery' || o.delivery_method === 'home_delivery' ? 'হোম ডেলিভারি' : 'দোকান পিকআপ'}
                         </span>
                       </div>
                     </td>
 
                     <td className="px-4 py-3.5 text-right font-extrabold text-primary font-display text-sm">
-                      {formatCurrency(o.total_amount)}
+                      {formatCurrency(o.total ?? o.total_amount)}
                     </td>
 
                     <td className="px-4 py-3.5 text-center">

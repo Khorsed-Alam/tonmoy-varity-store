@@ -1,6 +1,6 @@
-# 🛍️ Tonmoy Varity Store (তন্ময় ভ্যারাইটি স্টোর)
+# 🛍️ Tonmoy Varity Store (মেসার্স তন্ময় ভ্যারাইটি স্টোর)
 
-A modern, production-oriented neighborhood grocery e-commerce web application tailored for Bangladesh, built with **React**, **Vite**, **Tailwind CSS**, and **Supabase**.
+A modern, production-oriented neighborhood grocery e-commerce web application tailored for Bangladesh, built with **React 18**, **Vite**, **Tailwind CSS**, and **Supabase**.
 
 ---
 
@@ -12,11 +12,11 @@ A modern, production-oriented neighborhood grocery e-commerce web application ta
   - 🚚 **Home Delivery**: Delivery fee calculation (৳50 flat fee with Free Delivery threshold over ৳500) and Cash on Delivery (COD).
   - 🏪 **Store Pickup**: Customer collects in-store with Pay at Store option.
 - **Customer Experience**:
-  - Dynamic homepage with category carousel, featured items, and new arrivals.
+  - Dynamic homepage with category navigation, essentials, and new arrivals.
   - Shop catalog with category filtering, real-time search, sorting, and price range filters.
   - Persistent cart state in local storage.
   - Order checkout with strict BD phone number validation (`+8801XXXXXXXXX`).
-  - Visual order timeline and real-time status tracking (`Pending` ➔ `Confirmed` ➔ `Processing` ➔ `Ready` ➔ `Out for Delivery` ➔ `Delivered`).
+  - Visual order timeline and real-time status tracking (`Pending` ➔ `Confirmed` ➔ `Processing` ➔ `Out for Delivery` ➔ `Delivered`).
   - Customer account profile management and order history.
 - **Admin Management Portal**:
   - Secure role-guarded `/admin` dashboard with revenue metrics, total orders, customers, and low-stock alerts.
@@ -25,9 +25,6 @@ A modern, production-oriented neighborhood grocery e-commerce web application ta
   - **Orders Management**: Live search, status updates, customer address breakdown, and line items view.
   - **Quick Inventory Manager**: Fast inline stock adjustment and bulk saving.
   - **Store Settings**: Delivery fees, operating hours, and payment method switches.
-- **Enterprise-Grade Security**:
-  - **Supabase Edge Function** (`place-order`): Atomic server-side order calculation, stock validation, and race-condition-safe inventory decrementing using `service_role`.
-  - **Row Level Security (RLS)**: Fine-grained PostgreSQL RLS policies preventing privilege escalation, restricting customer profile role updates, and isolating user order histories.
 
 ---
 
@@ -45,102 +42,161 @@ A modern, production-oriented neighborhood grocery e-commerce web application ta
 
 ---
 
-## 📁 Project Structure
+## 📁 Architecture & File Structure
 
-```
+```text
 tonmoy-varity-store/
 ├── public/
-│   └── favicon.svg                  # Custom branded Bangla favicon
+│   └── images/
 ├── src/
+│   ├── app/
+│   │   ├── App.jsx                  # Root App component
+│   │   └── router.jsx               # Centralized React Router configuration & guards
 │   ├── components/
-│   │   ├── layout/                  # Navbar (bilingual, search, cart badge) & Footer
-│   │   ├── product/                 # ProductCard & Skeleton loaders
-│   │   └── ui/                      # Status badges, empty states
-│   ├── contexts/
+│   │   ├── common/                  # Navbar, Footer, MobileBottomNav, MarketListModal, Badges
+│   │   ├── products/                # ProductCard, ProductSkeleton
+│   │   ├── cart/                    # CartItem and cart action components
+│   │   └── admin/                   # AdminLayout, Admin header & navigation
+│   ├── pages/
+│   │   ├── Home.jsx                 # Storefront homepage
+│   │   ├── Shop.jsx                 # Full product catalog & filter engine
+│   │   ├── ProductDetails.jsx       # Single product details & recommendations
+│   │   ├── Cart.jsx                 # Shopping cart view
+│   │   ├── Checkout.jsx             # Checkout, address form, and payment selection
+│   │   ├── Login.jsx                # Customer login
+│   │   ├── Register.jsx             # Customer registration
+│   │   ├── MyOrders.jsx             # Customer order history
+│   │   └── admin/
+│   │       ├── Dashboard.jsx        # Admin real-time analytics & cash drawer
+│   │       ├── Products.jsx         # Product catalog CRUD
+│   │       ├── Categories.jsx       # Category management
+│   │       ├── Orders.jsx           # Order queue & status updates
+│   │       ├── Inventory.jsx        # Stock tracking & quick restock
+│   │       ├── Customers.jsx        # Customer directory & spending history
+│   │       └── Settings.jsx         # Store profile & delivery fee parameters
+│   ├── context/
 │   │   ├── AuthContext.jsx          # Session state, role detection, profile updates
 │   │   ├── CartContext.jsx          # Cart items, persistent quantity handling
 │   │   └── LanguageContext.jsx      # Bengali/English locale switcher
-│   ├── layouts/
-│   │   ├── CustomerLayout.jsx       # Standard storefront shell
-│   │   └── AdminLayout.jsx          # Admin sidebar navigation & header
+│   ├── hooks/
+│   │   ├── useAuth.js               # Authentication hook
+│   │   ├── useProducts.js           # Product querying & realtime sync hook
+│   │   └── useOrders.js             # Order management hook
 │   ├── lib/
-│   │   ├── supabase.js              # Resilient Supabase client initialization
-│   │   └── utils.js                 # Currency formatters, dates, BD phone validator
-│   ├── pages/
-│   │   ├── customer/                # Home, Shop, ProductDetail, Cart, Checkout,
-│   │   │                            # OrderConfirmation, OrderHistory, OrderDetail,
-│   │   │                            # Profile, Login, Register
-│   │   ├── admin/                   # AdminDashboard, AdminProducts, AdminCategories,
-│   │   │                            # AdminOrders, AdminOrderDetail, AdminInventory,
-│   │   │                            # AdminSettings, AdminLoginPage
-│   │   └── NotFoundPage.jsx         # 404 handler
-│   ├── App.jsx                      # Protected routes & role-based guards
-│   ├── main.jsx                     # Application bootstrap
-│   └── index.css                    # Tailwind CSS directives & utility classes
+│   │   └── supabaseClient.js        # Supabase client instance
+│   ├── services/
+│   │   ├── productService.js        # Product API & database operations
+│   │   ├── categoryService.js       # Category API operations
+│   │   ├── orderService.js          # Order submission & status pipeline
+│   │   ├── inventoryService.js      # Stock adjustment & batch restock
+│   │   └── uploadService.js         # Image upload to Supabase storage
+│   ├── utils/
+│   │   ├── currency.js              # Taka currency formatting & delivery fee rules
+│   │   └── validation.js            # BD mobile phone, email, and input validators
+│   ├── styles/
+│   │   └── index.css                # Tailwind CSS base styles & design tokens
+│   └── main.jsx                     # Application bootstrap & provider wrapping
 ├── supabase/
-│   ├── functions/
-│   │   └── place-order/
-│   │       └── index.ts             # Secure order calculation Edge Function
 │   ├── migrations/
-│   │   └── 20240101000000_initial_schema.sql # Version-controlled DB migration
-│   ├── schema.sql                   # Full idempotent schema & RLS policies
-│   └── seed.sql                     # Rich Bangladeshi grocery products & categories
-├── .env.example                     # Environment variables template
+│   │   └── 001_initial_schema.sql   # Relational schema, indexes & RLS policies
+│   ├── functions/
+│   │   └── create-order/            # Edge Function for atomic order processing
+│   └── seed.sql                     # Initial categories & products seed data
+├── .env.example
+├── .gitignore
 ├── package.json
-├── tailwind.config.js
-└── vite.config.js
+└── README.md
 ```
 
 ---
 
-## 🚀 Quick Setup Guide
+## 🚀 Getting Started
 
-### 1. Configure Environment Variables
-Copy `.env.example` to `.env`:
-```bash
-cp .env.example .env
+### 1. Prerequisites
+- Node.js (v18 or higher)
+- npm or pnpm
+
+### 2. Installation
+```powershell
+npm.cmd install
 ```
-Update with your Supabase credentials:
+
+### 3. Environment Setup
+Copy `.env.example` to `.env` and provide your Supabase credentials:
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-public-key-here
+VITE_SUPABASE_ANON_KEY=your-anon-public-key
 ```
 
-### 2. Set Up Database Schema & Initial Data
-1. Open your **[Supabase Project Dashboard](https://supabase.com/dashboard)**.
-2. Navigate to **SQL Editor** ➔ **New Query**.
-3. Copy the contents of [`supabase/schema.sql`](file:///C:/Users/khors/.gemini/antigravity-ide/scratch/tonmoy-varity-store/supabase/schema.sql) and click **Run**.
-4. Next, copy the contents of [`supabase/seed.sql`](file:///C:/Users/khors/.gemini/antigravity-ide/scratch/tonmoy-varity-store/supabase/seed.sql) and click **Run** to populate categories and staple products.
-
-### 3. Deploy the Edge Function
-Using the Supabase CLI:
-```bash
-supabase functions deploy place-order --no-verify-jwt
+### 4. Running the Development Server
+```powershell
+npm.cmd run dev
 ```
-*(The function automatically verifies user credentials via the Authorization header and uses `SUPABASE_SERVICE_ROLE_KEY` for server-side stock deductions).*
+Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
-### 4. Create an Admin Account
-1. Register a new user in the web application at `/register` (or via Supabase Auth dashboard).
-2. Run this quick query in the Supabase SQL Editor:
-```sql
-UPDATE public.profiles
-SET role = 'admin'
-WHERE id = (SELECT id FROM auth.users WHERE email = 'your-email@example.com');
+### 5. Production Build
+```powershell
+npm.cmd run build
 ```
-3. Now sign in through `/admin/login` to access the full store management suite.
-
-### 5. Run Locally
-```bash
-npm install
-npm run dev
-```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 🔒 Security Best Practices Implemented
+## 🗄️ Database Tables & Relationships
 
-- **Server-Side Price & Stock Verification**: Line items submitted by customers are never trusted for pricing or stock availability; prices and subtotal calculations are enforced on the backend via the Edge Function.
-- **Stock Atomicity**: Stock levels are safely decremented using the `decrement_stock` PostgreSQL stored procedure.
-- **Strict Role Isolation**: RLS policies prevent non-admin users from altering their own `role` or viewing other customers' order records.
-- **Input Sanitization**: Phone numbers are validated against official Bangladeshi carrier prefix masks (`013-019`).
+The database is built on **Supabase PostgreSQL** with 7 core production tables and strict relational integrity:
+
+| Table | Purpose (উদ্দেশ্য) | Key Columns & Constraints |
+|---|---|---|
+| `profiles` | Customer profile ও user role | `id` (PK, references `auth.users.id`), `full_name`, `phone`, `address`, `city`, `area`, `role` (`customer`/`admin`) |
+| `categories` | Grocery categories | `id` (PK), `name`, `name_bn`, `slug` (UNIQUE), `icon`, `icon_name`, `description_bn`, `subcategories`, `item_count`, `sort_order`, `is_active` |
+| `products` | Product details, price, stock | `id` (PK), `category_id` (FK ➔ `categories.id`), `name`, `name_bn`, `price`, `cost_price`, `stock_quantity`, `unit`, `tag`, `is_featured`, `is_active` |
+| `orders` | Customer order, address, total, status | `id` (PK), `order_number` (UNIQUE), `user_id` (FK ➔ `profiles.id`), `delivery_method`, `payment_method`, `payment_status`, `status`, `total_amount` |
+| `order_items` | অর্ডারের প্রতিটি product ও কেনার সময়কার price snapshot | `id` (PK), `order_id` (FK ➔ `orders.id`), `product_id` (FK ➔ `products.id`), `product_name`, `product_name_bn`, `unit_price`, `quantity`, `subtotal` |
+| `inventory_transactions` | Stock-in/stock-out history & audit trail | `id` (PK), `product_id` (FK ➔ `products.id`), `transaction_type` (`stock_in`, `stock_out`, `order_deduction`, `adjustment`, `initial`), `quantity`, `previous_stock`, `new_stock`, `reference_id` |
+| `shop_settings` | Shop name, delivery fee, pickup settings | `id` (PK, `'default'`), `store_name`, `store_name_bn`, `proprietor_name`, `phone`, `bkash_number`, `delivery_fee`, `free_delivery_threshold`, `open_hours` |
+
+### 🔗 Table Relationships
+
+```mermaid
+erDiagram
+    auth_users ||--|| profiles : "id -> auth.users.id"
+    profiles ||--o{ orders : "user_id -> profiles.id"
+    categories ||--o{ products : "category_id -> categories.id (1 Category : Many Products)"
+    orders ||--|{ order_items : "order_id -> orders.id"
+    products ||--o{ order_items : "product_id -> products.id"
+    products ||--o{ inventory_transactions : "product_id -> products.id (Stock Change Audit Trail)"
+    profiles ||--o{ inventory_transactions : "changed_by -> profiles.id"
+```
+
+---
+
+## 🔒 Security & Row Level Security (RLS) Policies
+
+All 7 tables have Row Level Security enabled (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`):
+
+- **Categories**:
+  - `Public read active categories`: `is_active = true` (Accessible to `anon`, `authenticated`)
+  - `Admins manage all categories`: Full CRUD for authenticated users with `role = 'admin'`
+- **Products**:
+  - `Public read active products`: `is_active = true` (Accessible to `anon`, `authenticated`)
+  - `Admins manage all products`: Full CRUD for authenticated users with `role = 'admin'`
+- **Profiles**:
+  - `Read own profile`: Customers read own profile (`id = (select auth.uid())`)
+  - `Admins read all profiles`: Admins view all customer accounts
+  - `Users can insert own profile` & `Users can update own profile`
+- **Orders**:
+  - `Read own orders`: Customers read own order history (`user_id = (select auth.uid())`)
+  - `Anyone can create orders`: Allows guest and registered customer checkout
+  - `Admins read all orders` & `Admins can update orders`
+- **Order Items**:
+  - `Read own order items`: Accessible if line item belongs to user's order
+  - `Anyone can insert order items`: Allows customer order line insertion
+  - `Admins read all order items`
+- **Inventory Transactions**:
+  - `Admins can view inventory transactions`: Warehouse audit history restricted to admins
+  - `System can insert inventory transactions`: Stock audit logging
+- **Shop Settings**:
+  - `Public read shop settings`: Unrestricted read for store info, delivery parameters, and announcement banner
+  - `Admins can update shop settings`: Admin configuration update
+
+
