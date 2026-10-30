@@ -20,32 +20,77 @@ export const DEFAULT_BANNERS = [
   },
   {
     id: 'b1000000-0000-0000-0000-000000000002',
-    title: 'Friday Special Offer',
-    title_bn: 'শুক্রবার স্পেশাল ধামাকা অফার',
-    subtitle: 'Special discounts on pure cooking oil, spices, and groceries every Friday!',
-    subtitle_bn: 'খাঁটি সরিষার তেল, সয়াবিন তেল, মসলা ও ডালের ওপর বিশেষ ছাড়!',
-    badge_text: 'Friday Offer',
-    badge_text_bn: 'শুক্রবার স্পেশাল',
-    image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
-    link_url: '/shop/category/cooking-essentials',
-    button_text: 'View Offers',
-    button_text_bn: 'অফার দেখুন',
+    title: '5% OFF For Ramadan',
+    title_bn: 'রমজান উপলক্ষে বিশেষ ছাড়!',
+    subtitle: 'All your daily essentials at more affordable prices!',
+    subtitle_bn: 'আপনার দৈনন্দিন প্রয়োজনীয় সব পণ্য এখন আরও সাশ্রয়ী মূল্যে!',
+    badge_text: '5% OFF',
+    badge_text_bn: 'রমজান ৫% ছাড়',
+    image_url: '/images/banners/banner-ramadan-special-5off.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
     sort_order: 2,
     is_active: true,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000003',
-    title: 'Eid Special Mega Offer',
-    title_bn: 'ঈদ স্পেশাল মেগা অফার',
-    subtitle: 'Mega discount on Polao Rice, Lachha Semai, Powder Milk, and Pure Ghee!',
-    subtitle_bn: 'পোলাও চাল, লাচ্ছা সেমাই, গুঁড়ো দুধ ও খাঁটি ঘিয়ে আকর্ষণীয় মূল্যছাড়!',
-    badge_text: 'Eid Mubarak',
-    badge_text_bn: 'ঈদ মোবারক',
-    image_url: 'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?auto=format&fit=crop&w=1200&q=80',
-    link_url: '/shop/category/snacks-beverages',
-    button_text: 'Get Eid Offer',
-    button_text_bn: 'ঈদ অফার নিন',
+    title: '2% OFF For Friday',
+    title_bn: 'শুক্রবারে বিশেষ ছাড়!',
+    subtitle: 'All your daily essentials at more affordable prices!',
+    subtitle_bn: 'আপনার দৈনন্দিন প্রয়োজনীয় সব পণ্য এখন আরও সাশ্রয়ী মূল্যে!',
+    badge_text: '2% OFF',
+    badge_text_bn: 'শুক্রবার ২% ছাড়',
+    image_url: '/images/banners/banner-friday-special-2off.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
     sort_order: 3,
+    is_active: true,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000004',
+    title: '5% Discount Qurbani Eid Special',
+    title_bn: 'কোরবানী ঈদ উপলক্ষে বিশেষ ছাড়',
+    subtitle: 'For favorite food, for loved ones — make Eid joy even more special!',
+    subtitle_bn: 'প্রিয় খাবার, প্রিয় মানুষের জন্য — কোরবানীর আনন্দ হোক আরও বিশেষ!',
+    badge_text: 'Eid Mubarak',
+    badge_text_bn: 'কোরবানী ঈদ ৫% ছাড়',
+    image_url: '/images/banners/banner-qurbani-eid-5discount.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 4,
+    is_active: true,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000005',
+    title: '2% Discount Happy New Year',
+    title_bn: 'নতুন বছরের বিশেষ অফার',
+    subtitle: 'For favorite food, for loved ones — more savings in the new year!',
+    subtitle_bn: 'প্রিয় খাবার, প্রিয় মানুষের জন্য — নতুন বছরে আরও বেশি সাশ্রয়!',
+    badge_text: 'Happy New Year',
+    badge_text_bn: 'নতুন বছর ২% ছাড়',
+    image_url: '/images/banners/banner-new-year-2discount.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 5,
+    is_active: true,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000006',
+    title: '2% Discount Pohela Boishakh',
+    title_bn: 'বাংলা নববর্ষ উপলক্ষে বিশেষ ছাড়',
+    subtitle: 'New shopping in the new year, stay healthy, stay well!',
+    subtitle_bn: 'নতুন বছরে নতুন কেনাকাটা, সুস্থ থাকুন, ভালো থাকুন!',
+    badge_text: 'Pohela Boishakh',
+    badge_text_bn: 'বৈশাখী ২% ছাড়',
+    image_url: '/images/banners/banner-boishakh-2discount.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 6,
     is_active: true,
   },
 ]
@@ -53,14 +98,20 @@ export const DEFAULT_BANNERS = [
 const STORAGE_KEY = 'tvs_custom_banners'
 
 /**
- * Read local storage custom banners safely
+ * Read local storage custom banners safely, automatically filtering out legacy unsplash mock images
  */
 function getLocalBanners() {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
-    return JSON.parse(raw)
+    const parsed = JSON.parse(raw)
+    // Filter out previously added mock unsplash banners
+    const cleaned = parsed.filter(b => !b.image_url?.includes('images.unsplash.com'))
+    if (cleaned.length !== parsed.length) {
+      setLocalBanners(cleaned)
+    }
+    return cleaned
   } catch (err) {
     console.warn('Could not parse local banners:', err)
     return []
@@ -103,7 +154,8 @@ export const bannerService = {
         hasDbError = true
         console.warn('Supabase banners query notice (using local storage fallback):', error.message)
       } else if (data && data.length > 0) {
-        dbBanners = data
+        // Filter out legacy unsplash mock banners
+        dbBanners = data.filter(b => !b.image_url?.includes('images.unsplash.com'))
       }
     } catch (err) {
       hasDbError = true
@@ -122,10 +174,13 @@ export const bannerService = {
     } else if (localBanners.length > 0) {
       combined = [...localBanners]
     } else {
-      // First-time fallback
+      // First-time fallback with the 5 authentic banners + official store banner
       combined = [...DEFAULT_BANNERS]
       setLocalBanners(combined)
     }
+
+    // Filter out any legacy unsplash URLs
+    combined = combined.filter(b => !b.image_url?.includes('images.unsplash.com'))
 
     // Filter active only if requested
     if (activeOnly) {
