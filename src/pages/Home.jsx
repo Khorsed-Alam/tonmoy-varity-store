@@ -55,9 +55,10 @@ export default function Home() {
   // Auto-slide hero banner only when multiple banners exist & not paused by mouse hover
   useEffect(() => {
     if (banners.length <= 1 || isBannerPaused) return
+    // Auto-slide hero banner every 2 seconds when multiple banners exist & not paused by mouse hover
     const bannerTimer = setInterval(() => {
       setActiveBannerIndex((prev) => (prev + 1) % banners.length)
-    }, 5000)
+    }, 2000)
     return () => clearInterval(bannerTimer)
   }, [banners.length, isBannerPaused])
 
@@ -220,24 +221,28 @@ export default function Home() {
                   <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                 </button>
 
-                <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full shadow-xs z-20">
-                  {banners.map((banner, index) => (
-                    <button
-                      key={banner.id || index}
-                      type="button"
-                      onClick={() => setActiveBannerIndex(index)}
-                      className={`transition-all ${
-                        activeBannerIndex === index
-                          ? 'w-6 h-2 bg-secondary-fixed rounded-full'
-                          : 'w-2 h-2 bg-white/60 hover:bg-white rounded-full'
-                      }`}
-                      aria-label={`Slide ${index + 1}`}
-                    />
-                  ))}
-                </div>
               </>
             )}
           </div>
+
+          {/* Sleek Carousel Indicators Bar (Placed underneath banner so it NEVER obscures banner graphics or text) */}
+          {banners.length > 1 && (
+            <div className="flex items-center justify-center gap-1.5 py-1.5 bg-surface-container-low/80 border-t border-outline-variant/20">
+              {banners.map((banner, index) => (
+                <button
+                  key={banner.id || index}
+                  type="button"
+                  onClick={() => setActiveBannerIndex(index)}
+                  className={`transition-all duration-300 ${
+                    activeBannerIndex === index
+                      ? 'w-6 h-2 bg-primary rounded-full shadow-xs'
+                      : 'w-2 h-2 bg-on-surface-variant/30 hover:bg-on-surface-variant/70 rounded-full'
+                  }`}
+                  aria-label={`Slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Quick Action Ribbon Under the Banner */}
           <div className="p-3 sm:p-4 bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low flex flex-col lg:flex-row items-center justify-between gap-3 border-t border-outline-variant/30">

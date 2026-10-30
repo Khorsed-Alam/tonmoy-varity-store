@@ -167,6 +167,7 @@ export default function AdminBanners() {
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [previewSlide, setPreviewSlide] = useState(0)
+  const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'active' | 'hidden'
 
   // Form State
   const [form, setForm] = useState({
@@ -343,11 +344,47 @@ export default function AdminBanners() {
   const handleToggleActive = async (banner) => {
     try {
       await bannerService.toggleActive(banner.id, banner.is_active)
-      toast.success(banner.is_active ? 'ব্যানার নিষ্ক্রিয় করা হয়েছে' : 'ব্যানার সক্রিয় করা হয়েছে')
+      toast.success(banner.is_active ? 'ব্যানার লুকানো হয়েছে (হোমপেজে দেখানো হবে না)' : 'ব্যানার প্রদর্শিত করা হয়েছে (হোমপেজে স্লাইডারে যোগ হয়েছে)')
       loadBanners()
     } catch (err) {
       console.error('Toggle active error:', err)
       toast.error('স্ট্যাটাস পরিবর্তন ব্যর্থ হয়েছে')
+    }
+  }
+
+  // Quick Action: Show all banners
+  const handleShowAll = async () => {
+    const hiddenBanners = banners.filter(b => !b.is_active)
+    if (hiddenBanners.length === 0) {
+      toast('সবগুলো ব্যানার ইতোমধ্যেই প্রদর্শিত রয়েছে')
+      return
+    }
+    try {
+      await Promise.all(hiddenBanners.map(b => bannerService.toggleActive(b.id, false)))
+      toast.success('সবগুলো ব্যানার প্রদর্শন সক্রিয় করা হয়েছে')
+      loadBanners()
+    } catch (err) {
+      console.error('Show all error:', err)
+      toast.error('সবগুলো সক্রিয় করতে সমস্যা হয়েছে')
+    }
+  }
+
+  // Quick Action: Show main official banner only, hide all festival banners
+  const handleShowMainOnly = async () => {
+    try {
+      const updates = banners.map((b, idx) => {
+        const isOfficial = idx === 0 || b.image_url?.includes('tonmoy-variety-store')
+        if (b.is_active !== isOfficial) {
+          return bannerService.toggleActive(b.id, b.is_active)
+        }
+        return Promise.resolve()
+      })
+      await Promise.all(updates)
+      toast.success('শুধু প্রধান ব্যানার রাখা হয়েছে, বাকি ব্যানারগুলো লুকানো হয়েছে')
+      loadBanners()
+    } catch (err) {
+      console.error('Show main only error:', err)
+      toast.error('লুকাতে সমস্যা হয়েছে')
     }
   }
 
@@ -377,6 +414,11 @@ export default function AdminBanners() {
   }
 
   const activeBanners = banners.filter(b => b.is_active)
+  const filteredBanners = banners.filter(b => {
+    if (statusFilter === 'active') return b.is_active
+    if (statusFilter === 'hidden') return !b.is_active
+    return true
+  })
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -533,14 +575,72 @@ export default function AdminBanners() {
 
       {/* 4. Banner List & Management Table */}
       <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-card overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-outline-variant/30 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-container-low/40">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-4 rounded-full bg-primary" />
-            <h2 className="text-base font-bold text-on-surface">সকল ব্যানার তালিকা</h2>
+            <h2 className="text-base font-bold text-on-surface">ব্যানার তালিকা ও প্রদর্শন নিয়ন্ত্রণ</h2>
+            <span className="text-xs bg-surface-container px-2 py-0.5 rounded-full text-on-surface-variant font-bold">
+              মোট {banners.length}টি
+            </span>
           </div>
-          <span className="text-xs text-on-surface-variant font-medium">
-            ড্র্যাগ বা বাটন দিয়ে ক্রম পরিবর্তন করুন
-          </span>
+
+          {/* Filter Pills & Quick Bulk Controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center bg-surface-container p-1 rounded-xl text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={`px-3 py-1 rounded-lg transition-all ${
+                  statusFilter === 'all'
+                    ? 'bg-surface-container-lowest text-primary shadow-xs font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                সকল ({banners.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('active')}
+                className={`px-3 py-1 rounded-lg transition-all ${
+                  statusFilter === 'active'
+                    ? 'bg-surface-container-lowest text-emerald-600 shadow-xs font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                👁️ প্রদর্শিত ({activeBanners.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('hidden')}
+                className={`px-3 py-1 rounded-lg transition-all ${
+                  statusFilter === 'hidden'
+                    ? 'bg-surface-container-lowest text-amber-600 shadow-xs font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                🚫 লুকানো ({banners.length - activeBanners.length})
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleShowAll}
+                className="text-xs font-bold text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1.5 rounded-xl border border-emerald-500/30 transition-colors"
+                title="সকল ব্যানার একসাথে হোমপেজে প্রদর্শন সক্রিয় করুন"
+              >
+                সবগুলো দেখান
+              </button>
+              <button
+                type="button"
+                onClick={handleShowMainOnly}
+                className="text-xs font-bold text-on-surface-variant bg-surface-container hover:bg-surface-container-high px-2.5 py-1.5 rounded-xl border border-outline-variant/60 transition-colors"
+                title="শুধু অফিসিয়াল প্রধান ব্যানারটি রাখুন, বাকি ব্যানারগুলো হাইড করুন"
+              >
+                শুধু ১ম ব্যানার
+              </button>
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -548,29 +648,25 @@ export default function AdminBanners() {
             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
             <p className="text-sm">ব্যানার লোড হচ্ছে...</p>
           </div>
-        ) : banners.length === 0 ? (
+        ) : filteredBanners.length === 0 ? (
           <div className="p-12 text-center text-on-surface-variant space-y-3">
             <ImageIcon className="w-12 h-12 mx-auto text-outline-variant" />
-            <p className="text-base font-semibold text-on-surface">কোনো ব্যানার পাওয়া যায়নি</p>
+            <p className="text-base font-semibold text-on-surface">কোনো ব্যানার পাওয়া যায়নি</p>
             <p className="text-xs max-w-sm mx-auto">
-              হোমপেজে আকর্ষণীয় অফার প্রদর্শন করতে "নতুন ব্যানার আপলোড করুন" বাটনে ক্লিক করুন।
+              {statusFilter === 'hidden'
+                ? 'বর্তমানে কোনো লুকানো ব্যানার নেই। সবগুলো ব্যানার হোমপেজে প্রদর্শিত হচ্ছে।'
+                : statusFilter === 'active'
+                ? 'বর্তমানে কোনো ব্যানার প্রদর্শিত হচ্ছে না। প্রদর্শন করতে ব্যানারের "দেখান" বাটনে ক্লিক করুন।'
+                : 'হোমপেজে আকর্ষণীয় অফার প্রদর্শন করতে "নতুন ব্যানার যোগ করুন" বাটনে ক্লিক করুন।'}
             </p>
-            <button
-              type="button"
-              onClick={handleOpenCreate}
-              className="inline-flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold"
-            >
-              <Plus className="w-4 h-4" />
-              <span>প্রথম ব্যানার তৈরি করুন</span>
-            </button>
           </div>
         ) : (
           <div className="divide-y divide-outline-variant/20">
-            {banners.map((banner, index) => (
+            {filteredBanners.map((banner, index) => (
               <div
                 key={banner.id}
                 className={`p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${
-                  banner.is_active ? 'hover:bg-surface-container-low/40' : 'bg-surface-container-low/60 opacity-75'
+                  banner.is_active ? 'hover:bg-surface-container-low/40' : 'bg-surface-container-low/60 opacity-80'
                 }`}
               >
                 {/* Banner Thumbnail & Info */}
@@ -649,18 +745,22 @@ export default function AdminBanners() {
 
                 {/* Controls & Actions */}
                 <div className="flex items-center justify-end gap-2.5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-outline-variant/30">
-                  {/* Status Toggle Button */}
+                  {/* Status Toggle Button with clear "দেখান / লুকান" */}
                   <button
                     type="button"
                     onClick={() => handleToggleActive(banner)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 ${
                       banner.is_active
-                        ? 'bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20'
-                        : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20'
+                        : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high border border-outline-variant/60'
                     }`}
+                    title={banner.is_active ? 'হোমপেজে প্রদর্শন বন্ধ করতে ক্লিক করুন' : 'হোমপেজে প্রদর্শন করতে ক্লিক করুন'}
                   >
-                    <span className={`w-2 h-2 rounded-full ${banner.is_active ? 'bg-emerald-600' : 'bg-gray-400'}`} />
-                    <span>{banner.is_active ? 'সক্রিয় (Visible)' : 'লুকানো (Hidden)'}</span>
+                    <Eye className={`w-3.5 h-3.5 ${banner.is_active ? 'text-white' : 'text-on-surface-variant'}`} />
+                    <span>{banner.is_active ? 'প্রদর্শিত' : 'লুকানো'}</span>
+                    <span className="text-[10px] opacity-90 font-normal">
+                      ({banner.is_active ? 'লুকান' : 'দেখান'})
+                    </span>
                   </button>
 
                   {/* Edit Button */}
