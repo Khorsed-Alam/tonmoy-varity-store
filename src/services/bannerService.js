@@ -93,6 +93,81 @@ export const DEFAULT_BANNERS = [
     sort_order: 6,
     is_active: true,
   },
+  {
+    id: 'b1000000-0000-0000-0000-000000000007',
+    title: '3% OFF Durga Puja Special',
+    title_bn: 'পুজো স্পেশাল সকল পণ্যে ৩% ছাড়',
+    subtitle: 'Everything for your home in the joy of Puja! Now at more affordable prices!',
+    subtitle_bn: 'পুজোর আনন্দে আপনার ঘরের সব প্রয়োজন! এখন আরও সাশ্রয়ী দামে!',
+    badge_text: '3% OFF Puja',
+    badge_text_bn: 'পুজো স্পেশাল ৩% ছাড়',
+    image_url: '/images/banners/banner-puja-special-3off.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 7,
+    is_active: true,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000008',
+    title: '3% Discount Independence Day Special',
+    title_bn: 'স্বাধীনতা দিবস উপলক্ষে ৩% ছাড়',
+    subtitle: 'Pride of our nation, our products. May every celebration be more beautiful!',
+    subtitle_bn: 'দেশের গর্ব, আমাদের পণ্য। সকল আয়োজন হোক আরও সুন্দর!',
+    badge_text: 'Independence Day',
+    badge_text_bn: 'স্বাধীনতা দিবস ৩% ছাড়',
+    image_url: '/images/banners/banner-independence-day-3discount.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 8,
+    is_active: true,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000009',
+    title: '3% Discount Victory Day Special',
+    title_bn: 'মহান বিজয় দিবসের বিশেষ অফার ৩% ছাড়',
+    subtitle: 'Bangladesh built on dreams of freedom, prosperity and healthy life for all!',
+    subtitle_bn: 'স্বাধীনতার স্বপ্নে গড়া বাংলাদেশ, সবার জন্য সমৃদ্ধি ও সুস্থ জীবন!',
+    badge_text: 'Victory Day',
+    badge_text_bn: 'বিজয় দিবস ৩% ছাড়',
+    image_url: '/images/banners/banner-victory-day-3discount.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 9,
+    is_active: true,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000010',
+    title: '2% OFF July 24 Mass Uprising Day',
+    title_bn: 'জুলাই ২৪ গণঅভ্যুত্থান দিবসে ২% ছাড়',
+    subtitle: 'Special discount on today shopping in honor of the martyrs!',
+    subtitle_bn: 'শহীদদের প্রতি শ্রদ্ধা জানিয়ে আজকের কেনাকাটায় বিশেষ ছাড়!',
+    badge_text: 'July 24 Uprising',
+    badge_text_bn: 'গণঅভ্যুত্থান দিবস ২% ছাড়',
+    image_url: '/images/banners/banner-july24-uprising-2off.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 10,
+    is_active: true,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000011',
+    title: '2% OFF International Mother Language Day',
+    title_bn: 'আন্তর্জাতিক মাতৃভাষা দিবস ২% ছাড়',
+    subtitle: 'Love for the Bengali language, special discount on grocery items!',
+    subtitle_bn: 'বাংলা ভাষার প্রতি ভালোবাসা, আমাদের সবার — গ্রোসারি পণ্যে বিশেষ ছাড়!',
+    badge_text: 'Language Day',
+    badge_text_bn: 'মাতৃভাষা দিবস ২% ছাড়',
+    image_url: '/images/banners/banner-language-day-2off.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 11,
+    is_active: true,
+  },
 ]
 
 const STORAGE_KEY = 'tvs_custom_banners'
@@ -173,8 +248,15 @@ export const bannerService = {
       combined = [...dbBanners, ...extraLocal]
     } else if (localBanners.length > 0) {
       combined = [...localBanners]
+      // Ensure all DEFAULT_BANNERS are present in combined
+      const existingIds = new Set(combined.map(b => b.id))
+      const missingDefaults = DEFAULT_BANNERS.filter(b => !existingIds.has(b.id))
+      if (missingDefaults.length > 0) {
+        combined = [...combined, ...missingDefaults]
+        setLocalBanners(combined)
+      }
     } else {
-      // First-time fallback with the 5 authentic banners + official store banner
+      // First-time fallback with the full authentic banners list
       combined = [...DEFAULT_BANNERS]
       setLocalBanners(combined)
     }
