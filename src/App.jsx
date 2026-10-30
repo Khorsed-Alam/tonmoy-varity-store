@@ -24,6 +24,7 @@ import AdminLoginPage from './pages/admin/AdminLoginPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminProducts from './pages/admin/AdminProducts'
 import AdminCategories from './pages/admin/AdminCategories'
+import AdminBanners from './pages/admin/AdminBanners'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminOrderDetail from './pages/admin/AdminOrderDetail'
 import AdminInventory from './pages/admin/AdminInventory'
@@ -41,11 +42,11 @@ function RequireAuth({ children }) {
 }
 
 function RequireAdmin({ children }) {
-  const { isAdmin, loading } = useAuth()
+  const { user, loading, isAdmin } = useAuth()
   if (loading) return <div className="flex items-center justify-center min-h-screen">
     <div className="animate-spin rounded-full h-10 w-10 border-4 border-brand-fresh border-t-transparent" />
   </div>
-  return isAdmin ? children : <Navigate to="/admin/login" replace />
+  return (user && isAdmin) ? children : <Navigate to="/admin/login" replace />
 }
 
 export default function App() {
@@ -73,6 +74,7 @@ export default function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="products" element={<AdminProducts />} />
         <Route path="categories" element={<AdminCategories />} />
+        <Route path="banners" element={<AdminBanners />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="orders/:orderId" element={<AdminOrderDetail />} />
         <Route path="inventory" element={<AdminInventory />} />

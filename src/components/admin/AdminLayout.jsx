@@ -1,14 +1,14 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { useLang } from '../../context/LanguageContext'
+import { useAuth } from '../contexts/AuthContext'
+import { useLang } from '../contexts/LanguageContext'
 import {
   LayoutDashboard, Package, Tag, ShoppingBag,
   Warehouse, Users, BarChart3, Settings, LogOut,
-  Menu, X, Bell, Search, Calendar, Store, CheckCircle, ChevronDown
+  Menu, X, Bell, Search, Calendar, Store, CheckCircle, ChevronDown, Sparkles
 } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
-import { supabaseClient } from '../../lib/supabaseClient'
-import { useProductSync, useOrderSync } from '../../lib/syncEvents'
+import { supabase } from '../lib/supabase'
+import { useProductSync, useOrderSync, useBannerSync } from '../lib/syncEvents'
 
 export default function AdminLayout() {
   const { signOut, profile } = useAuth()
@@ -24,9 +24,9 @@ export default function AdminLayout() {
   const fetchCounts = useCallback(async () => {
     try {
       const [prodRes, pendingRes, stockRes] = await Promise.all([
-        supabaseClient.from('products').select('id', { count: 'exact', head: true }),
-        supabaseClient.from('orders').select('id, order_number, total_amount, created_at, full_name').eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
-        supabaseClient.from('products').select('id', { count: 'exact', head: true }).lte('stock_quantity', 5).eq('is_active', true)
+        supabase.from('products').select('id', { count: 'exact', head: true }),
+        supabase.from('orders').select('id, order_number, total_amount, created_at, full_name').eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
+        supabase.from('products').select('id', { count: 'exact', head: true }).lte('stock_quantity', 5).eq('is_active', true)
       ])
 
       const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
@@ -52,6 +52,7 @@ export default function AdminLayout() {
   // Real-time synchronization for Admin Sidebar and Notification Badge
   useProductSync(fetchCounts)
   useOrderSync(fetchCounts)
+  useBannerSync(fetchCounts)
 
   const handleSignOut = async () => {
     await signOut()
@@ -68,6 +69,7 @@ export default function AdminLayout() {
     { to: '/admin', icon: LayoutDashboard, labelBN: 'ড্যাশবোর্ড', labelEN: 'Dashboard', end: true },
     { to: '/admin/products', icon: Package, labelBN: 'পণ্যসমূহ', labelEN: 'Products', badge: counts.products ? counts.products.toLocaleString('bn-BD') : null },
     { to: '/admin/categories', icon: Tag, labelBN: 'ক্যাটাগরি', labelEN: 'Categories' },
+    { to: '/admin/banners', icon: Sparkles, labelBN: 'ব্যানার ও অফার', labelEN: 'Banners & Offers' },
     { to: '/admin/orders', icon: ShoppingBag, labelBN: 'অর্ডার ব্যবস্থাপনা', labelEN: 'Orders', badge: counts.pendingOrders ? `${counts.pendingOrders} নতুন` : null, badgeColor: 'bg-error-container text-on-error-container' },
     { to: '/admin/inventory', icon: Warehouse, labelBN: 'মজুদ / স্টক', labelEN: 'Inventory', badge: counts.lowStock ? `${counts.lowStock} লো-স্টক` : null, badgeColor: 'bg-error-container text-on-error-container' },
     { to: '/admin/customers', icon: Users, labelBN: 'গ্রাহক তালিকা', labelEN: 'Customers' },
@@ -341,4 +343,3 @@ export default function AdminLayout() {
     </div>
   )
 }
-

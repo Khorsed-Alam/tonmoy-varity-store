@@ -130,6 +130,70 @@ export const uploadService = {
   },
 
   /**
+   * Upload banner image file.
+   * Tries buckets 'banners', 'public', 'products'.
+   * If storage upload fails due to permissions, returns crisp Base64 Data URL.
+   */
+  async uploadBannerImage(file) {
+    if (!file) throw new Error('No banner file provided')
+
+    const rawDataUrl = await fileToDataUrl(file)
+    const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const cleanFileName = `banner_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`
+    const filePath = `banners/${cleanFileName}`
+
+    const targetBuckets = ['banners', 'public', 'products']
+    let publicUrl = null
+    let uploadSuccess = false
+    let lastError = null
+
+    for (const bucket of targetBuckets) {
+      try {
+        const { data, error } = await supabaseClient.storage
+          .from(bucket)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true,
+          })
+
+        if (!error && data) {
+          const { data: pubData } = supabaseClient.storage.from(bucket).getPublicUrl(filePath)
+          if (pubData?.publicUrl) {
+            publicUrl = pubData.publicUrl
+            uploadSuccess = true
+            break
+          }
+        } else if (error) {
+          lastError = error
+        }
+      } catch (err) {
+        lastError = err
+      }
+    }
+
+    if (uploadSuccess && publicUrl) {
+      return { url: publicUrl, fromStorage: true, bucket: 'banners' }
+    }
+
+    // High quality compression for banners (1600x800) if > 2.5MB
+    let finalUrl = rawDataUrl
+    if (file.size > 2.5 * 1024 * 1024) {
+      try {
+        const compressed = await compressAndEncodeImage(file, 1600, 800, 0.92)
+        if (compressed) finalUrl = compressed
+      } catch (cErr) {
+        finalUrl = rawDataUrl
+      }
+    }
+
+    return {
+      url: finalUrl,
+      fromStorage: false,
+      storageError: lastError?.message || 'Storage permission denied'
+    }
+  },
+
+  /**
    * Helper to format image URL from storage or fallback URL
    */
   getImageUrl(url) {

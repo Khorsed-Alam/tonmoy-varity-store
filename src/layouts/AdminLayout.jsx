@@ -4,11 +4,11 @@ import { useLang } from '../contexts/LanguageContext'
 import {
   LayoutDashboard, Package, Tag, ShoppingBag,
   Warehouse, Users, BarChart3, Settings, LogOut,
-  Menu, X, Bell, Search, Calendar, Store, CheckCircle, ChevronDown
+  Menu, X, Bell, Search, Calendar, Store, CheckCircle, ChevronDown, Sparkles
 } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { useProductSync, useOrderSync } from '../lib/syncEvents'
+import { useProductSync, useOrderSync, useBannerSync } from '../lib/syncEvents'
 
 export default function AdminLayout() {
   const { signOut, profile } = useAuth()
@@ -52,6 +52,7 @@ export default function AdminLayout() {
   // Real-time synchronization for Admin Sidebar and Notification Badge
   useProductSync(fetchCounts)
   useOrderSync(fetchCounts)
+  useBannerSync(fetchCounts)
 
   const handleSignOut = async () => {
     await signOut()
@@ -68,6 +69,7 @@ export default function AdminLayout() {
     { to: '/admin', icon: LayoutDashboard, labelBN: 'ড্যাশবোর্ড', labelEN: 'Dashboard', end: true },
     { to: '/admin/products', icon: Package, labelBN: 'পণ্যসমূহ', labelEN: 'Products', badge: counts.products ? counts.products.toLocaleString('bn-BD') : null },
     { to: '/admin/categories', icon: Tag, labelBN: 'ক্যাটাগরি', labelEN: 'Categories' },
+    { to: '/admin/banners', icon: Sparkles, labelBN: 'ব্যানার ও অফার', labelEN: 'Banners & Offers' },
     { to: '/admin/orders', icon: ShoppingBag, labelBN: 'অর্ডার ব্যবস্থাপনা', labelEN: 'Orders', badge: counts.pendingOrders ? `${counts.pendingOrders} নতুন` : null, badgeColor: 'bg-error-container text-on-error-container' },
     { to: '/admin/inventory', icon: Warehouse, labelBN: 'মজুদ / স্টক', labelEN: 'Inventory', badge: counts.lowStock ? `${counts.lowStock} লো-স্টক` : null, badgeColor: 'bg-error-container text-on-error-container' },
     { to: '/admin/customers', icon: Users, labelBN: 'গ্রাহক তালিকা', labelEN: 'Customers' },
@@ -341,4 +343,3 @@ export default function AdminLayout() {
     </div>
   )
 }
-

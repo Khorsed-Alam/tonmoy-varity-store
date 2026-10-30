@@ -4,7 +4,8 @@ import { ArrowRight, Search } from 'lucide-react'
 import { supabaseClient as supabase } from '../lib/supabaseClient'
 import { useLang } from '../context/LanguageContext'
 import { useCart } from '../context/CartContext'
-import { useProductSync } from '../lib/syncEvents'
+import { useProductSync, useBannerSync } from '../lib/syncEvents'
+import { bannerService, DEFAULT_BANNERS } from '../services/bannerService'
 import ProductCard from '../components/products/ProductCard'
 import { ProductGridSkeleton } from '../components/products/ProductSkeleton'
 import MarketListModal from '../components/common/MarketListModal'
@@ -26,17 +27,39 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [deliveryMode, setDeliveryMode] = useState('delivery') // 'delivery' | 'pickup'
   const [isListModalOpen, setIsListModalOpen] = useState(false)
-  const [activeBannerIndex, setActiveBannerIndex] = useState(0)
 
-  // Auto-slide hero banner only when multiple banners exist
-  useEffect(() => {
-    if (HERO_BANNERS.length <= 1) return
-    const bannerTimer = setInterval(() => {
-      setActiveBannerIndex((prev) => (prev + 1) % HERO_BANNERS.length)
-    }, 5000)
-    return () => clearInterval(bannerTimer)
+  // Banners & Carousel state
+  const [banners, setBanners] = useState(DEFAULT_BANNERS)
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0)
+  const [isBannerPaused, setIsBannerPaused] = useState(false)
+
+  // Fetch dynamic banners from Supabase / LocalStorage
+  const loadBanners = useCallback(async () => {
+    try {
+      const data = await bannerService.getBanners({ activeOnly: true })
+      if (data && data.length > 0) {
+        setBanners(data)
+      }
+    } catch (err) {
+      console.warn('HomePage banner load warning:', err)
+    }
   }, [])
 
+  useEffect(() => {
+    loadBanners()
+  }, [loadBanners])
+
+  // Real-time synchronization when admin adds/edits/deletes a banner
+  useBannerSync(loadBanners)
+
+  // Auto-slide hero banner only when multiple banners exist & not paused by mouse hover
+  useEffect(() => {
+    if (banners.length <= 1 || isBannerPaused) return
+    const bannerTimer = setInterval(() => {
+      setActiveBannerIndex((prev) => (prev + 1) % banners.length)
+    }, 5000)
+    return () => clearInterval(bannerTimer)
+  }, [banners.length, isBannerPaused])
 
   const load = useCallback(async () => {
     try {
@@ -97,6 +120,8 @@ export default function Home() {
   // Real-time synchronization across User End & Admin End
   useProductSync(load)
 
+  const activeBanner = banners[activeBannerIndex] || banners[0] || DEFAULT_BANNERS[0]
+
   return (
     <div className="bg-surface font-sans text-on-surface flex flex-col min-h-screen">
       {/* Delivery / Pickup Mode Switcher */}
@@ -139,40 +164,66 @@ export default function Home() {
       <div className="page-container pb-6">
         <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-card border border-outline-variant/40 flex flex-col relative group">
           {/* Main Banner Image Display */}
-          <div className="relative w-full overflow-hidden bg-gradient-to-r from-[#e1f3f7] via-[#ebf7fa] to-[#e1f3f7] flex items-center justify-center min-h-[120px] sm:min-h-[180px] md:min-h-[220px] lg:min-h-[260px]">
-            <Link to="/shop" className="block w-full text-center">
-              <img
-                src={(HERO_BANNERS[activeBannerIndex] || HERO_BANNERS[0]).imageUrl}
-                alt={(HERO_BANNERS[activeBannerIndex] || HERO_BANNERS[0]).alt}
-                className="w-full h-auto max-h-[380px] object-contain mx-auto transition-transform duration-700 hover:scale-[1.008]"
-                loading="eager"
-              />
-            </Link>
+          <div 
+            className="relative w-full overflow-hidden bg-gradient-to-r from-[#e1f3f7] via-[#ebf7fa] to-[#e1f3f7] flex items-center justify-center min-h-[140px] sm:min-h-[180px] md:min-h-[220px] lg:min-h-[260px]"
+            onMouseEnter={() => setIsBannerPaused(true)}
+            onMouseLeave={() => setIsBannerPaused(false)}
+          >
+            {activeBanner && (
+              <Link 
+                to={activeBanner.link_url || activeBanner.linkUrl || '/shop'} 
+                className="block w-full text-center relative group/slide"
+              >
+                <img
+                  src={activeBanner.image_url || activeBanner.imageUrl}
+                  alt={activeBanner.title_bn || activeBanner.titleBN || activeBanner.alt || 'ব্যানার'}
+                  className="w-full h-auto max-h-[380px] object-contain mx-auto transition-transform duration-700 group-hover/slide:scale-[1.008]"
+                  loading="eager"
+                  onError={(e) => {
+                    e.target.src = '/images/tonmoy-variety-store-hero-banner.jpg'
+                  }}
+                />
+
+                {/* Offer floating badge if not standard official store */}
+                {activeBanner.badge_text_bn && activeBanner.badge_text_bn !== 'অফিসিয়াল স্টোর' && (
+                  <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 z-10 bg-primary/95 text-on-primary text-[11px] sm:text-xs font-bold px-3 py-1 rounded-full shadow-md backdrop-blur-xs flex items-center gap-1.5 animate-fade-in">
+                    <span className="material-symbols-outlined text-[14px] text-amber-300">sparkles</span>
+                    <span>{activeBanner.badge_text_bn}</span>
+                  </div>
+                )}
+              </Link>
+            )}
 
             {/* Left / Right Navigation Arrows & Dots only if multiple banners */}
-            {HERO_BANNERS.length > 1 && (
+            {banners.length > 1 && (
               <>
                 <button
                   type="button"
-                  onClick={() => setActiveBannerIndex((prev) => (prev === 0 ? HERO_BANNERS.length - 1 : prev - 1))}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-sm opacity-80 group-hover:opacity-100 transition-all active:scale-90 shadow-sm"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setActiveBannerIndex((prev) => (prev === 0 ? banners.length - 1 : prev - 1))
+                  }}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-sm opacity-80 group-hover:opacity-100 transition-all active:scale-90 shadow-sm z-20"
                   aria-label="Previous Banner"
                 >
                   <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveBannerIndex((prev) => (prev + 1) % HERO_BANNERS.length)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-sm opacity-80 group-hover:opacity-100 transition-all active:scale-90 shadow-sm"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setActiveBannerIndex((prev) => (prev + 1) % banners.length)
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-sm opacity-80 group-hover:opacity-100 transition-all active:scale-90 shadow-sm z-20"
                   aria-label="Next Banner"
                 >
                   <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                 </button>
 
-                <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full shadow-xs">
-                  {HERO_BANNERS.map((banner, index) => (
+                <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full shadow-xs z-20">
+                  {banners.map((banner, index) => (
                     <button
-                      key={banner.id}
+                      key={banner.id || index}
                       type="button"
                       onClick={() => setActiveBannerIndex(index)}
                       className={`transition-all ${
@@ -219,10 +270,10 @@ export default function Home() {
                 <span className="truncate">{MUDIKHANA_DOKAN_BANNER.phoneBN}</span>
               </a>
               <Link
-                to="/shop"
+                to={activeBanner?.link_url || activeBanner?.linkUrl || '/shop'}
                 className="flex items-center justify-center gap-1 bg-surface-container-lowest text-primary px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold shadow-xs active:scale-95 transition-all hover:bg-surface-container-high whitespace-nowrap border border-outline-variant/30"
               >
-                <span className="truncate">{t('বাজার করুন', 'Shop Now')}</span>
+                <span className="truncate">{t(activeBanner?.button_text_bn || 'বাজার করুন', activeBanner?.button_text || 'Shop Now')}</span>
                 <span className="material-symbols-outlined text-[15px] sm:text-[16px]">arrow_forward</span>
               </Link>
             </div>

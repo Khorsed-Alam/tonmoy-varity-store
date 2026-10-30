@@ -183,3 +183,88 @@ export const useOrderSync = (callback) => {
     }
   }, [callback])
 }
+
+
+/**
+ * Dispatch banner update across tabs and storage
+ */
+export const notifyBannerChange = (data = {}) => {
+  const syncEvent = {
+    type: 'BANNERS_UPDATED',
+    timestamp: Date.now(),
+    data,
+  }
+
+  if (broadcastChannel) {
+    try {
+      broadcastChannel.postMessage(syncEvent)
+    } catch (err) {
+      console.warn('Broadcast postMessage error:', err)
+    }
+  }
+
+  try {
+    localStorage.setItem('tvs_banners_sync_timestamp', Date.now().toString())
+  } catch {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('tvs_banners_updated', { detail: syncEvent }))
+  }
+}
+
+/**
+ * React hook to listen for real-time banner updates
+ */
+export const useBannerSync = (callback) => {
+  useEffect(() => {
+    if (!callback) return
+
+    const handleBroadcast = (event) => {
+      if (event.data?.type === 'BANNERS_UPDATED') {
+        callback(event.data)
+      }
+    }
+    if (broadcastChannel) {
+      broadcastChannel.addEventListener('message', handleBroadcast)
+    }
+
+    const handleStorage = (event) => {
+      if (event.key === 'tvs_banners_sync_timestamp' || event.key === 'tvs_custom_banners') {
+        callback({ type: 'BANNERS_UPDATED', timestamp: Date.now() })
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+
+    const handleCustom = (e) => {
+      callback(e.detail)
+    }
+    window.addEventListener('tvs_banners_updated', handleCustom)
+
+    let channel = null
+    try {
+      channel = supabase
+        .channel('realtime:public:banners')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'banners' },
+          (payload) => {
+            callback(payload)
+          }
+        )
+        .subscribe()
+    } catch (err) {
+      console.warn('Supabase banners channel notice:', err)
+    }
+
+    return () => {
+      if (broadcastChannel) {
+        broadcastChannel.removeEventListener('message', handleBroadcast)
+      }
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('tvs_banners_updated', handleCustom)
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [callback])
+}
