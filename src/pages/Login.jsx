@@ -6,14 +6,16 @@ import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Login() {
+  const navigate = useNavigate()
   const { user, signIn } = useAuth()
+  const { t } = useLang()
+
   useEffect(() => {
     if (user) {
       navigate('/', { replace: true })
     }
   }, [user, navigate])
-  const { t } = useLang()
-  const navigate = useNavigate()
+
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -50,7 +52,6 @@ export default function Login() {
       navigate('/', { replace: true })
     }
   }
-
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
