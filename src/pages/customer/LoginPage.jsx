@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLang } from '../../contexts/LanguageContext'
@@ -6,7 +6,12 @@ import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
-  const { signIn } = useAuth()
+  const { user, signIn } = useAuth()
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true })
+    }
+  }, [user, navigate])
   const { t } = useLang()
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })

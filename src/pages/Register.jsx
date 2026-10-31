@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LanguageContext'
@@ -6,7 +6,12 @@ import { Mail, Lock, User, Phone, Loader2, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Register() {
-  const { signUp } = useAuth()
+  const { user, signUp } = useAuth()
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true })
+    }
+  }, [user, navigate])
   const { t } = useLang()
   const navigate = useNavigate()
   const [form, setForm] = useState({ fullName: '', phone: '', email: '', password: '', confirmPassword: '' })

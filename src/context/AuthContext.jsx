@@ -57,18 +57,24 @@ export function AuthProvider({ children }) {
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id).finally(() => setLoading(false))
+        if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('type=signup'))) {
+          window.history.replaceState(null, '', window.location.pathname)
+        }
       } else {
         setLoading(false)
       }
     })
 
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
       if (localStorage.getItem('tvs_demo_admin') === 'true') {
         return
       }
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id)
+        if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('type=signup'))) {
+          window.history.replaceState(null, '', window.location.pathname)
+        }
       } else {
         setProfile(null)
         setIsAdmin(false)
@@ -87,11 +93,13 @@ export function AuthProvider({ children }) {
   }
 
   const signUp = async ({ email, password, fullName, phone }) => {
+    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined
     const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName, phone },
+        emailRedirectTo: redirectUrl,
       },
     })
     return { data, error }
@@ -132,13 +140,18 @@ export function AuthProvider({ children }) {
       return { data: updated, error: null }
     }
 
+    if (!user) return { data: null, error: new Error('No user logged in') }
+
     const { data, error } = await supabaseClient
       .from('profiles')
       .update(updates)
       .eq('id', user.id)
       .select()
       .single()
-    if (!error && data) setProfile(data)
+
+    if (!error && data) {
+      setProfile(data)
+    }
     return { data, error }
   }
 
@@ -161,11 +174,10 @@ export function AuthProvider({ children }) {
   )
 }
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
 }
-
-export default AuthContext
-
