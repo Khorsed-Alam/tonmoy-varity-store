@@ -31,15 +31,24 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-surface/95 dark:bg-surface-container-lowest/95 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_1px_8px_rgba(0,0,0,0.03)] transition-colors">
-      {/* Top Announcement Bar from Stitch Design */}
-      <div className="bg-primary text-on-primary px-3 sm:px-4 py-1 text-[10px] sm:text-xs flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 truncate">
-          <span className="material-symbols-outlined text-[14px] sm:text-[15px] shrink-0">electric_moped</span>
-          <span className="truncate">{t('🛵 আশেপাশের এলাকায় ৬০ মিনিটে ফ্রি ডেলিভারি! (৳৫০০+ অর্ডারে)', '🛵 Free 60-min delivery nearby! (Orders ৳500+)')}</span>
+      {/* Top Announcement Bar with Circular Left-to-Right Marquee */}
+      <div className="bg-primary text-on-primary py-1.5 overflow-hidden text-[11px] sm:text-xs select-none border-b border-primary-container/40">
+        <div className="animate-marquee-ltr flex items-center">
+          {[1, 2, 3, 4].map((idx) => (
+            <div key={idx} className="flex items-center gap-6 sm:gap-10 shrink-0 px-4 sm:px-6">
+              <div className="flex items-center gap-1.5 font-medium">
+                <span className="material-symbols-outlined text-[15px] sm:text-[16px] text-amber-300">electric_moped</span>
+                <span>{t('🛵 আশেপাশের এলাকায় ৬০ মিনিটে ফ্রি ডেলিভারি! (৳৫০০+ অর্ডারে)', '🛵 Free 60-min delivery nearby! (Orders ৳500+)')}</span>
+              </div>
+              <span className="text-white/40">•</span>
+              <a href="tel:01717999460" className="flex items-center gap-1 bg-white/15 hover:bg-white/25 px-2 py-0.5 rounded text-white font-semibold transition-colors shrink-0">
+                <span>📞 {t('০১৭১৭-৯৯৯৪৬০', '01717-999460')}</span>
+              </a>
+              <span className="text-white/40">•</span>
+              <span className="text-white/90 font-medium">{t('মেসার্স তন্ময় ভ্যারাইটি স্টোর — নারুয়ামালা হাট, গাবতলী, বগুড়া', 'M/S Tonmoy Varity Store — Naruamala Haat, Gabtoli, Bogura')}</span>
+            </div>
+          ))}
         </div>
-        <a href="tel:01717999460" className="flex items-center gap-1 bg-primary-container px-2 py-0.5 rounded text-white text-[10px] sm:text-xs whitespace-nowrap hover:opacity-90 transition-opacity shrink-0">
-          <span>📞 {t('০১৭১৭-৯৯৯৪৬০', '01717-999460')}</span>
-        </a>
       </div>
 
       <div className="page-container">
