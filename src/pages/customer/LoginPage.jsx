@@ -47,7 +47,7 @@ export default function LoginPage() {
       }
     } else {
       toast.success(t('স্বাগতম! 👋', 'Welcome back! 👋'))
-      navigate('/')
+      navigate('/', { replace: true })
     }
   }
 

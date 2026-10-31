@@ -80,21 +80,6 @@ export const DEFAULT_BANNERS = [
   },
   {
     id: 'b1000000-0000-0000-0000-000000000006',
-    title: '2% Discount Pohela Boishakh',
-    title_bn: 'বাংলা নববর্ষ উপলক্ষে বিশেষ ছাড়',
-    subtitle: 'New shopping in the new year, stay healthy, stay well!',
-    subtitle_bn: 'নতুন বছরে নতুন কেনাকাটা, সুস্থ থাকুন, ভালো থাকুন!',
-    badge_text: 'Pohela Boishakh',
-    badge_text_bn: 'বৈশাখী ২% ছাড়',
-    image_url: '/images/banners/banner-boishakh-2discount.jpg',
-    link_url: '/shop',
-    button_text: 'Shop Now',
-    button_text_bn: 'বাজার করুন',
-    sort_order: 6,
-    is_active: true,
-  },
-  {
-    id: 'b1000000-0000-0000-0000-000000000007',
     title: '3% OFF Durga Puja Special',
     title_bn: 'পুজো স্পেশাল সকল পণ্যে ৩% ছাড়',
     subtitle: 'Everything for your home in the joy of Puja! Now at more affordable prices!',
@@ -105,11 +90,11 @@ export const DEFAULT_BANNERS = [
     link_url: '/shop',
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
-    sort_order: 7,
+    sort_order: 6,
     is_active: true,
   },
   {
-    id: 'b1000000-0000-0000-0000-000000000008',
+    id: 'b1000000-0000-0000-0000-000000000007',
     title: '3% Discount Independence Day Special',
     title_bn: 'স্বাধীনতা দিবস উপলক্ষে ৩% ছাড়',
     subtitle: 'Pride of our nation, our products. May every celebration be more beautiful!',
@@ -120,11 +105,11 @@ export const DEFAULT_BANNERS = [
     link_url: '/shop',
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
-    sort_order: 8,
+    sort_order: 7,
     is_active: true,
   },
   {
-    id: 'b1000000-0000-0000-0000-000000000009',
+    id: 'b1000000-0000-0000-0000-000000000008',
     title: '3% Discount Victory Day Special',
     title_bn: 'মহান বিজয় দিবসের বিশেষ অফার ৩% ছাড়',
     subtitle: 'Bangladesh built on dreams of freedom, prosperity and healthy life for all!',
@@ -135,11 +120,11 @@ export const DEFAULT_BANNERS = [
     link_url: '/shop',
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
-    sort_order: 9,
+    sort_order: 8,
     is_active: true,
   },
   {
-    id: 'b1000000-0000-0000-0000-000000000010',
+    id: 'b1000000-0000-0000-0000-000000000009',
     title: '2% OFF July 24 Mass Uprising Day',
     title_bn: 'জুলাই ২৪ গণঅভ্যুত্থান দিবসে ২% ছাড়',
     subtitle: 'Special discount on today shopping in honor of the martyrs!',
@@ -150,27 +135,12 @@ export const DEFAULT_BANNERS = [
     link_url: '/shop',
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
-    sort_order: 10,
-    is_active: true,
-  },
-  {
-    id: 'b1000000-0000-0000-0000-000000000011',
-    title: '2% OFF International Mother Language Day',
-    title_bn: 'আন্তর্জাতিক মাতৃভাষা দিবস ২% ছাড়',
-    subtitle: 'Love for the Bengali language, special discount on grocery items!',
-    subtitle_bn: 'বাংলা ভাষার প্রতি ভালোবাসা, আমাদের সবার — গ্রোসারি পণ্যে বিশেষ ছাড়!',
-    badge_text: 'Language Day',
-    badge_text_bn: 'মাতৃভাষা দিবস ২% ছাড়',
-    image_url: '/images/banners/banner-language-day-2off.jpg',
-    link_url: '/shop',
-    button_text: 'Shop Now',
-    button_text_bn: 'বাজার করুন',
-    sort_order: 11,
+    sort_order: 9,
     is_active: true,
   },
 ]
 
-const STORAGE_KEY = 'tvs_custom_banners'
+const STORAGE_KEY = 'tvs_custom_banners_v3'
 
 /**
  * Read local storage custom banners safely, automatically filtering out legacy unsplash mock images

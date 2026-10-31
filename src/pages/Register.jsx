@@ -47,7 +47,7 @@ export default function Register() {
       }
     } else {
       toast.success(t('নিবন্ধন সফল! ইমেইল যাচাই করুন।', 'Registered! Check your email.'))
-      navigate('/login')
+      navigate('/login', { replace: true })
     }
   }
 
