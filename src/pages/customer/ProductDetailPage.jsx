@@ -98,15 +98,24 @@ export default function ProductDetailPage() {
       setProduct(currentItem)
 
       // 2. Fetch suggestions:
-      // Match level 3 category across the whole database (WITHOUT category_id restriction)
-      // to find different weights/sizes (e.g. 100g, 200g, 500g) of this item
+      // STRICT exact matching by Level 3 subcategory item (e.g. Chilli only -> Chilli; Turmeric only -> Turmeric)
+      // Never suggest unrelated items (e.g. no turmeric/cumin when viewing chilli powder)
       if (currentItem) {
-        const level3 = detectLevel3(currentItem)
-        const baseName = getBaseName(currentItem.name_bn || currentItem.name)
+        const level3 = currentItem.child_subcategory || detectLevel3(currentItem)
         const gathered = []
         const gatheredIds = new Set([currentItem.id])
 
-        // A. Match by exact level 3 category (child_subcategory or tag)
+        // Determine core search token (e.g. "মরিচ", "হলুদ", "জিরা", "ধনে", "সয়াবিন", "সরিষা")
+        let coreToken = ''
+        if (level3) {
+          coreToken = level3.replace(/গুঁড়া|গুঁড়ো|পাউডার|মিক্স/g, '').trim()
+        }
+        if (!coreToken) {
+          const match = (currentItem.name_bn || '').match(/(মরিচ|হলুদ|জিরা|ধনে|সরিষা|সয়াবিন|আটা|ময়দা|চিনি|লবণ|চা|ডিম|দুধ)/)
+          if (match) coreToken = match[1]
+        }
+
+        // A. Match strictly by exact Level 3 category (child_subcategory or tag)
         if (level3) {
           const { data: l3Matches } = await supabase
             .from('products')
@@ -114,7 +123,7 @@ export default function ProductDetailPage() {
             .or('is_active.eq.true,is_active.is.null')
             .or(`child_subcategory.eq.${level3},tag.eq.${level3}`)
             .neq('id', currentItem.id)
-            .limit(20)
+            .limit(24)
 
           if (l3Matches) {
             for (const item of l3Matches) {
@@ -126,45 +135,20 @@ export default function ProductDetailPage() {
           }
         }
 
-        // B. Match by base name across all products (e.g. "রাঁধুনী মরিচের গুঁড়া")
-        if (baseName && baseName.length >= 3 && gathered.length < 8) {
+        // B. If fewer matches, search by core item keyword in name (e.g. "মরিচ গুঁড়া")
+        if (gathered.length < 12 && coreToken) {
           const { data: nameMatches } = await supabase
             .from('products')
             .select('*, categories(name, name_bn, slug)')
             .or('is_active.eq.true,is_active.is.null')
-            .ilike('name_bn', `%${baseName}%`)
-            .neq('id', currentItem.id)
-            .limit(15)
-
-          if (nameMatches) {
-            for (const item of nameMatches) {
-              if (!gatheredIds.has(item.id)) {
-                gatheredIds.add(item.id)
-                gathered.push(item)
-              }
-            }
-          }
-        }
-
-        // C. Fill remaining slots with same subcategory or category items
-        if (gathered.length < 12 && (currentItem.subcategory || currentItem.category_id)) {
-          let catQuery = supabase
-            .from('products')
-            .select('*, categories(name, name_bn, slug)')
-            .or('is_active.eq.true,is_active.is.null')
+            .ilike('name_bn', `%${coreToken}%`)
             .neq('id', currentItem.id)
             .limit(20)
 
-          if (currentItem.subcategory) {
-            catQuery = catQuery.eq('subcategory', currentItem.subcategory)
-          } else if (currentItem.category_id) {
-            catQuery = catQuery.eq('category_id', currentItem.category_id)
-          }
-
-          const { data: catMatches } = await catQuery
-          if (catMatches) {
-            for (const item of catMatches) {
-              if (!gatheredIds.has(item.id)) {
+          if (nameMatches) {
+            for (const item of nameMatches) {
+              const itemName = (item.name_bn || item.name || '').toLowerCase()
+              if (itemName.includes(coreToken.toLowerCase()) && !gatheredIds.has(item.id)) {
                 gatheredIds.add(item.id)
                 gathered.push(item)
               }
@@ -172,29 +156,71 @@ export default function ProductDetailPage() {
           }
         }
 
-        // Include local custom products that match
+        // C. Filter local custom products strictly matching the same item
         const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
         for (const loc of localCustom) {
-          if (
-            !gatheredIds.has(loc.id) &&
-            loc.id !== currentItem.id &&
-            ((level3 && (loc.child_subcategory === level3 || loc.tag === level3)) ||
-              (baseName && (loc.name_bn || loc.name || '').includes(baseName)))
-          ) {
-            gatheredIds.add(loc.id)
-            gathered.push(loc)
+          if (!gatheredIds.has(loc.id) && loc.id !== currentItem.id) {
+            const locName = (loc.name_bn || loc.name || '').toLowerCase()
+            const matchesExact = (level3 && (loc.child_subcategory === level3 || loc.tag === level3)) ||
+                                 (coreToken && locName.includes(coreToken.toLowerCase()))
+            if (matchesExact) {
+              gatheredIds.add(loc.id)
+              gathered.push(loc)
+            }
           }
         }
 
-        // Sort so exact level 3 matches and price variants come first
-        gathered.sort((a, b) => {
-          const aL3 = a.child_subcategory === level3 || a.tag === level3 ? 0 : 1
-          const bL3 = b.child_subcategory === level3 || b.tag === level3 ? 0 : 1
-          if (aL3 !== bL3) return aL3 - bL3
-          return (a.price || 0) - (b.price || 0)
+        // D. Final strict anti-conflict filter:
+        // NEVER include conflicting spice/product types:
+        // E.g. if Chilli (মরিচ), exclude turmeric (হলুদ), cumin (জিরা), coriander (ধনে)
+        // If Turmeric (হলুদ), exclude chilli (মরিচ), cumin (জিরা)
+        // If Soybean Oil, exclude mustard oil
+        const filteredStrict = gathered.filter(p => {
+          const pName = (p.name_bn || p.name || '').toLowerCase()
+          const pChild = (p.child_subcategory || '').toLowerCase()
+
+          if (coreToken === 'মরিচ' || (level3 && level3.includes('মরিচ'))) {
+            if (pName.includes('হলুদ') || pName.includes('জিরা') || pName.includes('ধনে') || pChild.includes('হলুদ') || pChild.includes('জিরা') || pChild.includes('ধনে')) {
+              return false
+            }
+            return pName.includes('মরিচ') || pChild.includes('মরিচ')
+          }
+
+          if (coreToken === 'হলুদ' || (level3 && level3.includes('হলুদ'))) {
+            if (pName.includes('মরিচ') || pName.includes('জিরা') || pName.includes('ধনে') || pChild.includes('মরিচ') || pChild.includes('জিরা') || pChild.includes('ধনে')) {
+              return false
+            }
+            return pName.includes('হলুদ') || pChild.includes('হলুদ')
+          }
+
+          if (coreToken === 'জিরা' || (level3 && level3.includes('জিরা'))) {
+            if (pName.includes('মরিচ') || pName.includes('হলুদ') || pName.includes('ধনে') || pChild.includes('মরিচ') || pChild.includes('হলুদ')) {
+              return false
+            }
+            return pName.includes('জিরা') || pChild.includes('জিরা')
+          }
+
+          if (coreToken === 'সয়াবিন' || coreToken === 'সয়াবিন' || (level3 && level3.includes('সয়াবিন'))) {
+            if (pName.includes('সরিষা') || pChild.includes('সরিষা')) {
+              return false
+            }
+            return pName.includes('সয়াবিন') || pName.includes('সয়াবিন') || pChild.includes('সয়াবিন') || pChild.includes('সয়াবিন')
+          }
+
+          if (coreToken === 'সরিষা' || (level3 && level3.includes('সরিষা'))) {
+            if (pName.includes('সয়াবিন') || pName.includes('সয়াবিন') || pChild.includes('সয়াবিন')) {
+              return false
+            }
+            return pName.includes('সরিষা') || pChild.includes('সরিষা')
+          }
+
+          return true
         })
 
-        setSuggestions(gathered)
+        // Sort by price ascending (different sizes: 50g, 100g, 200g, 500g etc.)
+        filteredStrict.sort((a, b) => (a.price || 0) - (b.price || 0))
+
+        setSuggestions(filteredStrict)
       }
     } catch (err) {
       console.warn('Error loading product details:', err)
