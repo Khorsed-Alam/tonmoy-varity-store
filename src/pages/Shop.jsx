@@ -20,6 +20,7 @@ import {
   Package,
   Layers,
   ArrowRight,
+  ArrowLeft,
   ChevronRight
 } from 'lucide-react'
 import { supabaseClient as supabase } from '../lib/supabaseClient'
@@ -47,6 +48,7 @@ export default function Shop() {
   const [viewMode, setViewMode] = useState('list') // 'list' | 'grid'
   const [stockOnly, setStockOnly] = useState(false)
   const [voiceActive, setVoiceActive] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   // Query Params
   const q = searchParams.get('q') || ''
   const categorySlug = slug || searchParams.get('category') || 'all'
@@ -559,7 +561,21 @@ export default function Shop() {
                 )}
               </button>
 
-              {/* Category Dropdown Button */}
+<button
+                type="button"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className={`flex items-center gap-1.5 h-8 sm:h-9 px-2.5 sm:px-3 rounded-full text-xs font-semibold shadow-sm transition-all active:scale-95 ${
+                  isSidebarOpen
+                    ? 'bg-primary/15 text-primary border border-primary/30 font-bold'
+                    : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container'
+                }`}
+                title={isSidebarOpen ? t('সাইডবার লুকান', 'Hide Sidebar') : t('সাইডবার দেখান', 'Show Sidebar')}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>{isSidebarOpen ? t('সাইডবার লুকান', 'Hide Cat.') : t('সাইডবার দেখান', 'Categories')}</span>
+              </button>
+
+                            {/* Category Dropdown Button */}
               <div className="relative" ref={catDropdownRef}>
                 <button
                   type="button"
@@ -872,10 +888,66 @@ export default function Shop() {
         </div>
       </div>
 
+            {/* Mobile Horizontal Category Chips Bar (Allows phone users to quickly switch or view categories) */}
+      <div className="md:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar px-3 py-2 bg-surface-container-lowest border-b border-outline-variant/20 sticky top-[98px] z-20">
+        <button
+          type="button"
+          onClick={() => handleSelectCategory('all')}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 shrink-0 ${
+            categorySlug === 'all'
+              ? 'bg-primary text-on-primary shadow-xs'
+              : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
+          }`}
+        >
+          <span>🛒</span>
+          <span>{t('সব পণ্য', 'All')}</span>
+        </button>
+        {mainCategories.map((cat) => {
+          const isActive = isCatActive(cat.slug)
+          return (
+            <button
+              key={cat.id || cat.slug}
+              type="button"
+              onClick={() => handleSelectCategory(cat.slug)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 shrink-0 ${
+                isActive
+                  ? 'bg-primary text-on-primary font-bold shadow-xs'
+                  : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
+              }`}
+            >
+              <span>{cat.icon || '📦'}</span>
+              <span>{t(cat.name_bn || cat.name, cat.name)}</span>
+            </button>
+          )
+        })}
+      </div>
+
       {/* 2. Dual-Pane Grocery Category & Products Workspace */}
       <div className="max-w-7xl mx-auto w-full flex flex-1 min-h-[calc(100vh-210px)]">
         {/* Left Sidebar: Exact Chaldal Demo Style */}
-        <aside className="w-48 sm:w-56 md:w-60 lg:w-64 flex-shrink-0 bg-surface-container-lowest py-3 px-1 sm:px-2 flex flex-col sticky top-[138px] md:top-[146px] h-[calc(100vh-160px)] overflow-y-auto no-scrollbar border-r border-outline-variant/20 font-sans text-on-surface">
+        <aside
+          className={`${
+            isSidebarOpen
+              ? 'w-48 sm:w-56 md:w-60 lg:w-64 opacity-100 translate-x-0 py-3 px-1 sm:px-2 border-r'
+              : 'w-0 -translate-x-full opacity-0 pointer-events-none p-0 m-0 border-0 overflow-hidden'
+          } flex-shrink-0 bg-surface-container-lowest flex flex-col sticky top-[138px] md:top-[146px] h-[calc(100vh-160px)] overflow-y-auto no-scrollbar border-outline-variant/20 font-sans text-on-surface transition-all duration-300 ease-in-out z-20`}
+        >
+          {/* Header with Title and Cross (Close) Button */}
+          <div className="flex items-center justify-between pb-2 mb-1 px-2 border-b border-outline-variant/30 shrink-0">
+            <span className="text-xs font-bold text-primary flex items-center gap-1.5 uppercase tracking-wider">
+              <span>📂</span>
+              <span>{t('ক্যাটাগরি মেনু', 'Categories')}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(false)}
+              className="w-7 h-7 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface hover:text-red-500 transition-all active:scale-90 flex items-center justify-center shadow-xs"
+              title={t('সাইডবার লুকান (Hide Sidebar)', 'Close Sidebar')}
+              aria-label="Hide category sidebar"
+            >
+              <X className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          </div>
           {/* Quick Links at the top (like Demo) */}
           <button
             type="button"
@@ -1042,9 +1114,24 @@ export default function Shop() {
             )
           })}
         </aside>
+        {/* Floating Sidebar Re-open Tab when collapsed */}
+        {!isSidebarOpen && (
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(true)}
+            className="fixed left-0 top-[220px] md:top-[260px] z-30 bg-primary hover:bg-secondary text-on-primary py-2.5 px-2 rounded-r-xl shadow-lg flex items-center gap-1.5 active:scale-95 transition-all animate-fade-in group"
+            title={t('ক্যাটাগরি সাইডবার খুলুন', 'Open Categories Sidebar')}
+          >
+            <ChevronRight className="w-4 h-4 stroke-[3] group-hover:translate-x-0.5 transition-transform" />
+            <span className="text-xs font-bold whitespace-nowrap">
+              {t('ক্যাটাগরি', 'Categories')}
+            </span>
+          </button>
+        )}
+
 
         {/* Right Feed: Sub-categories & Product Cards Listing */}
-        <section className="flex-1 flex flex-col min-w-0 px-2.5 sm:px-4 md:px-6 pt-2 pb-16">
+        <section className="w-full flex-1 flex flex-col min-w-0 px-3 sm:px-4 md:px-6 pt-2 pb-16">
           {/* 3-Tier Breadcrumbs Navigation */}
           <nav className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-2 px-1 overflow-x-auto no-scrollbar py-0.5" aria-label="Breadcrumb">
             <Link
@@ -1105,6 +1192,20 @@ export default function Shop() {
               </>
             )}
           </nav>
+
+                    {/* Prominent Back Button on Category View */}
+          {categorySlug !== 'all' && (
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('all')}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 border border-outline-variant/30"
+              >
+                <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+                <span>{t('← সব পণ্যে ফিরে যান', '← Back to All Products')}</span>
+              </button>
+            </div>
+          )}
 
           {/* Current Category Banner */}
           <div className="bg-surface-container-lowest rounded-2xl p-3 sm:p-4 shadow-sm mb-3 flex items-center justify-between border border-outline-variant/20">

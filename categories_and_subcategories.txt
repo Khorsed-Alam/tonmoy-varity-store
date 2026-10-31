@@ -277,13 +277,6 @@ Generated on: 2026-10-29
 
    [5.7] Feminine Care (নারীর ব্যক্তিগত যত্ন)
          • Sanitary Pads (স্যানিটারি ন্যাপকিন)
-         • Pantyliners (প্যান্টিলাইনার)
-         • Tampons (ট্যাম্পন)
-         • Menstrual Cups (মেনস্ট্রুয়াল কাপ)
-         • Intimate Wash (ইন্টিমেট ওয়াশ)
-         • Maternity Pads (ম্যাটারনিটি প্যাড)
-
-
 6. CLEANING SUPPLIES / CLEANING & HOUSEHOLD (ক্লিনিং ও গৃহস্থালি)
    Icon: 🧹 | Slug: cleaning-household
    Description: ডিটারজেন্ট, ফ্লোর ক্লিনার, টয়লেট ক্লিনার, টিস্যু ও ব্যাগ

@@ -301,8 +301,8 @@ export const DEFAULT_CATEGORIES = [
         name: 'Feminine Care',
         name_bn: 'নারীর ব্যক্তিগত যত্ন',
         slug: 'feminine-care',
-        items: ['Sanitary Pads', 'Pantyliners', 'Tampons', 'Menstrual Cups', 'Intimate Wash', 'Maternity Pads'],
-        items_bn: ['স্যানিটারি ন্যাপকিন', 'প্যান্টিলাইনার', 'ট্যাম্পন', 'মেনস্ট্রুয়াল কাপ', 'ইন্টিমেট ওয়াশ', 'ম্যাটারনিটি প্যাড']
+        items: ['Sanitary Pads'],
+        items_bn: ['স্যানিটারি ন্যাপকিন']
       }
     ]
   },
