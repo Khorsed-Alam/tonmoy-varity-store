@@ -166,7 +166,7 @@ export default function Home() {
         <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-card border border-outline-variant/40 flex flex-col relative group">
           {/* Main Banner Image Display */}
           <div 
-            className="relative w-full overflow-hidden bg-gradient-to-r from-[#e1f3f7] via-[#ebf7fa] to-[#e1f3f7] flex items-center justify-center min-h-[140px] sm:min-h-[180px] md:min-h-[220px] lg:min-h-[260px]"
+            className="relative w-full overflow-hidden bg-gradient-to-r from-[#e1f3f7] via-[#ebf7fa] to-[#e1f3f7] dark:from-[#111d16] dark:via-[#16251d] dark:to-[#111d16] flex items-center justify-center min-h-[140px] sm:min-h-[180px] md:min-h-[220px] lg:min-h-[260px]"
             onMouseEnter={() => setIsBannerPaused(true)}
             onMouseLeave={() => setIsBannerPaused(false)}
           >

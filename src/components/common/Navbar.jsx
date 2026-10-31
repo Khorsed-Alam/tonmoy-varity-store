@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LanguageContext'
+import ThemeToggle from './ThemeToggle'
 
 export default function Navbar() {
   const { itemCount } = useCart()
@@ -29,7 +30,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-brand-light shadow-[0_1px_8px_rgba(0,0,0,0.03)]">
+    <header className="sticky top-0 z-50 bg-surface/95 dark:bg-surface-container-lowest/95 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_1px_8px_rgba(0,0,0,0.03)] transition-colors">
       {/* Top Announcement Bar from Stitch Design */}
       <div className="bg-primary text-on-primary px-3 sm:px-4 py-1 text-[10px] sm:text-xs flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 truncate">
@@ -107,9 +108,12 @@ export default function Navbar() {
               </button>
             </div>
 
+            {/* Theme Toggle Button (Light/Dark) */}
+            <ThemeToggle />
+
             {/* Cart */}
-            <Link to="/cart" className="relative p-2.5 rounded-xl hover:bg-brand-mint transition-colors">
-              <ShoppingCart className="w-5 h-5 text-brand-dark" />
+            <Link to="/cart" className="relative p-2.5 rounded-xl hover:bg-surface-container transition-colors">
+              <ShoppingCart className="w-5 h-5 text-on-surface" />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-brand-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse-green">
                   {itemCount > 99 ? '99+' : itemCount}
@@ -121,45 +125,47 @@ export default function Navbar() {
             {user ? (
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-brand-mint transition-colors"
+                  className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-surface-container transition-colors"
                 >
                   <div className="w-7 h-7 rounded-full gradient-brand flex items-center justify-center text-white text-xs font-bold">
                     {user.email?.[0]?.toUpperCase()}
                   </div>
                 </button>
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 animate-fade-in z-50">
+                  <div className="absolute right-0 mt-2 w-52 bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/30 py-2 animate-fade-in z-50 text-on-surface">
                     {isAdmin && (
                       <Link
                         to="/admin"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-brand-dark hover:bg-brand-mint transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container transition-colors"
                       >
-                        <Package className="w-4 h-4" />
+                        <Package className="w-4 h-4 text-primary" />
                         {t('অ্যাডমিন প্যানেল', 'Admin Panel')}
                       </Link>
                     )}
                     <Link
                       to="/profile"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-brand-dark hover:bg-brand-mint transition-colors"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container transition-colors"
                     >
-                      <User className="w-4 h-4" />
+                      <User className="w-4 h-4 text-primary" />
                       {t('প্রোফাইল', 'Profile')}
                     </Link>
                     <Link
                       to="/orders"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-brand-dark hover:bg-brand-mint transition-colors"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container transition-colors"
                     >
-                      <Package className="w-4 h-4" />
+                      <Package className="w-4 h-4 text-primary" />
                       {t('আমার অর্ডার', 'My Orders')}
                     </Link>
-                    <hr className="my-1 border-gray-100" />
+                    <hr className="my-1 border-outline-variant/30" />
                     <button
+                      type="button"
                       onClick={handleSignOut}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-brand-danger hover:bg-red-50 transition-colors w-full text-left"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-brand-danger hover:bg-error-container/40 transition-colors w-full text-left"
                     >
                       <LogOut className="w-4 h-4" />
                       {t('লগ আউট', 'Log Out')}
@@ -177,10 +183,11 @@ export default function Navbar() {
             )}
           </nav>
 
-          {/* Mobile: Cart + Hamburger */}
-          <div className="flex md:hidden items-center gap-2">
-            <Link to="/cart" className="relative p-2 rounded-xl hover:bg-brand-mint">
-              <ShoppingCart className="w-5 h-5 text-brand-dark" />
+          {/* Mobile: Theme + Cart + Hamburger */}
+          <div className="flex md:hidden items-center gap-1 sm:gap-2">
+            <ThemeToggle />
+            <Link to="/cart" className="relative p-2 rounded-xl hover:bg-surface-container text-on-surface">
+              <ShoppingCart className="w-5 h-5 text-on-surface" />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-brand-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                   {itemCount}
@@ -188,8 +195,9 @@ export default function Navbar() {
               )}
             </Link>
             <button
+              type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="p-2 rounded-xl hover:bg-brand-mint"
+              className="p-2 rounded-xl hover:bg-surface-container text-on-surface"
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -198,10 +206,10 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {menuOpen && (
-          <div className="md:hidden pb-4 animate-slide-up border-t border-brand-light pt-4 space-y-3">
+          <div className="md:hidden pb-4 animate-slide-up border-t border-outline-variant/30 pt-4 space-y-3">
             <form onSubmit={handleSearch}>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
                 <input
                   type="search"
                   value={searchQuery}
@@ -212,22 +220,26 @@ export default function Navbar() {
               </div>
             </form>
             <div className="flex flex-col gap-1">
-              <Link to="/" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-brand-mint text-sm font-medium text-brand-dark">{t('হোম', 'Home')}</Link>
-              <Link to="/shop" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-brand-mint text-sm font-medium text-brand-dark">{t('দোকান', 'Shop')}</Link>
+              <Link to="/" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-surface-container text-sm font-medium text-on-surface">{t('হোম', 'Home')}</Link>
+              <Link to="/shop" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-surface-container text-sm font-medium text-on-surface">{t('দোকান', 'Shop')}</Link>
               {user ? (
                 <>
-                  <Link to="/profile" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-brand-mint text-sm font-medium text-brand-dark">{t('প্রোফাইল', 'Profile')}</Link>
-                  <Link to="/orders" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-brand-mint text-sm font-medium text-brand-dark">{t('আমার অর্ডার', 'My Orders')}</Link>
-                  {isAdmin && <Link to="/admin" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-brand-mint text-sm font-medium text-brand-dark">{t('অ্যাডমিন', 'Admin')}</Link>}
-                  <button onClick={handleSignOut} className="px-4 py-2.5 rounded-xl text-sm font-medium text-brand-danger hover:bg-red-50 text-left">{t('লগ আউট', 'Log Out')}</button>
+                  <Link to="/profile" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-surface-container text-sm font-medium text-on-surface">{t('প্রোফাইল', 'Profile')}</Link>
+                  <Link to="/orders" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-surface-container text-sm font-medium text-on-surface">{t('আমার অর্ডার', 'My Orders')}</Link>
+                  {isAdmin && <Link to="/admin" onClick={() => setMenuOpen(false)} className="px-4 py-2.5 rounded-xl hover:bg-surface-container text-sm font-medium text-on-surface">{t('অ্যাডমিন', 'Admin')}</Link>}
+                  <button type="button" onClick={handleSignOut} className="px-4 py-2.5 rounded-xl text-sm font-medium text-brand-danger hover:bg-error-container/40 text-left">{t('লগ আউট', 'Log Out')}</button>
                 </>
               ) : (
                 <Link to="/login" onClick={() => setMenuOpen(false)} className="btn-primary text-center text-sm py-2.5">{t('লগইন / নিবন্ধন', 'Login / Register')}</Link>
               )}
-              <button onClick={toggleLang} className="flex items-center gap-2 px-4 py-2.5 rounded-xl hover:bg-brand-mint text-sm font-medium text-brand-dark">
+              <button type="button" onClick={toggleLang} className="flex items-center gap-2 px-4 py-2.5 rounded-xl hover:bg-surface-container text-sm font-medium text-on-surface">
                 <Globe className="w-4 h-4" />
                 {lang === 'bn' ? 'Switch to English' : 'বাংলায় দেখুন'}
               </button>
+              <div className="flex items-center justify-between px-4 py-2 border-t border-outline-variant/30 mt-1">
+                <span className="text-sm font-medium text-on-surface">{t('থিম মোড', 'Theme Mode')}</span>
+                <ThemeToggle variant="segmented" />
+              </div>
             </div>
           </div>
         )}

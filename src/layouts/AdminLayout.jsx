@@ -9,6 +9,7 @@ import {
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useProductSync, useOrderSync, useBannerSync } from '../lib/syncEvents'
+import ThemeToggle from '../components/common/ThemeToggle'
 
 export default function AdminLayout() {
   const { signOut, profile } = useAuth()
@@ -174,6 +175,12 @@ export default function AdminLayout() {
           </span>
         </div>
 
+        {/* Sidebar Theme Switcher */}
+        <div className="flex items-center justify-between px-1 py-1 text-xs">
+          <span className="text-on-surface-variant font-medium">থিম পরিবর্তন</span>
+          <ThemeToggle variant="segmented" />
+        </div>
+
         <button
           onClick={handleSignOut}
           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-error bg-error-container/40 hover:bg-error-container text-xs font-bold transition-colors"
@@ -260,6 +267,9 @@ export default function AdminLayout() {
                 EN
               </button>
             </div>
+
+            {/* Theme Toggle Button */}
+            <ThemeToggle />
 
             {/* Notifications Dropdown */}
             <div className="relative">

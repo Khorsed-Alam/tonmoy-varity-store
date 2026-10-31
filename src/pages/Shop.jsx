@@ -875,7 +875,7 @@ export default function Shop() {
       {/* 2. Dual-Pane Grocery Category & Products Workspace */}
       <div className="max-w-7xl mx-auto w-full flex flex-1 min-h-[calc(100vh-210px)]">
         {/* Left Sidebar: Exact Chaldal Demo Style */}
-        <aside className="w-48 sm:w-56 md:w-60 lg:w-64 flex-shrink-0 bg-white py-3 px-1 sm:px-2 flex flex-col sticky top-[138px] md:top-[146px] h-[calc(100vh-160px)] overflow-y-auto no-scrollbar border-r border-outline-variant/20 font-sans text-on-surface">
+        <aside className="w-48 sm:w-56 md:w-60 lg:w-64 flex-shrink-0 bg-surface-container-lowest py-3 px-1 sm:px-2 flex flex-col sticky top-[138px] md:top-[146px] h-[calc(100vh-160px)] overflow-y-auto no-scrollbar border-r border-outline-variant/20 font-sans text-on-surface">
           {/* Quick Links at the top (like Demo) */}
           <button
             type="button"
