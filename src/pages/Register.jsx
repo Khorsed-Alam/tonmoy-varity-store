@@ -47,9 +47,14 @@ export default function Register() {
     })
     setLoading(false)
     if (error) {
-      const code = error?.code || error?.message || ''
-      if (code.includes('user_already_exists') || code.includes('already registered')) {
-        toast.error(t('এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট আছে।', 'User with this email already exists.'))
+      const code = (error?.code || error?.message || '').toLowerCase()
+      if (
+        code.includes('user_already_exists') ||
+        code.includes('already registered') ||
+        code.includes('already exists') ||
+        code.includes('identity_already_exists')
+      ) {
+        toast.error(t('এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট আছে। অনুগ্রহ করে লগইন করুন।', 'User with this email already exists. Please log in.'))
       } else if (code.includes('password') && code.includes('weak')) {
         toast.error(t('আরও শক্তিশালী পাসওয়ার্ড দিন।', 'Password is too weak.'))
       } else {

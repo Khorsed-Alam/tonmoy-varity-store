@@ -882,8 +882,7 @@ export default function Shop() {
             onClick={() => handleSelectCategory('all')}
             className={`w-full text-left py-2 px-3 text-[13.5px] sm:text-[14px] transition-colors rounded-lg flex items-center justify-between ${
               categorySlug === 'all'
-                ? 'text-primary font-bold'
-                : 'text-gray-800 hover:text-primary font-medium'
+                ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-emerald-950/50' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
             }`}
           >
             <span>{t('জনপ্রিয় পণ্য', 'Popular')}</span>
@@ -897,14 +896,13 @@ export default function Shop() {
             }}
             className={`w-full text-left py-2 px-3 text-[13.5px] sm:text-[14px] transition-colors rounded-lg flex items-center justify-between ${
               stockOnly
-                ? 'text-primary font-bold'
-                : 'text-gray-800 hover:text-primary font-medium'
+                ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-emerald-950/50' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
             }`}
           >
             <span>{t('ফ্ল্যাশ সেলস', 'Flash Sales')}</span>
           </button>
 
-          <div className="h-px bg-gray-100 my-1 mx-2" />
+          <div className="h-px bg-outline-variant/30 my-1 mx-2" />
 
           {/* Main Categories (Level 1) & Subcategories (Level 2) Accordion */}
           {mainCategories.map((cat) => {
@@ -924,11 +922,7 @@ export default function Shop() {
                 {/* Main Category Row */}
                 <div
                   className={`w-full flex items-center justify-between py-2 px-3 rounded-lg transition-colors cursor-pointer group ${
-                    isActive
-                      ? 'text-primary font-bold bg-primary/5'
-                      : isCatOpen
-                      ? 'text-primary font-semibold'
-                      : 'text-gray-800 hover:text-primary font-medium'
+                    isActive ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-emerald-950/60' : isCatOpen ? 'text-primary dark:text-emerald-300 font-semibold bg-primary/5 dark:bg-emerald-950/30' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
                   }`}
                   onClick={() => {
                     handleSelectCategory(cat.slug)
@@ -947,13 +941,13 @@ export default function Shop() {
                         e.stopPropagation()
                         toggleCategoryExpand(cat.slug)
                       }}
-                      className="p-1 -mr-1 text-gray-400 group-hover:text-primary hover:text-primary transition-colors flex items-center justify-center shrink-0"
+                      className="p-1 -mr-1 text-gray-400 dark:text-emerald-400/80 group-hover:text-primary hover:text-primary dark:hover:text-emerald-300 transition-colors flex items-center justify-center shrink-0"
                       aria-label={isCatOpen ? 'Collapse category' : 'Expand category'}
                     >
                       {isCatOpen ? (
-                        <ChevronDown className="w-4 h-4 text-primary stroke-[2.5]" />
+                        <ChevronDown className="w-4 h-4 text-primary dark:text-emerald-400 stroke-[2.5]" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-gray-400 stroke-[2]" />
+                        <ChevronRight className="w-4 h-4 text-gray-400 dark:text-emerald-400/80 stroke-[2]" />
                       )}
                     </button>
                   )}
@@ -961,7 +955,7 @@ export default function Shop() {
 
                 {/* Subcategories (Level 2) Indented List */}
                 {isCatOpen && subs.length > 0 && (
-                  <div className="pl-3.5 pr-1 py-1 flex flex-col gap-0.5 animate-fade-in border-l-2 border-primary/20 ml-3.5 my-0.5">
+                  <div className="pl-3.5 pr-1 py-1 flex flex-col gap-0.5 animate-fade-in border-l-2 border-primary/20 dark:border-emerald-500/30 ml-3.5 my-0.5">
                     {subs.map((sub) => {
                       const subName = typeof sub === 'string' ? sub : t(sub.name_bn || sub.name, sub.name)
                       const subSlug = typeof sub === 'string' ? sub : sub.slug
@@ -974,9 +968,7 @@ export default function Shop() {
                           {/* Subcategory Row (Level 2) */}
                           <div
                             className={`w-full flex items-center justify-between py-1.5 px-2 rounded-md transition-colors cursor-pointer group ${
-                              isSubActive
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-gray-700 hover:text-primary font-normal hover:bg-gray-50'
+                              isSubActive ? 'text-primary dark:text-emerald-400 font-bold bg-primary/15 dark:bg-emerald-950/60' : 'text-gray-700 dark:text-emerald-100/90 hover:text-primary dark:hover:text-emerald-300 font-normal hover:bg-gray-50 dark:hover:bg-emerald-950/40'
                             }`}
                             onClick={() => {
                               if (categorySlug !== cat.slug) {
@@ -998,13 +990,13 @@ export default function Shop() {
                                   e.stopPropagation()
                                   toggleSubcatExpand(subSlug)
                                 }}
-                                className="p-1 -mr-1 text-gray-400 hover:text-primary group-hover:text-primary transition-colors flex items-center justify-center shrink-0"
+                                className="p-1 -mr-1 text-gray-400 dark:text-emerald-400/80 hover:text-primary dark:hover:text-emerald-300 group-hover:text-primary transition-colors flex items-center justify-center shrink-0"
                                 aria-label={isSubExpanded ? 'Collapse subcategory' : 'Expand subcategory'}
                               >
                                 {isSubExpanded ? (
-                                  <ChevronDown className="w-3.5 h-3.5 text-primary stroke-[2.5]" />
+                                  <ChevronDown className="w-3.5 h-3.5 text-primary dark:text-emerald-400 stroke-[2.5]" />
                                 ) : (
-                                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 stroke-[2]" />
+                                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 dark:text-emerald-400/80 stroke-[2]" />
                                 )}
                               </button>
                             )}
@@ -1012,7 +1004,7 @@ export default function Shop() {
 
                           {/* Level 3 items: Subcategory under Subcategory */}
                           {isSubExpanded && hasL3 && (
-                            <div className="pl-3 pr-1 py-1 flex flex-col gap-0.5 border-l-2 border-emerald-300/70 ml-2.5 my-1 animate-fade-in">
+                            <div className="pl-3 pr-1 py-1 flex flex-col gap-0.5 border-l-2 border-emerald-300/70 dark:border-emerald-500/40 ml-2.5 my-1 animate-fade-in">
                               {sub.items.map((itEn, idx) => {
                                 const itBn = sub.items_bn?.[idx] || itEn
                                 const itName = t(itBn, itEn)
@@ -1031,12 +1023,10 @@ export default function Shop() {
                                       }
                                     }}
                                     className={`w-full text-left py-1 px-2 text-[12px] sm:text-[12.5px] rounded transition-colors flex items-center gap-1.5 ${
-                                      isL3Active
-                                        ? 'text-primary font-bold bg-primary/15'
-                                        : 'text-gray-600 hover:text-primary hover:bg-gray-50'
+                                      isL3Active ? 'text-primary dark:text-emerald-400 font-bold bg-primary/15 dark:bg-emerald-950/70' : 'text-gray-600 dark:text-emerald-200/90 hover:text-primary dark:hover:text-white hover:bg-gray-50 dark:hover:bg-emerald-950/40'
                                     }`}
                                   >
-                                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isL3Active ? 'bg-primary' : 'bg-gray-300'}`} />
+                                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isL3Active ? 'bg-primary dark:bg-emerald-400' : 'bg-gray-300 dark:bg-emerald-600/50'}`} />
                                     <span className="truncate">{itName}</span>
                                   </button>
                                 )

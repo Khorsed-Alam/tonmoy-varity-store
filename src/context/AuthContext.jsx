@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const fetchProfile = useCallback(async (userId) => {
+  const fetchProfile = useCallback(async (userId, currentUser) => {
     try {
       const { data, error } = await supabaseClient
         .from('profiles')
@@ -36,6 +36,25 @@ export function AuthProvider({ children }) {
       if (!error && data) {
         setProfile(data)
         setIsAdmin(data.role === 'admin')
+      } else {
+        // Self-heal: ensure user record exists in profiles table
+        const userMeta = currentUser?.user_metadata || {}
+        const newProfile = {
+          id: userId,
+          full_name: userMeta.full_name || '',
+          phone: userMeta.phone || '',
+          role: 'customer',
+          preferred_language: 'bn',
+        }
+        const { data: inserted } = await supabaseClient
+          .from('profiles')
+          .upsert([newProfile])
+          .select()
+          .single()
+        if (inserted) {
+          setProfile(inserted)
+          setIsAdmin(inserted.role === 'admin')
+        }
       }
     } catch (e) {
       console.warn('Profile fetch error:', e)
@@ -56,7 +75,7 @@ export function AuthProvider({ children }) {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id).finally(() => setLoading(false))
+        fetchProfile(session.user.id, session.user).finally(() => setLoading(false))
         if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('type=signup'))) {
           window.history.replaceState(null, '', window.location.pathname)
         }
@@ -71,7 +90,7 @@ export function AuthProvider({ children }) {
       }
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id)
+        fetchProfile(session.user.id, session.user)
         if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('type=signup'))) {
           window.history.replaceState(null, '', window.location.pathname)
         }
@@ -102,6 +121,33 @@ export function AuthProvider({ children }) {
         emailRedirectTo: redirectUrl,
       },
     })
+
+    // Supabase returns identities: [] when user already exists with email enumeration protection
+    if (!error && data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return {
+        data: null,
+        error: {
+          code: 'user_already_exists',
+          message: 'User already registered with this email',
+        },
+      }
+    }
+
+    // If a session exists immediately (e.g. email confirmation disabled), create profile directly
+    if (!error && data?.user && data?.session) {
+      try {
+        await supabaseClient.from('profiles').upsert({
+          id: data.user.id,
+          full_name: fullName || '',
+          phone: phone || '',
+          role: 'customer',
+          preferred_language: 'bn',
+        })
+      } catch (e) {
+        console.warn('Profile direct creation notice:', e)
+      }
+    }
+
     return { data, error }
   }
 
