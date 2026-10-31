@@ -1,6 +1,6 @@
 -- ====================================================================================
 -- TONMOY VARIETY STORE - BANNERS & OFFERS TABLE MIGRATION
--- (চিন্ময় ও তন্ময় ভ্যারাইটি স্টোর - ব্যানার ও অফার টেবিল এবং সিড ডাটা)
+-- (মেসার্স তন্ময় ভ্যারাইটি স্টোর - ব্যানার ও অফার টেবিল, সিকিউরিটি পলিসি এবং সিড ডাটা)
 -- ====================================================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -26,25 +26,41 @@ CREATE TABLE IF NOT EXISTS public.banners (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 2. Indexes for fast retrieval
+-- 2. Indexes for high performance querying
 CREATE INDEX IF NOT EXISTS idx_banners_active ON public.banners(is_active);
 CREATE INDEX IF NOT EXISTS idx_banners_sort ON public.banners(sort_order);
 
 -- 3. Row Level Security (RLS)
 ALTER TABLE public.banners ENABLE ROW LEVEL SECURITY;
 
+-- Allow everyone to read banners (visitors and customers)
 DROP POLICY IF EXISTS "Public can view active banners" ON public.banners;
-CREATE POLICY "Public can view active banners"
+DROP POLICY IF EXISTS "Public can view banners" ON public.banners;
+CREATE POLICY "Public can view banners"
   ON public.banners FOR SELECT
   USING (true);
 
+-- Allow inserting, updating and deleting banners (admin end)
 DROP POLICY IF EXISTS "Anyone can manage banners" ON public.banners;
 CREATE POLICY "Anyone can manage banners"
   ON public.banners FOR ALL
   USING (true)
   WITH CHECK (true);
 
--- 4. Seed Official Store & 10 Authentic Promo Banners
+-- 4. Enable Supabase Realtime for instant multi-device live sync
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.banners;
+  END IF;
+EXCEPTION
+  WHEN duplicate_object THEN
+    NULL;
+  WHEN OTHERS THEN
+    NULL;
+END $$;
+
+-- 5. Seed Official Store & 10 Festival Promo Banners (with UPSERT)
 INSERT INTO public.banners (
   id, title, title_bn, subtitle, subtitle_bn, badge_text, badge_text_bn,
   image_url, link_url, button_text, button_text_bn, sort_order, is_active
@@ -228,13 +244,34 @@ ON CONFLICT (id) DO UPDATE SET
   sort_order = EXCLUDED.sort_order,
   is_active = EXCLUDED.is_active;
 
--- 5. Storage Bucket (Optional if Supabase Storage is configured)
+-- 6. Setup Supabase Storage bucket for custom banner uploads (if storage schema exists)
 DO $$
 BEGIN
   INSERT INTO storage.buckets (id, name, public)
   VALUES ('banners', 'banners', true)
   ON CONFLICT (id) DO UPDATE SET public = true;
+
+  -- Create public storage access policies if not exists
+  DROP POLICY IF EXISTS "Public Access Banners Bucket" ON storage.objects;
+  CREATE POLICY "Public Access Banners Bucket"
+    ON storage.objects FOR SELECT
+    USING (bucket_id = 'banners');
+
+  DROP POLICY IF EXISTS "Public Upload Banners Bucket" ON storage.objects;
+  CREATE POLICY "Public Upload Banners Bucket"
+    ON storage.objects FOR INSERT
+    WITH CHECK (bucket_id = 'banners');
+
+  DROP POLICY IF EXISTS "Public Update Banners Bucket" ON storage.objects;
+  CREATE POLICY "Public Update Banners Bucket"
+    ON storage.objects FOR UPDATE
+    USING (bucket_id = 'banners');
+
+  DROP POLICY IF EXISTS "Public Delete Banners Bucket" ON storage.objects;
+  CREATE POLICY "Public Delete Banners Bucket"
+    ON storage.objects FOR DELETE
+    USING (bucket_id = 'banners');
 EXCEPTION
   WHEN OTHERS THEN
-    NULL; -- Silently ignore if storage schema is not installed
+    NULL; -- Silently ignore if storage extension or permissions are managed separately
 END $$;
