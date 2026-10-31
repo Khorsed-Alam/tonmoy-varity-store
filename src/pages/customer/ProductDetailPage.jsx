@@ -6,12 +6,10 @@ import {
   Minus,
   ArrowLeft,
   Package,
-  CheckCircle2,
   Truck,
   ShieldCheck,
   Scale,
   Sparkles,
-  Layers,
   PhoneCall
 } from 'lucide-react'
 import { supabaseClient as supabase } from '../../lib/supabaseClient'
@@ -22,11 +20,39 @@ import { useProductSync } from '../../lib/syncEvents'
 import { DEFAULT_CATEGORIES, LEGACY_CATEGORY_MAP } from '../../data/categories'
 import toast from 'react-hot-toast'
 
-// Helper to extract base product name for intelligent weight/size matching
+// Helper to extract base product name for matching
 function getBaseName(text = '') {
   return text
     .replace(/[০-৯0-9]+\s*(?:গ্রাম|কেজি|লিটার|মিলি|প্যাক|পিস|gm|g|kg|ltr|l|ml|pcs|pack)/gi, '')
     .trim()
+}
+
+// Helper to detect Level 3 category from product or category data
+function detectLevel3(product) {
+  if (!product) return ''
+  if (product.child_subcategory && product.child_subcategory.trim()) {
+    return product.child_subcategory.trim()
+  }
+  if (product.tag && product.tag.trim()) {
+    return product.tag.trim()
+  }
+  // Try matching items_bn in DEFAULT_CATEGORIES
+  const text = `${product.name_bn || ''} ${product.name || ''}`.toLowerCase()
+  for (const cat of DEFAULT_CATEGORIES) {
+    for (const sub of cat.subcategories || []) {
+      if (sub.items_bn) {
+        for (const itemBn of sub.items_bn) {
+          if (text.includes(itemBn.toLowerCase())) return itemBn
+        }
+      }
+      if (sub.items) {
+        for (const itemEn of sub.items) {
+          if (text.includes(itemEn.toLowerCase())) return itemEn
+        }
+      }
+    }
+  }
+  return ''
 }
 
 export default function ProductDetailPage() {
@@ -37,13 +63,13 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [siblings, setSiblings] = useState([])
+  const [suggestions, setSuggestions] = useState([])
 
-  // Main product loader with robust fallback so it NEVER fails on schema joins
+  // Main product loader with cross-catalog level 3 category suggestions
   const loadProduct = useCallback(async () => {
     setLoading(true)
     try {
-      // 1. Try fetching product with category details (without nonexistent image_url on categories table)
+      // 1. Fetch current product
       let currentItem = null
       const { data, error } = await supabase
         .from('products')
@@ -54,7 +80,6 @@ export default function ProductDetailPage() {
       if (!error && data) {
         currentItem = data
       } else {
-        // Fallback: direct product select
         const { data: rawItem } = await supabase
           .from('products')
           .select('*')
@@ -63,7 +88,7 @@ export default function ProductDetailPage() {
         if (rawItem) currentItem = rawItem
       }
 
-      // 2. Check local custom products cache if still not found
+      // Check local custom products fallback if still not found
       if (!currentItem) {
         const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
         const found = localCustom.find(p => p.id === id)
@@ -72,30 +97,104 @@ export default function ProductDetailPage() {
 
       setProduct(currentItem)
 
-      // 3. Fetch sibling products in same category/subcategory for size variants & recommendations
-      if (currentItem?.category_id || currentItem?.category_slug) {
-        let query = supabase
-          .from('products')
-          .select('*, categories(name, name_bn, slug)')
-          .or('is_active.eq.true,is_active.is.null')
-          .limit(36)
+      // 2. Fetch suggestions:
+      // Match level 3 category across the whole database (WITHOUT category_id restriction)
+      // to find different weights/sizes (e.g. 100g, 200g, 500g) of this item
+      if (currentItem) {
+        const level3 = detectLevel3(currentItem)
+        const baseName = getBaseName(currentItem.name_bn || currentItem.name)
+        const gathered = []
+        const gatheredIds = new Set([currentItem.id])
 
-        if (currentItem.category_id) {
-          query = query.eq('category_id', currentItem.category_id)
-        }
+        // A. Match by exact level 3 category (child_subcategory or tag)
+        if (level3) {
+          const { data: l3Matches } = await supabase
+            .from('products')
+            .select('*, categories(name, name_bn, slug)')
+            .or('is_active.eq.true,is_active.is.null')
+            .or(`child_subcategory.eq.${level3},tag.eq.${level3}`)
+            .neq('id', currentItem.id)
+            .limit(20)
 
-        const { data: siblingData } = await query
-        const localSiblings = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
-          .filter(p => p.category_id === currentItem.category_id && p.is_active !== false)
-
-        const allSiblings = [...(siblingData || [])]
-        const existingIds = new Set(allSiblings.map(p => p.id))
-        for (const loc of localSiblings) {
-          if (!existingIds.has(loc.id)) {
-            allSiblings.push(loc)
+          if (l3Matches) {
+            for (const item of l3Matches) {
+              if (!gatheredIds.has(item.id)) {
+                gatheredIds.add(item.id)
+                gathered.push(item)
+              }
+            }
           }
         }
-        setSiblings(allSiblings)
+
+        // B. Match by base name across all products (e.g. "রাঁধুনী মরিচের গুঁড়া")
+        if (baseName && baseName.length >= 3 && gathered.length < 8) {
+          const { data: nameMatches } = await supabase
+            .from('products')
+            .select('*, categories(name, name_bn, slug)')
+            .or('is_active.eq.true,is_active.is.null')
+            .ilike('name_bn', `%${baseName}%`)
+            .neq('id', currentItem.id)
+            .limit(15)
+
+          if (nameMatches) {
+            for (const item of nameMatches) {
+              if (!gatheredIds.has(item.id)) {
+                gatheredIds.add(item.id)
+                gathered.push(item)
+              }
+            }
+          }
+        }
+
+        // C. Fill remaining slots with same subcategory or category items
+        if (gathered.length < 12 && (currentItem.subcategory || currentItem.category_id)) {
+          let catQuery = supabase
+            .from('products')
+            .select('*, categories(name, name_bn, slug)')
+            .or('is_active.eq.true,is_active.is.null')
+            .neq('id', currentItem.id)
+            .limit(20)
+
+          if (currentItem.subcategory) {
+            catQuery = catQuery.eq('subcategory', currentItem.subcategory)
+          } else if (currentItem.category_id) {
+            catQuery = catQuery.eq('category_id', currentItem.category_id)
+          }
+
+          const { data: catMatches } = await catQuery
+          if (catMatches) {
+            for (const item of catMatches) {
+              if (!gatheredIds.has(item.id)) {
+                gatheredIds.add(item.id)
+                gathered.push(item)
+              }
+            }
+          }
+        }
+
+        // Include local custom products that match
+        const localCustom = JSON.parse(localStorage.getItem('tvs_custom_products') || '[]')
+        for (const loc of localCustom) {
+          if (
+            !gatheredIds.has(loc.id) &&
+            loc.id !== currentItem.id &&
+            ((level3 && (loc.child_subcategory === level3 || loc.tag === level3)) ||
+              (baseName && (loc.name_bn || loc.name || '').includes(baseName)))
+          ) {
+            gatheredIds.add(loc.id)
+            gathered.push(loc)
+          }
+        }
+
+        // Sort so exact level 3 matches and price variants come first
+        gathered.sort((a, b) => {
+          const aL3 = a.child_subcategory === level3 || a.tag === level3 ? 0 : 1
+          const bL3 = b.child_subcategory === level3 || b.tag === level3 ? 0 : 1
+          if (aL3 !== bL3) return aL3 - bL3
+          return (a.price || 0) - (b.price || 0)
+        })
+
+        setSuggestions(gathered)
       }
     } catch (err) {
       console.warn('Error loading product details:', err)
@@ -115,37 +214,10 @@ export default function ProductDetailPage() {
   // Real-time synchronization
   useProductSync(loadProduct)
 
-  // Calculate intelligent size/weight variants of this exact product line
-  const { weightVariants, relatedProducts } = useMemo(() => {
-    if (!product) return { weightVariants: [], relatedProducts: [] }
-
-    const targetBase = getBaseName(product.name_bn || product.name)
-    const targetChild = product.child_subcategory
-
-    // Same product line in different weights/sizes
-    const variants = siblings.filter(p => {
-      if (targetChild && p.child_subcategory === targetChild) return true
-      if (targetBase && getBaseName(p.name_bn || p.name) === targetBase) return true
-      return false
-    })
-
-    // Sort variants by price
-    variants.sort((a, b) => (a.price || 0) - (b.price || 0))
-
-    // Other related products in same category/subcategory (excluding variants)
-    const variantIds = new Set(variants.map(v => v.id))
-    const others = siblings.filter(p => !variantIds.has(p.id) && p.id !== product.id)
-
-    return {
-      weightVariants: variants.length > 1 ? variants : [],
-      relatedProducts: others.slice(0, 12)
-    }
-  }, [product, siblings])
-
   const cartItem = items.find(i => i.product_id === product?.id)
   const imageUrl = getProductImageUrl(supabase, product?.image_url)
   const isOutOfStock = (product?.stock_quantity ?? 1) <= 0
-  const isLowStock = !isOutOfStock && (product?.stock_quantity ?? 99) <= 5
+  const level3Name = detectLevel3(product)
 
   const handleAddToCart = (targetProd = product) => {
     if (!targetProd || targetProd.stock_quantity <= 0) return
@@ -238,13 +310,19 @@ export default function ProductDetailPage() {
               </Link>
             </>
           )}
+          {level3Name && (
+            <>
+              <span className="text-outline-variant">/</span>
+              <span className="text-primary font-medium">{level3Name}</span>
+            </>
+          )}
           <span className="text-outline-variant">/</span>
           <span className="font-semibold text-on-surface truncate max-w-[200px] sm:max-w-xs">
             {t(product.name_bn || product.name, product.name)}
           </span>
         </nav>
 
-        {/* 2. Main Product Showcase & Interactive Size Selector */}
+        {/* 2. Main Product Card: Pure Single Product Only */}
         <div className="bg-surface-container-lowest rounded-2xl p-4 sm:p-6 md:p-8 shadow-card border border-outline-variant/30 grid md:grid-cols-2 gap-6 lg:gap-10">
           
           {/* Left: Product Image & Prominent Weight Badge */}
@@ -295,19 +373,19 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Right: Product Details, Multi-Weight Selector & Add to Cart */}
+          {/* Right: Product Information & Direct Cart Stepper */}
           <div className="flex flex-col justify-between">
             <div>
-              {/* Category & Subcategory Tag */}
+              {/* Category & Level 3 Badges */}
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 {product.subcategory && (
                   <span className="text-[11px] font-bold text-primary bg-primary/10 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
                     {product.subcategory}
                   </span>
                 )}
-                {product.child_subcategory && (
+                {level3Name && (
                   <span className="text-[11px] font-medium text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
-                    {product.child_subcategory}
+                    {level3Name}
                   </span>
                 )}
                 {!isOutOfStock && (
@@ -345,141 +423,113 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* 3. MULTI-WEIGHT / SIZE VARIANT SELECTOR */}
-              {weightVariants.length > 0 && (
-                <div className="mb-6 p-3.5 bg-surface-container-low rounded-xl border-2 border-primary/20 animate-fade-in">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <span className="text-xs sm:text-sm font-bold text-on-surface flex items-center gap-1.5">
-                      <Scale className="w-4 h-4 text-primary" />
-                      <span>{t('উপলব্ধ সাইজ ও ওজন (Select Available Size):', 'Available Sizes & Weights:')}</span>
-                    </span>
-                    <span className="text-[11px] text-primary font-semibold">
-                      {weightVariants.length} {t('টি সাইজ আছে', 'sizes available')}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {weightVariants.map((v) => {
-                      const isCurrent = v.id === product.id
-                      const vUnit = v.unit || (v.name_bn?.match(/[০-৯0-9]+\s*(?:গ্রাম|কেজি|লিটার|মিলি|প্যাক|gm|g|kg|l|ml)/i)?.[0]) || t('সাইজ', 'Size')
-                      
-                      return (
-                        <button
-                          key={v.id}
-                          type="button"
-                          onClick={() => {
-                            if (!isCurrent) navigate(`/product/${v.id}`)
-                          }}
-                          className={`p-2 rounded-xl text-left transition-all flex flex-col justify-between border ${
-                            isCurrent
-                              ? 'bg-primary text-on-primary border-primary shadow-sm ring-2 ring-primary/40'
-                              : 'bg-surface-container-lowest text-on-surface hover:border-primary border-outline-variant/30 hover:bg-surface-container'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-1 w-full">
-                            <span className={`text-xs font-bold truncate ${isCurrent ? 'text-white' : 'text-on-surface'}`}>
-                              {vUnit}
-                            </span>
-                            {isCurrent && <CheckCircle2 className="w-3.5 h-3.5 text-amber-300 shrink-0" />}
-                          </div>
-                          <span className={`text-xs font-semibold mt-1 ${isCurrent ? 'text-amber-200' : 'text-primary'}`}>
-                            {formatCurrency(v.price)}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* Description */}
               {(product.description_bn || product.description) && (
                 <div className="text-xs sm:text-sm text-on-surface-variant mb-6 leading-relaxed bg-surface-container/50 p-3 rounded-xl border border-outline-variant/20">
                   <h4 className="font-bold text-on-surface text-xs mb-1">
                     {t('পণ্যের বিবরণ:', 'Product Details:')}
                   </h4>
-                  <p>{t(product.description_bn || product.description, product.description)}</p>
+                  <p className="whitespace-pre-line">
+                    {t(product.description_bn || product.description, product.description)}
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Add to Cart Actions */}
-            <div className="pt-4 border-t border-outline-variant/20">
+            {/* Bottom Actions: Quantity / Add to Cart */}
+            <div className="pt-4 border-t border-outline-variant/20 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               {cartItem ? (
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center bg-surface-container rounded-xl p-1 shadow-inner">
-                    <button
-                      onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-container-lowest text-on-surface hover:text-primary transition-all active:scale-95 shadow-xs"
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-10 text-center font-bold text-base text-primary">
-                      {cartItem.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                      disabled={cartItem.quantity >= (product.stock_quantity || 99)}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-container-lowest text-on-surface hover:text-primary transition-all active:scale-95 shadow-xs disabled:opacity-40"
-                      aria-label="Increase quantity"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <Link
-                    to="/cart"
-                    className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-primary hover:bg-secondary text-on-primary py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95"
+                <div className="flex items-center justify-between sm:justify-start bg-primary text-on-primary rounded-xl p-1 shadow-md w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
+                    className="w-10 h-10 flex items-center justify-center hover:bg-black/10 rounded-lg active:scale-95 transition-all text-white font-bold"
+                    aria-label="Decrease quantity"
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>{t('কার্ট দেখুন ও অর্ডার করুন', 'View Cart & Order')}</span>
-                  </Link>
+                    <Minus className="w-5 h-5" />
+                  </button>
+                  <span className="font-bold text-base px-6 text-white min-w-[3rem] text-center">
+                    {cartItem.quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
+                    className="w-10 h-10 flex items-center justify-center hover:bg-black/10 rounded-lg active:scale-95 transition-all text-white font-bold"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => handleAddToCart(product)}
                   disabled={isOutOfStock}
-                  className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-secondary disabled:bg-gray-400 text-on-primary py-3 px-6 rounded-xl font-bold text-sm sm:text-base shadow-sm transition-all active:scale-95 cursor-pointer"
+                  className={`w-full sm:flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 ${
+                    isOutOfStock
+                      ? 'bg-outline-variant/50 text-outline cursor-not-allowed'
+                      : 'bg-primary hover:bg-secondary text-on-primary'
+                  }`}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  <span>{isOutOfStock ? t('স্টক নেই', 'Out of Stock') : t('কার্টে যোগ করুন', 'Add to Cart')}</span>
+                  <span>{isOutOfStock ? t('স্টক শেষ', 'Out of Stock') : t('কার্টে যোগ করুন', 'Add to Cart')}</span>
                 </button>
               )}
 
-              {/* Call to Order shortcut */}
-              <div className="flex items-center justify-between text-xs text-on-surface-variant mt-4 pt-3 border-t border-outline-variant/15">
-                <Link to="/shop" className="hover:text-primary flex items-center gap-1 font-medium">
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>{t('আরও পণ্য দেখুন', 'Continue Shopping')}</span>
-                </Link>
-                <a href="tel:01717999460" className="flex items-center gap-1 text-primary font-bold hover:underline">
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span>{t('ফোনে অর্ডার: ০১৭১৭-৯৯৯৪৬০', 'Order: 01717-999460')}</span>
-                </a>
-              </div>
+              {/* Direct Checkout or Phone support link */}
+              <Link
+                to="/cart"
+                className="py-3 px-4 rounded-xl border border-outline-variant/40 hover:border-primary text-xs font-semibold text-center text-on-surface hover:text-primary transition-colors flex items-center justify-center gap-1.5"
+              >
+                <span>{t('কার্ট দেখুন', 'View Cart')}</span>
+                <span>({items.reduce((s, i) => s + (i.quantity || 1), 0)})</span>
+              </Link>
+            </div>
+
+            {/* Back link & phone call */}
+            <div className="mt-4 pt-3 flex items-center justify-between text-xs text-on-surface-variant">
+              <Link to="/shop" className="hover:text-primary flex items-center gap-1 transition-colors">
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{t('আরও পণ্য দেখুন', 'Explore more')}</span>
+              </Link>
+              <a href="tel:01717999460" className="flex items-center gap-1 text-primary hover:underline">
+                <PhoneCall className="w-3.5 h-3.5" />
+                <span>{t('ফোনে অর্ডার: ০১৭১৭-৯৯৯৪৬০', 'Order: 01717-999460')}</span>
+              </a>
             </div>
           </div>
         </div>
 
-        {/* 4. SAME CATEGORY & DIFFERENT WEIGHTS RECOMMENDATIONS GRID */}
-        {(weightVariants.length > 0 || relatedProducts.length > 0) && (
-          <section className="mt-12">
-            <div className="flex items-center justify-between pb-4">
+        {/* 3. Below Product Card: Level 3 Category Matching Products & Size Variants */}
+        {suggestions.length > 0 && (
+          <section className="mt-8 sm:mt-12 animate-fade-in">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-5 rounded-full bg-primary" />
-                <h3 className="text-base sm:text-lg md:text-xl font-bold text-on-surface">
-                  {t('একই ক্যাটাগরির অন্যান্য সাইজ ও পণ্য', 'Available Sizes & Similar Products')}
-                </h3>
+                <div>
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-on-surface flex items-center gap-2">
+                    <span>
+                      {level3Name
+                        ? t(`${level3Name} - বিভিন্ন সাইজ ও পরামর্শ`, `${level3Name} - Available Sizes & Suggestions`)
+                        : t('একই ধরণের বিভিন্ন সাইজ ও পরামর্শ', 'Available Sizes & Suggestions')}
+                    </span>
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                  </h3>
+                  <p className="text-xs text-on-surface-variant mt-0.5">
+                    {t(
+                      `এই পণ্যের বিভিন্ন ওজন (যেমনঃ ১০০ গ্রাম, ২০০ গ্রাম, ৫০০ গ্রাম ইত্যাদি) ও অন্যান্য সাইজ`,
+                      `Different weights/sizes (e.g. 100g, 200g, 500g) & related choices`
+                    )}
+                  </p>
+                </div>
               </div>
-              <Link to={`/shop/category/${catSlug}`} className="text-xs font-semibold text-primary hover:underline">
+              <Link to={`/shop/category/${catSlug}`} className="text-xs font-semibold text-primary hover:underline shrink-0">
                 {t('সবগুলো দেখুন', 'View All')} →
               </Link>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-              {[...weightVariants.filter(v => v.id !== product.id), ...relatedProducts].slice(0, 12).map((rel) => {
+              {suggestions.map((rel) => {
                 const relImg = getProductImageUrl(supabase, rel.image_url)
                 const inRelCart = items.find(i => i.product_id === rel.id)
                 const relUnit = rel.unit || (rel.name_bn?.match(/[০-৯0-9]+\s*(?:গ্রাম|কেজি|লিটার|মিলি|প্যাক|gm|g|kg|l|ml)/i)?.[0])
@@ -490,7 +540,7 @@ export default function ProductDetailPage() {
                     className="bg-surface-container-lowest rounded-xl p-2.5 sm:p-3 flex flex-col justify-between shadow-[0_1px_6px_rgba(25,51,40,0.05)] hover:shadow-card-hover transition-all group border border-outline-variant/30 relative"
                   >
                     <div>
-                      {/* Thumbnail & Weight Badge */}
+                      {/* Thumbnail & Prominent Weight Badge */}
                       <Link to={`/product/${rel.id}`} className="relative block aspect-square bg-surface-container-low rounded-lg overflow-hidden mb-2">
                         {relImg ? (
                           <img
@@ -505,8 +555,9 @@ export default function ProductDetailPage() {
 
                         {/* Prominent Weight Badge */}
                         {relUnit && (
-                          <span className="absolute top-1.5 left-1.5 bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                            {relUnit}
+                          <span className="absolute top-1.5 left-1.5 bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                            <Scale className="w-2.5 h-2.5" />
+                            <span>{relUnit}</span>
                           </span>
                         )}
                       </Link>
