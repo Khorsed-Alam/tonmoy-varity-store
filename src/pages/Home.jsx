@@ -13,7 +13,7 @@ import {
   MUDIKHANA_DOKAN_BANNER,
   HERO_BANNERS,
 } from '../data/stitchMockData'
-import { DEFAULT_CATEGORIES, ALLOWED_MAIN_SLUGS } from '../data/categories'
+import { DEFAULT_CATEGORIES, ALLOWED_MAIN_SLUGS, CATEGORY_IMAGES } from '../data/categories'
 import toast from 'react-hot-toast'
 
 export default function Home() {
@@ -303,34 +303,44 @@ export default function Home() {
 
         {/* Category Grid: Responsive 4 cols on mobile, 7 cols on tablet & desktop */}
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 gap-2 sm:gap-2.5 md:gap-3">
-          {categories.slice(0, 7).map((cat) => (
-            <Link
-              key={cat.id || cat.slug}
-              to={`/shop/category/${cat.slug}`}
-              className="flex flex-col items-center bg-surface-container-lowest rounded-2xl p-2.5 sm:p-3 text-center group active:scale-95 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-outline-variant/30 hover:border-emerald-600 hover:shadow-md hover:-translate-y-0.5"
-            >
-              {/* Circular Icon Container matching Tonmoy / Chaldal style */}
-              <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full bg-emerald-50 text-emerald-800 flex items-center justify-center group-hover:bg-emerald-100 group-hover:scale-105 transition-all mb-1.5 shadow-xs">
-                {cat.icon && !cat.icon_name ? (
-                  <span className="text-[22px] sm:text-[26px]">{cat.icon}</span>
-                ) : (
-                  <span className="material-symbols-outlined text-[22px] sm:text-[26px] text-emerald-700">
-                    {cat.icon_name || 'shopping_bag'}
-                  </span>
-                )}
-              </div>
+          {categories.slice(0, 7).map((cat) => {
+            const catImage = cat.image_url || CATEGORY_IMAGES?.[cat.slug]
+            return (
+              <Link
+                key={cat.id || cat.slug}
+                to={`/shop/category/${cat.slug}`}
+                className="flex flex-col items-center bg-surface-container-lowest rounded-2xl p-2 sm:p-2.5 text-center group active:scale-95 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-outline-variant/30 hover:border-emerald-600 hover:shadow-md hover:-translate-y-0.5"
+              >
+                {/* Category Image or Icon Container (Chaldal / Tonmoy Style) */}
+                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-2xl bg-white dark:bg-surface-container flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1.5 shadow-xs border border-outline-variant/20 group-hover:border-emerald-500/40 overflow-hidden">
+                  {catImage ? (
+                    <img
+                      src={catImage}
+                      alt={cat.name}
+                      className="w-full h-full object-contain transition-transform group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  ) : cat.icon && !cat.icon_name ? (
+                    <span className="text-[26px] sm:text-[28px]">{cat.icon}</span>
+                  ) : (
+                    <span className="material-symbols-outlined text-[26px] sm:text-[28px] text-emerald-700 dark:text-emerald-400">
+                      {cat.icon_name || 'shopping_bag'}
+                    </span>
+                  )}
+                </div>
 
-              {/* Bengali Name (Primary Title) */}
-              <span className="text-[11px] sm:text-xs font-bold text-on-surface leading-tight line-clamp-1 group-hover:text-emerald-700 transition-colors">
-                {t(cat.name_bn || cat.name, cat.name)}
-              </span>
+                {/* Bengali Name (Primary Title) */}
+                <span className="text-[11px] sm:text-xs font-bold text-on-surface leading-tight line-clamp-1 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                  {t(cat.name_bn || cat.name, cat.name)}
+                </span>
 
-              {/* English Subtitle */}
-              <span className="text-[9px] sm:text-[10px] text-on-surface-variant font-medium line-clamp-1 mt-0.5">
-                {cat.name}
-              </span>
-            </Link>
-          ))}
+                {/* English Subtitle */}
+                <span className="text-[9px] sm:text-[10px] text-on-surface-variant font-medium line-clamp-1 mt-0.5">
+                  {cat.name}
+                </span>
+              </Link>
+            )
+          })}
         </div>
       </section>
 

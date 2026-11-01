@@ -28,7 +28,7 @@ import { useCart } from '../context/CartContext'
 import { useLang } from '../context/LanguageContext'
 import { formatCurrency, getProductImageUrl } from '../lib/utils'
 import { useProductSync } from '../lib/syncEvents'
-import { DEFAULT_CATEGORIES, LEGACY_CATEGORY_MAP, ALLOWED_MAIN_SLUGS } from '../data/categories'
+import { DEFAULT_CATEGORIES, LEGACY_CATEGORY_MAP, ALLOWED_MAIN_SLUGS, CATEGORY_IMAGES } from '../data/categories'
 import toast from 'react-hot-toast'
 
 export default function Shop() {
@@ -904,6 +904,7 @@ export default function Shop() {
         </button>
         {mainCategories.map((cat) => {
           const isActive = isCatActive(cat.slug)
+          const catImage = cat.image_url || CATEGORY_IMAGES?.[cat.slug]
           return (
             <button
               key={cat.id || cat.slug}
@@ -915,7 +916,11 @@ export default function Shop() {
                   : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
               }`}
             >
-              <span>{cat.icon || '📦'}</span>
+              {catImage ? (
+                <img src={catImage} alt={cat.name} className="w-4 h-4 object-contain shrink-0" />
+              ) : (
+                <span>{cat.icon || '📦'}</span>
+              )}
               <span>{t(cat.name_bn || cat.name, cat.name)}</span>
             </button>
           )
@@ -1001,9 +1006,16 @@ export default function Shop() {
                     toggleCategoryExpand(cat.slug)
                   }}
                 >
-                  <span className="text-[13.5px] sm:text-[14px] truncate flex-1 text-left select-none">
-                    {t(cat.name_bn || cat.name, cat.name)}
-                  </span>
+                  <div className="flex items-center gap-2 min-w-0 flex-1 pr-1">
+                    {(cat.image_url || CATEGORY_IMAGES?.[cat.slug]) ? (
+                      <img src={cat.image_url || CATEGORY_IMAGES?.[cat.slug]} alt={cat.name} className="w-5 h-5 object-contain shrink-0" />
+                    ) : (
+                      <span className="text-sm shrink-0">{cat.icon || '📁'}</span>
+                    )}
+                    <span className="text-[13.5px] sm:text-[14px] truncate text-left select-none">
+                      {t(cat.name_bn || cat.name, cat.name)}
+                    </span>
+                  </div>
 
                   {/* Dropdown Indicator Icon on the far right */}
                   {subs.length > 0 && (

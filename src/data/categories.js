@@ -1,3 +1,14 @@
+// Official Level 1 Category Images (Tonmoy Variety Store / Chaldal style)
+export const CATEGORY_IMAGES = {
+  'dairy-eggs': '/images/categories/dairy-eggs.webp',
+  'cooking-essentials': '/images/categories/cooking-essentials.webp',
+  'snacks-beverages': '/images/categories/snacks-beverages.webp',
+  'baby-care': '/images/categories/baby-care.webp',
+  'beauty-personal-care': '/images/categories/beauty-personal-care.webp',
+  'cleaning-household': '/images/categories/cleaning-household.webp',
+  'stationery-lifestyle': '/images/categories/stationery-lifestyle.webp',
+};
+
 // Complete 7 Main Categories, Subcategories, and Detailed Subcategories (Chaldal Style)
 // for Tonmoy Variety Store
 
@@ -7,6 +18,7 @@ export const DEFAULT_CATEGORIES = [
     name: 'Dairy & Eggs',
     name_bn: 'দুধ ও ডিম',
     slug: 'dairy-eggs',
+    image_url: '/images/categories/dairy-eggs.webp',
     icon: '🥛',
     icon_name: 'egg_alt',
     description: 'তাজা খাঁটি দুধ, ঘি, মাখন, পনির ও পুষ্টিকর ডিম',
@@ -65,6 +77,7 @@ export const DEFAULT_CATEGORIES = [
     name: 'Cooking Essentials',
     name_bn: 'রান্নার সামগ্রী',
     slug: 'cooking-essentials',
+    image_url: '/images/categories/cooking-essentials.webp',
     icon: '🌾',
     icon_name: 'restaurant',
     description: 'চাল, ডাল, আটা, তেল, চিনি, লবণ ও খাঁটি মসলাপাতি',
@@ -130,6 +143,7 @@ export const DEFAULT_CATEGORIES = [
     name: 'Snacks & Beverages',
     name_bn: 'নাস্তা ও পানীয়',
     slug: 'snacks-beverages',
+    image_url: '/images/categories/snacks-beverages.webp',
     icon: '🍪',
     icon_name: 'fastfood',
     description: 'বিস্কুট, চিপস, চকলেট, চা, কফি, জুস ও কোমল পানীয়',
@@ -195,6 +209,7 @@ export const DEFAULT_CATEGORIES = [
     name: 'Baby Care',
     name_bn: 'শিশুর যত্ন',
     slug: 'baby-care',
+    image_url: '/images/categories/baby-care.webp',
     icon: '👶',
     icon_name: 'child_care',
     description: 'ডায়াপার, বেবি ওয়াইপস, শিশুর পুষ্টিকর খাবার ও লোশন',
@@ -246,6 +261,7 @@ export const DEFAULT_CATEGORIES = [
     name: 'Beauty & Personal Care',
     name_bn: 'সৌন্দর্য ও ব্যক্তিগত যত্ন',
     slug: 'beauty-personal-care',
+    image_url: '/images/categories/beauty-personal-care.webp',
     icon: '💄',
     icon_name: 'face',
     description: 'স্কিন কেয়ার, শ্যাম্পু, টুথপেস্ট, সাবান ও ব্যক্তিগত যত্ন',
@@ -311,6 +327,7 @@ export const DEFAULT_CATEGORIES = [
     name: 'Cleaning & Household',
     name_bn: 'ক্লিনিং ও গৃহস্থালি',
     slug: 'cleaning-household',
+    image_url: '/images/categories/cleaning-household.webp',
     icon: '🧹',
     icon_name: 'cleaning_services',
     description: 'ডিটারজেন্ট, ফ্লোর ক্লিনার, টয়লেট ক্লিনার, টিস্যু ও ব্যাগ',
@@ -404,6 +421,7 @@ export const DEFAULT_CATEGORIES = [
     name: 'Stationery & Lifestyle',
     name_bn: 'স্টেশনারি ও লাইফস্টাইল',
     slug: 'stationery-lifestyle',
+    image_url: '/images/categories/stationery-lifestyle.webp',
     icon: '✏️',
     icon_name: 'menu_book',
     description: 'খাতা, কলম, ফাইল, ব্যাটারি, লাইটার ও গৃহস্থালি টুকিটাকি',
