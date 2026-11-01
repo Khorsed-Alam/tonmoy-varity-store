@@ -72,10 +72,14 @@ export default function Register() {
       <div className="w-full max-w-md animate-fade-in">
         <div className="card p-8">
           {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 gradient-brand rounded-2xl flex items-center justify-center text-3xl font-bold text-white mx-auto mb-4 shadow-lg">
-              ত
-            </div>
+          <div className="text-center mb-6">
+            <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+              <img
+                src="/logo.png"
+                alt="তন্ময় ভ্যারাইটি স্টোর"
+                className="h-20 w-auto mx-auto object-contain mb-3 drop-shadow-sm"
+              />
+            </Link>
             <h1 className="text-2xl font-bold text-brand-dark">{t('নতুন অ্যাকাউন্ট খুলুন', 'Create Account')}</h1>
             <p className="text-brand-muted text-sm mt-1">{t('তন্ময় ভ্যারাইটি স্টোরে স্বাগতম!', 'Welcome to Tonmoy Varity Store!')}</p>
           </div>

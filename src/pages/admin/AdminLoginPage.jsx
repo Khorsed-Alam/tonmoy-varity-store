@@ -66,9 +66,11 @@ export default function AdminLoginPage() {
       <header className="w-full bg-surface-container-lowest/80 backdrop-blur-xl shadow-xs sticky top-0 z-50 border-b border-outline-variant/30">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-xs">
-              <Store className="w-5 h-5 text-on-primary" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Tonmoy Varity Store"
+              className="h-9 w-auto object-contain drop-shadow-xs shrink-0"
+            />
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-primary text-sm tracking-tight font-display">
@@ -169,9 +171,11 @@ export default function AdminLoginPage() {
               {/* Brand & Seal Header */}
               <div className="flex flex-col items-center text-center mb-6">
                 <div className="relative mb-4">
-                  <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-md">
-                    <Store className="w-8 h-8 text-on-primary" />
-                  </div>
+                  <img
+                    src="/logo.png"
+                    alt="Tonmoy Varity Store"
+                    className="h-20 w-auto mx-auto object-contain drop-shadow-md"
+                  />
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center shadow-xs">
                     <ShieldCheck className="w-3.5 h-3.5 text-on-secondary-container" />
                   </div>

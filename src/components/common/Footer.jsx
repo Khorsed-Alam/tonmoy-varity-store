@@ -11,13 +11,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl font-bold">
-                ত
-              </div>
+            <div className="flex items-center gap-3 mb-4">
+              <img
+                src="/logo.png"
+                alt={t('তন্ময় ভ্যারাইটি স্টোর', 'Tonmoy Varity Store')}
+                className="h-12 w-auto object-contain bg-white/10 p-1 rounded-xl backdrop-blur-xs shrink-0"
+              />
               <div>
-                <div className="text-xs text-white/70">{t('মেসার্স তন্ময়', 'M/S Tonmoy')}</div>
-                <div className="font-bold">{t('ভ্যারাইটি স্টোর', 'Varity Store')}</div>
+                <div className="text-xs text-white/80">{t('মেসার্স তন্ময়', 'M/S Tonmoy')}</div>
+                <div className="font-bold text-base text-white">{t('ভ্যারাইটি স্টোর', 'Varity Store')}</div>
               </div>
             </div>
             <p className="text-white/70 text-sm leading-relaxed">

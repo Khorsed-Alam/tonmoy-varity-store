@@ -54,11 +54,13 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-15 sm:h-16 md:h-18">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group min-w-0 pr-2">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-sm group-hover:scale-105 transition-transform shrink-0">
-              <span className="material-symbols-outlined text-[18px] sm:text-[20px]">storefront</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt={t('মেসার্স তন্ময় ভ্যারাইটি স্টোর', 'M/S Tonmoy Varity Store')}
+              className="h-9 sm:h-11 md:h-12 w-auto object-contain transition-transform group-hover:scale-105 shrink-0 drop-shadow-xs"
+            />
             <div className="min-w-0">
-              <div className="text-xs sm:text-sm md:text-base font-bold text-primary leading-tight font-display truncate">
+              <div className="text-xs sm:text-sm md:text-base font-bold text-primary dark:text-emerald-400 leading-tight font-display truncate">
                 {t('মেসার্স তন্ময় ভ্যারাইটি স্টোর', 'M/S Tonmoy Varity Store')}
               </div>
               <div className="text-[10px] sm:text-[11px] text-on-surface-variant font-medium leading-none truncate mt-0.5">
