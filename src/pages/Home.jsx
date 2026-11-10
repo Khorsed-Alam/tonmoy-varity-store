@@ -17,7 +17,7 @@ import { DEFAULT_CATEGORIES, ALLOWED_MAIN_SLUGS, CATEGORY_IMAGES } from '../data
 import toast from 'react-hot-toast'
 
 export default function Home() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const { addItem } = useCart()
   const navigate = useNavigate()
 
@@ -301,8 +301,8 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Category Grid: Responsive 4 cols on mobile, 7 cols on tablet & desktop */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 gap-2 sm:gap-2.5 md:gap-3">
+        {/* Category Grid: Responsive 3 cols on mobile, 4 cols on tablet, 7 cols on desktop */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 gap-2 sm:gap-2.5 md:gap-3">
           {categories.slice(0, 7).map((cat) => {
             const catImage = cat.image_url || CATEGORY_IMAGES?.[cat.slug]
             return (
@@ -312,7 +312,7 @@ export default function Home() {
                 className="flex flex-col items-center bg-surface-container-lowest rounded-2xl p-2 sm:p-2.5 text-center group active:scale-95 transition-all shadow-md hover:shadow-xl border border-outline-variant/60 hover:border-outline hover:-translate-y-0.5 duration-300"
               >
                 {/* Category Image or Icon Container (Chaldal / Tonmoy Style) */}
-                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-2xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1.5 shadow-xs border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1 sm:p-1.5 shadow-xs border border-slate-100 dark:border-slate-800 overflow-hidden">
                   {catImage ? (
                     <img
                       src={catImage}
@@ -321,23 +321,25 @@ export default function Home() {
                       loading="lazy"
                     />
                   ) : cat.icon && !cat.icon_name ? (
-                    <span className="text-[26px] sm:text-[28px]">{cat.icon}</span>
+                    <span className="text-[22px] sm:text-[28px]">{cat.icon}</span>
                   ) : (
-                    <span className="material-symbols-outlined text-[26px] sm:text-[28px] text-emerald-700 dark:text-emerald-400">
+                    <span className="material-symbols-outlined text-[22px] sm:text-[28px] text-emerald-700 dark:text-emerald-400">
                       {cat.icon_name || 'shopping_bag'}
                     </span>
                   )}
                 </div>
 
-                {/* Bengali Name (Primary Title) */}
-                <span className="text-[11px] sm:text-xs font-bold text-on-surface leading-tight line-clamp-1 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                {/* Primary Category Name */}
+                <span className="text-[10.5px] sm:text-xs font-bold text-on-surface leading-tight line-clamp-2 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                   {t(cat.name_bn || cat.name, cat.name)}
                 </span>
 
-                {/* English Subtitle */}
-                <span className="text-[9px] sm:text-[10px] text-on-surface-variant font-medium line-clamp-1 mt-0.5">
-                  {cat.name}
-                </span>
+                {/* English Subtitle (shown in Bengali mode without duplicate text) */}
+                {lang === 'bn' && (
+                  <span className="text-[8.5px] sm:text-[10px] text-on-surface-variant font-medium line-clamp-1 mt-0.5">
+                    {cat.name}
+                  </span>
+                )}
               </Link>
             )
           })}
