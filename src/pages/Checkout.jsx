@@ -12,7 +12,7 @@ import EmptyState from '../components/common/EmptyState'
 
 export default function Checkout() {
   const { items, subtotal, clearCart } = useCart()
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const { t } = useLang()
   const navigate = useNavigate()
 
@@ -55,6 +55,58 @@ export default function Checkout() {
     return Object.keys(e).length === 0
   }
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  // Strict Login Gate: Unauthenticated users MUST log in or create an account to order
+  if (!user) {
+    return (
+      <div className="page-container py-16 animate-fade-in max-w-md mx-auto text-center">
+        <div className="card p-8 shadow-xl border border-outline-variant/60">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 flex items-center justify-center mx-auto mb-4 text-amber-600">
+            <span className="material-symbols-outlined text-[32px]">lock</span>
+          </div>
+          <h2 className="text-xl font-bold text-on-surface mb-2 font-display">
+            {t('অর্ডার করতে লগইন প্রয়োজন', 'Login Required to Order')}
+          </h2>
+          <p className="text-xs sm:text-sm text-on-surface-variant mb-6 leading-relaxed">
+            {t(
+              'আপনার অর্ডারটি সঠিকভাবে ট্র্যাক করতে এবং গ্রাহকের তথ্য ডাটাবেসে সুরক্ষিত রাখতে লগইন বা নতুন অ্যাকাউন্ট তৈরি করা বাধ্যতামূলক।',
+              'To accurately track your order and keep records safe in our database, logging in or creating an account is required.'
+            )}
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link
+              to="/login?redirect=/checkout"
+              className="btn-primary w-full py-3 text-center flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">login</span>
+              <span>{t('লগইন করুন', 'Sign In to Account')}</span>
+            </Link>
+            <Link
+              to="/register?redirect=/checkout"
+              className="w-full py-3 text-center rounded-xl border border-outline-variant/80 hover:border-primary text-xs font-bold text-on-surface hover:text-primary transition-colors flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              <span>{t('নতুন অ্যাকাউন্ট খুলুন', 'Create New Account')}</span>
+            </Link>
+            <Link
+              to="/cart"
+              className="text-xs text-on-surface-variant hover:text-primary mt-2 font-medium"
+            >
+              ← {t('কার্টে ফিরে যান', 'Back to Cart')}
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (items.length === 0) return (
     <div className="page-container py-20">
       <EmptyState
@@ -67,6 +119,11 @@ export default function Checkout() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!user || !user.id) {
+      toast.error(t('অর্ডার সম্পন্ন করতে অনুগ্রহ করে লগইন করুন।', 'Please log in to place an order.'))
+      navigate('/login?redirect=/checkout')
+      return
+    }
     if (!validate()) return
     setLoading(true)
 
@@ -146,7 +203,7 @@ export default function Checkout() {
       let order = null
       let currentPayload = {
         order_number: orderNumber,
-        user_id: user?.id || null,
+        user_id: user.id,
         full_name: form.full_name.trim(),
         customer_name: form.full_name.trim(),
         phone: form.phone.trim(),

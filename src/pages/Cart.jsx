@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Lock } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LanguageContext'
 import { formatCurrency, calculateDeliveryFee, getProductImageUrl } from '../lib/utils'
 import EmptyState from '../components/common/EmptyState'
@@ -8,6 +9,7 @@ import { supabaseClient as supabase } from '../lib/supabaseClient'
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, subtotal, itemCount, clearCart } = useCart()
+  const { user } = useAuth()
   const { t } = useLang()
   const deliveryFee = calculateDeliveryFee(subtotal, 'home_delivery')
   const total = subtotal + deliveryFee
@@ -117,9 +119,34 @@ export default function Cart() {
                 <span className="text-brand-dark">{formatCurrency(total)}</span>
               </div>
             </div>
-            <Link to="/checkout" className="btn-primary w-full text-center mt-5 flex items-center justify-center gap-2">
-              <ShoppingBag className="w-4 h-4" />
-              {t('চেকআউট করুন', 'Proceed to Checkout')}
+
+            {!user && (
+              <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  {t(
+                    'অর্ডার নিশ্চিত করতে একাউন্টে লগইন থাকা প্রয়োজন।',
+                    'You must be logged in to your account to place an order.'
+                  )}
+                </span>
+              </div>
+            )}
+
+            <Link
+              to={user ? '/checkout' : '/login?redirect=/checkout'}
+              className="btn-primary w-full text-center mt-5 flex items-center justify-center gap-2"
+            >
+              {user ? (
+                <>
+                  <ShoppingBag className="w-4 h-4" />
+                  {t('চেকআউট করুন', 'Proceed to Checkout')}
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  {t('লগইন করে চেকআউট করুন', 'Login & Checkout')}
+                </>
+              )}
             </Link>
             <Link to="/shop" className="flex items-center justify-center gap-1.5 text-sm text-brand-muted hover:text-brand-dark mt-3 transition-colors">
               <ArrowLeft className="w-4 h-4" />

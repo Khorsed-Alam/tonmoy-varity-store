@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LanguageContext'
 import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
@@ -7,14 +7,18 @@ import toast from 'react-hot-toast'
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { user, signIn } = useAuth()
   const { t } = useLang()
 
+  const redirectTarget = searchParams.get('redirect') || location.state?.from?.pathname || '/'
+
   useEffect(() => {
     if (user) {
-      navigate('/', { replace: true })
+      navigate(redirectTarget, { replace: true })
     }
-  }, [user, navigate])
+  }, [user, navigate, redirectTarget])
 
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPass, setShowPass] = useState(false)
@@ -49,7 +53,7 @@ export default function Login() {
       }
     } else {
       toast.success(t('স্বাগতম! 👋', 'Welcome back! 👋'))
-      navigate('/', { replace: true })
+      navigate(redirectTarget, { replace: true })
     }
   }
 
@@ -69,6 +73,19 @@ export default function Login() {
             <h1 className="text-2xl font-bold text-brand-dark">{t('স্বাগতম!', 'Welcome Back!')}</h1>
             <p className="text-brand-muted text-sm mt-1">{t('তন্ময় ভ্যারাইটি স্টোরে লগইন করুন', 'Sign in to Tonmoy Varity Store')}</p>
           </div>
+
+          {/* Checkout Login Notice */}
+          {redirectTarget.includes('checkout') && (
+            <div className="mb-5 p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2.5">
+              <span className="material-symbols-outlined text-[18px] text-amber-600 mt-0.5 shrink-0">lock</span>
+              <span className="leading-relaxed">
+                {t(
+                  'আপনার কার্টের পণ্য অর্ডার করতে অনুগ্রহ করে প্রথমে অ্যাকাউন্টে লগইন করুন।',
+                  'Please log in to your account to place the order for your cart items.'
+                )}
+              </span>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
@@ -120,7 +137,10 @@ export default function Login() {
 
           <p className="text-center text-sm text-brand-muted mt-5">
             {t('অ্যাকাউন্ট নেই?', "Don't have an account?")}{' '}
-            <Link to="/register" className="text-brand-fresh font-semibold hover:underline">
+            <Link
+              to={redirectTarget !== '/' ? `/register?redirect=${encodeURIComponent(redirectTarget)}` : '/register'}
+              className="text-brand-fresh font-semibold hover:underline"
+            >
               {t('নিবন্ধন করুন', 'Register')}
             </Link>
           </p>

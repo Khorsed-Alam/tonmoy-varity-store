@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 // Layouts
@@ -34,6 +34,7 @@ import Settings from '../pages/admin/Settings'
 // Route Guards
 export function RequireAuth({ children }) {
   const { user, loading } = useAuth()
+  const location = useLocation()
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -41,7 +42,8 @@ export function RequireAuth({ children }) {
       </div>
     )
   }
-  return user ? children : <Navigate to="/login" replace />
+  const target = location.pathname + location.search
+  return user ? children : <Navigate to={`/login?redirect=${encodeURIComponent(target)}`} state={{ from: location }} replace />
 }
 
 export function RequireAdmin({ children }) {
@@ -66,7 +68,7 @@ export function AppRouter() {
         <Route path="/shop/category/:slug" element={<Shop />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
         <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
         <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="/orders" element={<RequireAuth><MyOrders /></RequireAuth>} />
