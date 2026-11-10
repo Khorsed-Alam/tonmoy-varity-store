@@ -959,7 +959,7 @@ export default function Shop() {
             onClick={() => handleSelectCategory('all')}
             className={`w-full text-left py-2 px-3 text-[13.5px] sm:text-[14px] transition-colors rounded-lg flex items-center justify-between ${
               categorySlug === 'all'
-                ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-emerald-950/50' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
+                ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-slate-800' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
             }`}
           >
             <span>{t('জনপ্রিয় পণ্য', 'Popular')}</span>
@@ -973,7 +973,7 @@ export default function Shop() {
             }}
             className={`w-full text-left py-2 px-3 text-[13.5px] sm:text-[14px] transition-colors rounded-lg flex items-center justify-between ${
               stockOnly
-                ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-emerald-950/50' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
+                ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-slate-800' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
             }`}
           >
             <span>{t('ফ্ল্যাশ সেলস', 'Flash Sales')}</span>
@@ -999,7 +999,7 @@ export default function Shop() {
                 {/* Main Category Row */}
                 <div
                   className={`w-full flex items-center justify-between py-2 px-3 rounded-lg transition-colors cursor-pointer group ${
-                    isActive ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-emerald-950/60' : isCatOpen ? 'text-primary dark:text-emerald-300 font-semibold bg-primary/5 dark:bg-emerald-950/30' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
+                    isActive ? 'text-primary dark:text-emerald-400 font-bold bg-primary/10 dark:bg-slate-800' : isCatOpen ? 'text-primary dark:text-emerald-300 font-semibold bg-primary/5 dark:bg-slate-800/40' : 'text-gray-800 dark:text-white hover:text-primary dark:hover:text-emerald-400 font-medium hover:bg-surface-container dark:hover:bg-emerald-950/30'
                   }`}
                   onClick={() => {
                     handleSelectCategory(cat.slug)
@@ -1052,7 +1052,7 @@ export default function Shop() {
                           {/* Subcategory Row (Level 2) */}
                           <div
                             className={`w-full flex items-center justify-between py-1.5 px-2 rounded-md transition-colors cursor-pointer group ${
-                              isSubActive ? 'text-primary dark:text-emerald-400 font-bold bg-primary/15 dark:bg-emerald-950/60' : 'text-gray-700 dark:text-emerald-100/90 hover:text-primary dark:hover:text-emerald-300 font-normal hover:bg-gray-50 dark:hover:bg-emerald-950/40'
+                              isSubActive ? 'text-primary dark:text-emerald-400 font-bold bg-primary/15 dark:bg-slate-800' : 'text-gray-700 dark:text-emerald-100/90 hover:text-primary dark:hover:text-emerald-300 font-normal hover:bg-gray-50 dark:hover:bg-emerald-950/40'
                             }`}
                             onClick={() => {
                               if (categorySlug !== cat.slug) {
@@ -1107,7 +1107,7 @@ export default function Shop() {
                                       }
                                     }}
                                     className={`w-full text-left py-1 px-2 text-[12px] sm:text-[12.5px] rounded transition-colors flex items-center gap-1.5 ${
-                                      isL3Active ? 'text-primary dark:text-emerald-400 font-bold bg-primary/15 dark:bg-emerald-950/70' : 'text-gray-600 dark:text-emerald-200/90 hover:text-primary dark:hover:text-white hover:bg-gray-50 dark:hover:bg-emerald-950/40'
+                                      isL3Active ? 'text-primary dark:text-emerald-400 font-bold bg-primary/15 dark:bg-slate-800' : 'text-gray-600 dark:text-emerald-200/90 hover:text-primary dark:hover:text-white hover:bg-gray-50 dark:hover:bg-emerald-950/40'
                                     }`}
                                   >
                                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isL3Active ? 'bg-primary dark:bg-emerald-400' : 'bg-gray-300 dark:bg-emerald-600/50'}`} />
@@ -1443,12 +1443,12 @@ export default function Shop() {
                 return (
                   <article
                     key={product.id}
-                    className="bg-surface-container-lowest rounded-2xl p-2.5 sm:p-3 shadow-sm flex items-center gap-3 relative overflow-hidden transition-all hover:shadow-md border border-outline-variant/20 group"
+                    className="bg-surface-container-lowest rounded-2xl p-2.5 sm:p-3 shadow-md hover:shadow-xl flex items-center gap-3 relative overflow-hidden transition-all border border-outline-variant/60 hover:-translate-y-0.5 group"
                   >
                     {/* Thumbnail Image with Weight Badge */}
                     <Link
                       to={`/product/${product.id}`}
-                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-surface-container overflow-hidden flex-shrink-0 block"
+                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 overflow-hidden flex-shrink-0 block"
                     >
                       <img
                         className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
@@ -1567,12 +1567,12 @@ export default function Shop() {
                 return (
                   <article
                     key={product.id}
-                    className="bg-surface-container-lowest rounded-2xl p-2.5 sm:p-3 shadow-sm flex flex-col justify-between border border-outline-variant/20 hover:shadow-md transition-all group"
+                    className="bg-surface-container-lowest rounded-2xl p-2.5 sm:p-3 shadow-md hover:shadow-xl flex flex-col justify-between border border-outline-variant/60 hover:-translate-y-0.5 transition-all duration-300 group"
                   >
                     <div>
                       <Link
                         to={`/product/${product.id}`}
-                        className="relative w-full aspect-square rounded-xl bg-surface-container overflow-hidden flex items-center justify-center block mb-2"
+                        className="relative w-full aspect-square rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 overflow-hidden flex items-center justify-center block mb-2"
                       >
                         <img
                           src={imageUrl || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300'}

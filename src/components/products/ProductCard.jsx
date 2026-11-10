@@ -43,10 +43,10 @@ export default function ProductCard({ product }) {
   }
 
   return (
-    <Link to={`/product/${product.id}`} className="block bg-surface-container-lowest rounded-xl p-2.5 sm:p-3 flex flex-col justify-between shadow-[0_1px_6px_rgba(25,51,40,0.05)] hover:shadow-card-hover transition-all group border border-outline-variant/30 h-full">
+    <Link to={`/product/${product.id}`} className="block bg-surface-container-lowest rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between shadow-md hover:shadow-xl transition-all duration-300 group border border-outline-variant/60 hover:border-outline hover:-translate-y-0.5 h-full">
       {/* Top Image Container */}
       <div>
-        <div className="relative w-full aspect-square bg-surface-container-low rounded-lg overflow-hidden flex items-center justify-center">
+        <div className="relative w-full aspect-square bg-slate-50 dark:bg-slate-800/60 rounded-xl overflow-hidden flex items-center justify-center border border-slate-100 dark:border-slate-800/80">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -60,7 +60,7 @@ export default function ProductCard({ product }) {
 
           {/* Unit Badge (e.g. 1 কেজি) */}
           {product.unit && (
-            <span className="absolute top-2 left-2 bg-surface-container-lowest/90 backdrop-blur-sm text-primary font-medium text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded shadow-sm">
+            <span className="absolute top-2 left-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-slate-700 dark:text-slate-300 font-semibold text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded shadow-xs border border-slate-200/60 dark:border-slate-700/60">
               {product.unit}
             </span>
           )}
@@ -114,12 +114,12 @@ export default function ProductCard({ product }) {
 
         {cartItem ? (
           <div
-            className="flex items-center justify-between bg-surface-container rounded-lg h-9 px-1"
+            className="flex items-center justify-between bg-slate-100 dark:bg-slate-800 rounded-lg h-9 px-1 border border-slate-200/70 dark:border-slate-700"
             onClick={e => e.preventDefault()}
           >
             <button
               onClick={handleDecrease}
-              className="w-7 h-7 rounded bg-surface-container-lowest text-primary flex items-center justify-center font-bold active:scale-90 shadow-xs"
+              className="w-7 h-7 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center font-bold active:scale-90 shadow-xs"
               aria-label="Decrease quantity"
             >
               -
@@ -130,7 +130,7 @@ export default function ProductCard({ product }) {
             <button
               onClick={handleIncrease}
               disabled={cartItem.quantity >= product.stock_quantity}
-              className="w-7 h-7 rounded bg-surface-container-lowest text-primary flex items-center justify-center font-bold active:scale-90 shadow-xs disabled:opacity-40"
+              className="w-7 h-7 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center font-bold active:scale-90 shadow-xs disabled:opacity-40"
               aria-label="Increase quantity"
             >
               +

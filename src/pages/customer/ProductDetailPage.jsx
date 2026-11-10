@@ -353,7 +353,7 @@ export default function ProductDetailPage() {
           
           {/* Left: Product Image & Prominent Weight Badge */}
           <div className="flex flex-col items-center">
-            <div className="relative w-full aspect-square bg-gradient-to-b from-surface-container-low via-surface-container to-surface-container-low rounded-2xl overflow-hidden flex items-center justify-center p-4 border border-outline-variant/20 shadow-inner group">
+            <div className="relative w-full aspect-square bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden flex items-center justify-center p-4 border border-slate-200/60 dark:border-slate-700/60 shadow-inner group">
               {imageUrl ? (
                 <img
                   src={imageUrl}
@@ -405,7 +405,7 @@ export default function ProductDetailPage() {
               {/* Category & Level 3 Badges */}
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 {product.subcategory && (
-                  <span className="text-[11px] font-bold text-primary bg-primary/10 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[11px] font-bold text-primary bg-emerald-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-emerald-200/50 dark:border-slate-700">
                     {product.subcategory}
                   </span>
                 )}
@@ -563,11 +563,11 @@ export default function ProductDetailPage() {
                 return (
                   <article
                     key={rel.id}
-                    className="bg-surface-container-lowest rounded-xl p-2.5 sm:p-3 flex flex-col justify-between shadow-[0_1px_6px_rgba(25,51,40,0.05)] hover:shadow-card-hover transition-all group border border-outline-variant/30 relative"
+                    className="bg-surface-container-lowest rounded-xl p-2.5 sm:p-3 flex flex-col justify-between shadow-md hover:shadow-xl transition-all duration-300 group border border-outline-variant/60 hover:-translate-y-0.5 relative"
                   >
                     <div>
                       {/* Thumbnail & Prominent Weight Badge */}
-                      <Link to={`/product/${rel.id}`} className="relative block aspect-square bg-surface-container-low rounded-lg overflow-hidden mb-2">
+                      <Link to={`/product/${rel.id}`} className="relative block aspect-square bg-slate-50 dark:bg-slate-800/60 rounded-xl overflow-hidden mb-2 border border-slate-100 dark:border-slate-800">
                         {relImg ? (
                           <img
                             src={relImg}

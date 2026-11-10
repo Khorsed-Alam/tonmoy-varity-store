@@ -309,10 +309,10 @@ export default function Home() {
               <Link
                 key={cat.id || cat.slug}
                 to={`/shop/category/${cat.slug}`}
-                className="flex flex-col items-center bg-surface-container-lowest rounded-2xl p-2 sm:p-2.5 text-center group active:scale-95 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-outline-variant/30 hover:border-emerald-600 hover:shadow-md hover:-translate-y-0.5"
+                className="flex flex-col items-center bg-surface-container-lowest rounded-2xl p-2 sm:p-2.5 text-center group active:scale-95 transition-all shadow-md hover:shadow-xl border border-outline-variant/60 hover:border-outline hover:-translate-y-0.5 duration-300"
               >
                 {/* Category Image or Icon Container (Chaldal / Tonmoy Style) */}
-                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-2xl bg-white dark:bg-surface-container flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1.5 shadow-xs border border-outline-variant/20 group-hover:border-emerald-500/40 overflow-hidden">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-2xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1.5 shadow-xs border border-slate-100 dark:border-slate-800 overflow-hidden">
                   {catImage ? (
                     <img
                       src={catImage}

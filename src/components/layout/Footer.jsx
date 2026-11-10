@@ -6,7 +6,7 @@ export default function Footer() {
   const { t } = useLang()
 
   return (
-    <footer className="gradient-brand text-white mt-16">
+    <footer className="bg-slate-900 text-slate-100 mt-16 border-t border-slate-800">
       <div className="page-container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
