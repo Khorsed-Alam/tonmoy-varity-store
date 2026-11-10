@@ -22,6 +22,7 @@ export default function Home() {
   const navigate = useNavigate()
 
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
+  const [showAllCategories, setShowAllCategories] = useState(false)
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [newProducts, setNewProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -301,15 +302,19 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Category Grid: Responsive 3 cols on mobile, 4 cols on tablet, 7 cols on desktop */}
+        {/* Category Grid: Responsive 3 cols on mobile (2x3 matrix default), 4 cols on tablet, 7 cols on desktop */}
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 gap-2 sm:gap-2.5 md:gap-3">
-          {categories.slice(0, 7).map((cat) => {
+          {categories.slice(0, 7).map((cat, index) => {
             const catImage = cat.image_url || CATEGORY_IMAGES?.[cat.slug]
+            const isHiddenOnMobile = index >= 5 && !showAllCategories
+
             return (
               <Link
                 key={cat.id || cat.slug}
                 to={`/shop/category/${cat.slug}`}
-                className="flex flex-col items-center bg-surface-container-lowest rounded-2xl p-2 sm:p-2.5 text-center group active:scale-95 transition-all shadow-md hover:shadow-xl border border-outline-variant/60 hover:border-outline hover:-translate-y-0.5 duration-300"
+                className={`${
+                  isHiddenOnMobile ? 'hidden sm:flex' : 'flex'
+                } flex-col items-center bg-surface-container-lowest rounded-2xl p-2 sm:p-2.5 text-center group active:scale-95 transition-all shadow-md hover:shadow-xl border border-outline-variant/60 hover:border-outline hover:-translate-y-0.5 duration-300`}
               >
                 {/* Category Image or Icon Container (Chaldal / Tonmoy Style) */}
                 <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1 sm:p-1.5 shadow-xs border border-slate-100 dark:border-slate-800 overflow-hidden">
@@ -343,6 +348,68 @@ export default function Home() {
               </Link>
             )
           })}
+
+          {/* 6th Slot on Mobile: See More / আরও দেখুন Card (Creates exact 2x3 Matrix on mobile) */}
+          {!showAllCategories && (
+            <button
+              type="button"
+              onClick={() => setShowAllCategories(true)}
+              className="sm:hidden flex flex-col items-center justify-center bg-surface-container-lowest rounded-2xl p-2 text-center group active:scale-95 transition-all shadow-md hover:shadow-xl border border-primary/30 hover:border-primary duration-300"
+            >
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1 shadow-xs border border-emerald-100 dark:border-emerald-900/60">
+                <span className="material-symbols-outlined text-[24px] text-primary dark:text-emerald-400">
+                  grid_view
+                </span>
+              </div>
+              <span className="text-[10.5px] font-bold text-primary dark:text-emerald-400 leading-tight">
+                {t('আরও দেখুন', 'See More')}
+              </span>
+              <span className="text-[8.5px] text-on-surface-variant font-medium mt-0.5">
+                {t('বাকিগুলো', 'Remaining')}
+              </span>
+            </button>
+          )}
+
+          {/* When expanded on mobile: "সকল পণ্য" (Shop All) in slot 8 */}
+          {showAllCategories && (
+            <Link
+              to="/shop"
+              className="sm:hidden flex flex-col items-center justify-center bg-surface-container-lowest rounded-2xl p-2 text-center group active:scale-95 transition-all shadow-md hover:shadow-xl border border-outline-variant/60 hover:border-primary duration-300"
+            >
+              <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1 shadow-xs border border-slate-100 dark:border-slate-800">
+                <span className="material-symbols-outlined text-[24px] text-primary dark:text-emerald-400">
+                  storefront
+                </span>
+              </div>
+              <span className="text-[10.5px] font-bold text-on-surface leading-tight">
+                {t('সকল পণ্য', 'All Products')}
+              </span>
+              <span className="text-[8.5px] text-on-surface-variant font-medium mt-0.5">
+                {t('দোকানে যান', 'Go to Shop')}
+              </span>
+            </Link>
+          )}
+
+          {/* When expanded on mobile: "Show Less" (কম দেখুন) in slot 9 (completes 3x3 matrix) */}
+          {showAllCategories && (
+            <button
+              type="button"
+              onClick={() => setShowAllCategories(false)}
+              className="sm:hidden flex flex-col items-center justify-center bg-surface-container-lowest rounded-2xl p-2 text-center group active:scale-95 transition-all shadow-md hover:shadow-xl border border-outline-variant/60 hover:border-outline duration-300"
+            >
+              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-105 transition-all mb-1.5 p-1 shadow-xs border border-slate-200/60 dark:border-slate-700">
+                <span className="material-symbols-outlined text-[24px] text-outline">
+                  expand_less
+                </span>
+              </div>
+              <span className="text-[10.5px] font-bold text-on-surface-variant leading-tight">
+                {t('কম দেখুন', 'Show Less')}
+              </span>
+              <span className="text-[8.5px] text-outline font-medium mt-0.5">
+                {t('সংক্ষেপ করুন', 'Collapse')}
+              </span>
+            </button>
+          )}
         </div>
       </section>
 
