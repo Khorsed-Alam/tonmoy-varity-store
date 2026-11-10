@@ -30,9 +30,9 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-brand-light shadow-[0_1px_8px_rgba(0,0,0,0.03)]">
-      {/* Top Announcement Bar with Circular Left-to-Right Marquee */}
+      {/* Top Announcement Bar with Infinite Right-to-Left Marquee */}
       <div className="bg-primary text-on-primary py-1.5 overflow-hidden text-[11px] sm:text-xs select-none border-b border-primary-container/40">
-        <div className="animate-marquee-ltr flex items-center">
+        <div className="animate-marquee-rtl flex items-center">
           {[1, 2, 3, 4].map((idx) => (
             <div key={idx} className="flex items-center gap-6 sm:gap-10 shrink-0 px-4 sm:px-6">
               <div className="flex items-center gap-1.5 font-medium">

@@ -230,4 +230,27 @@
   .gradient-hero {
     background: linear-gradient(135deg, #176B3A 0%, #2E8B57 60%, #3CB371 100%);
   }
+
+  /* Seamless Infinite Marquee Right to Left */
+  @keyframes marqueeRtl {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee-rtl,
+  .animate-marquee-ltr {
+    display: flex;
+    width: max-content;
+    animation: marqueeRtl 28s linear infinite;
+    will-change: transform;
+  }
+
+  .animate-marquee-rtl:hover,
+  .animate-marquee-ltr:hover {
+    animation-play-state: paused;
+  }
 }
