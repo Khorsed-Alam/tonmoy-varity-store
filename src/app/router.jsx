@@ -13,6 +13,9 @@ import Cart from '../pages/Cart'
 import Checkout from '../pages/Checkout'
 import Login from '../pages/Login'
 import Register from '../pages/Register'
+import ForgotPassword from '../pages/ForgotPassword'
+import VerifyOtp from '../pages/VerifyOtp'
+import ResetPassword from '../pages/ResetPassword'
 import MyOrders from '../pages/MyOrders'
 import OrderDetailPage from '../pages/customer/OrderDetailPage'
 import OrderConfirmationPage from '../pages/customer/OrderConfirmationPage'
@@ -75,6 +78,9 @@ export function AppRouter() {
         <Route path="/orders/:orderId" element={<RequireAuth><OrderDetailPage /></RequireAuth>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
       {/* Admin Back-Office Routes */}

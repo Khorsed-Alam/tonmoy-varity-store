@@ -107,7 +107,15 @@ export default function Login() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-brand-dark mb-1.5">{t('পাসওয়ার্ড', 'Password')}</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-brand-dark">{t('পাসওয়ার্ড', 'Password')}</label>
+                <Link
+                  to={form.email ? `/forgot-password?email=${encodeURIComponent(form.email)}` : '/forgot-password'}
+                  className="text-xs text-brand-fresh hover:underline font-medium transition-colors"
+                >
+                  {t('পাসওয়ার্ড ভুলে গেছেন?', 'Forgot Password?')}
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input

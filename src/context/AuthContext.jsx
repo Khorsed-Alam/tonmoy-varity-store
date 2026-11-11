@@ -201,6 +201,30 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
+  const resetPasswordForEmail = async (email) => {
+    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/forgot-password` : undefined
+    const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl,
+    })
+    return { data, error }
+  }
+
+  const verifyResetOtp = async ({ email, token }) => {
+    const { data, error } = await supabaseClient.auth.verifyOtp({
+      email,
+      token: token.trim(),
+      type: 'recovery',
+    })
+    return { data, error }
+  }
+
+  const updatePassword = async (newPassword) => {
+    const { data, error } = await supabaseClient.auth.updateUser({
+      password: newPassword,
+    })
+    return { data, error }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -213,6 +237,9 @@ export function AuthProvider({ children }) {
         signOut,
         updateProfile,
         loginAsDemoAdmin,
+        resetPasswordForEmail,
+        verifyResetOtp,
+        updatePassword,
       }}
     >
       {children}

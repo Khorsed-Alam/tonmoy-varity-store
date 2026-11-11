@@ -20,7 +20,13 @@ export default function Register() {
     }
   }, [user, navigate, redirectTarget])
 
-  const [form, setForm] = useState({ fullName: '', phone: '', email: '', password: '', confirmPassword: '' })
+  const [form, setForm] = useState({
+    fullName: '',
+    phone: '',
+    email: searchParams.get('email') || '',
+    password: '',
+    confirmPassword: '',
+  })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})

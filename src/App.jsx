@@ -14,6 +14,9 @@ import CheckoutPage from './pages/customer/CheckoutPage'
 import OrderConfirmationPage from './pages/customer/OrderConfirmationPage'
 import LoginPage from './pages/customer/LoginPage'
 import RegisterPage from './pages/customer/RegisterPage'
+import ForgotPasswordPage from './pages/customer/ForgotPasswordPage'
+import VerifyOtpPage from './pages/customer/VerifyOtpPage'
+import ResetPasswordPage from './pages/customer/ResetPasswordPage'
 import ProfilePage from './pages/customer/ProfilePage'
 import OrderHistoryPage from './pages/customer/OrderHistoryPage'
 import OrderDetailPage from './pages/customer/OrderDetailPage'
@@ -68,6 +71,9 @@ export default function App() {
         <Route path="/orders/:orderId" element={<RequireAuth><OrderDetailPage /></RequireAuth>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-otp" element={<VerifyOtpPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Admin Routes */}
