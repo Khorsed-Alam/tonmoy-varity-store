@@ -21,3 +21,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.check_user_exists(TEXT) TO anon, authenticated, service_role;
 
 COMMENT ON FUNCTION public.check_user_exists(TEXT) IS 'Returns true if user exists in auth.users, false otherwise.';
+
