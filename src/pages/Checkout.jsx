@@ -84,9 +84,9 @@ export default function Checkout() {
   const deliveryFee = calculateDeliveryFee(subtotal, deliveryMethod)
   const total = Math.max(0, subtotal - discountAmount + deliveryFee)
 
-  const handleApplyPromo = async (e) => {
-    e?.preventDefault()
-    const code = promoInput.trim().toUpperCase()
+  const handleApplyPromo = async (e, directCode = null) => {
+    e?.preventDefault?.()
+    const code = (typeof directCode === 'string' ? directCode : promoInput).trim().toUpperCase()
     if (!code) {
       toast.error(t('প্রোমোকোড লিখুন', 'Please enter a promo code'))
       return
@@ -119,6 +119,10 @@ export default function Checkout() {
     } finally {
       setValidatingPromo(false)
     }
+  }
+
+  const handleQuickApplyPromo = (code) => {
+    handleApplyPromo(null, code)
   }
 
   const handleRemovePromo = () => {
@@ -531,6 +535,112 @@ export default function Checkout() {
             )}
           </div>
 
+          {/* Promo Code & Banner Discount Card (Prominent for all devices) */}
+          <div className="card p-5 border-2 border-dashed border-primary/40 bg-gradient-to-br from-primary/5 via-surface to-amber-500/5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-brand-dark flex items-center gap-2 text-base">
+                <Tag className="w-4 h-4 text-primary" />
+                <span>{t('প্রমো কোড / ব্যানার ডিসকাউন্ট', 'Promo Code / Banner Discount')}</span>
+              </h2>
+              {coupon && (
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30">
+                  {coupon.discountPercent}% {t('ছাড় সক্রিয়', 'Off Applied')}
+                </span>
+              )}
+            </div>
+
+            {coupon ? (
+              <div className="flex items-center justify-between p-3.5 bg-brand-mint/70 border border-primary/30 rounded-xl">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-brand-dark font-mono text-sm tracking-wide">{coupon.code}</span>
+                      <span className="text-xs font-semibold text-primary">({coupon.discountPercent}% ছাড় কার্যকর)</span>
+                    </div>
+                    <p className="text-xs text-brand-muted mt-0.5">
+                      {t('আপনি সাশ্রয় করছেন:', 'You are saving:')} <span className="font-bold text-primary">{formatCurrency(discountAmount)}</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemovePromo}
+                  className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{t('মুছুন', 'Remove')}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
+                    <input
+                      type="text"
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value.toUpperCase().replace(/\s+/g, ''))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleApplyPromo(e)
+                        }
+                      }}
+                      placeholder={t('প্রমো কোড লিখুন (যেমন: RAMADAN5)', 'Enter promo code (e.g. RAMADAN5)')}
+                      className="input-field pl-9 font-mono font-bold tracking-wider uppercase text-sm"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleApplyPromo}
+                    disabled={validatingPromo || !promoInput.trim()}
+                    className="btn-primary px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0"
+                  >
+                    {validatingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span>{t('প্রয়োগ করুন', 'Apply')}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Available Active Promos */}
+                {activePromos.length > 0 && (
+                  <div className="pt-2 border-t border-outline-variant/40">
+                    <p className="text-[11px] text-brand-muted mb-2 flex items-center gap-1.5 font-medium">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>{t('বর্তমানে চালু থাকা ব্যানার অফারসমূহ (ক্লিক করলেই কোড বসবে):', 'Active banner offers (click to auto-apply):')}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {activePromos.map((p) => (
+                        <button
+                          key={p.code}
+                          type="button"
+                          onClick={() => {
+                            setPromoInput(p.code)
+                            handleQuickApplyPromo(p.code)
+                          }}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold font-mono px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-all hover:scale-105 active:scale-95 shadow-xs cursor-pointer"
+                          title={`${p.title} (${p.discountPercent}% ছাড়)`}
+                        >
+                          <span>🏷️</span>
+                          <span>{p.code}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-200/80 text-amber-950 font-sans">
+                            {p.discountPercent}% ছাড়
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Payment Method */}
           <div className="card p-5">
             <h2 className="font-bold text-brand-dark mb-4 flex items-center gap-2">
@@ -606,6 +716,12 @@ export default function Checkout() {
                     type="text"
                     value={promoInput}
                     onChange={(e) => setPromoInput(e.target.value.toUpperCase().replace(/\s+/g, ''))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleApplyPromo(e)
+                      }
+                    }}
                     placeholder={t('কোড লিখুন (যেমন: RAMADAN5)', 'Enter promo (e.g. RAMADAN5)')}
                     className="flex-1 text-xs py-2 px-3 rounded-xl border border-outline-variant font-mono font-bold tracking-wider uppercase bg-surface outline-hidden focus:border-primary"
                   />
