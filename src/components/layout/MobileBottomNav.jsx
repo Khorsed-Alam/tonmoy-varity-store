@@ -30,12 +30,6 @@ export default function MobileBottomNav() {
       badge: itemCount > 0 ? (total > 0 ? `৳${total}` : itemCount) : null,
     },
     {
-      to: user ? '/orders' : '/login',
-      label: t('অর্ডার', 'Orders'),
-      icon: 'receipt_long',
-      isActive: location.pathname.startsWith('/orders'),
-    },
-    {
       to: isAdmin ? '/admin' : user ? '/profile' : '/login',
       label: isAdmin ? t('দোকান', 'Admin') : user ? t('প্রোফাইল', 'Profile') : t('লগইন', 'Login'),
       icon: isAdmin ? 'space_dashboard' : 'person',

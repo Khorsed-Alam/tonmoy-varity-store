@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLang } from '../../contexts/LanguageContext'
-import { User, Phone, MapPin, Loader2, CheckCircle } from 'lucide-react'
+import { User, Phone, MapPin, Loader2, CheckCircle, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
@@ -61,6 +62,25 @@ export default function ProfilePage() {
                 <span className="badge bg-brand-dark text-white mt-1">{t('অ্যাডমিন', 'Admin')}</span>
               )}
             </div>
+          </div>
+
+          {/* Quick Action: My Orders */}
+          <div className="mb-6">
+            <Link
+              to="/orders"
+              className="flex items-center justify-between p-3.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/60 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-on-surface">{t('আমার অর্ডারসমূহ', 'My Orders')}</div>
+                  <div className="text-xs text-on-surface-variant">{t('পূর্বের সকল অর্ডারের তালিকা ও ট্র্যাকিং', 'View order history & tracking')}</div>
+                </div>
+              </div>
+              <span className="text-sm font-bold text-primary group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
           </div>
 
           <form onSubmit={handleSave} className="space-y-4">
