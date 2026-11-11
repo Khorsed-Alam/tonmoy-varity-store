@@ -6,12 +6,21 @@ import { useLang } from '../context/LanguageContext'
 import { supabaseClient as supabase } from '../lib/supabaseClient'
 import { formatCurrency, calculateDeliveryFee, getProductImageUrl, DELIVERY_FEE } from '../lib/utils'
 import { notifyOrderChange, notifyProductChange } from '../lib/syncEvents'
-import { Truck, Store, MapPin, Phone, User, CreditCard, Loader2 } from 'lucide-react'
+import { bannerService } from '../services/bannerService'
+import { Truck, Store, MapPin, Phone, User, CreditCard, Loader2, Tag, CheckCircle2, Sparkles, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import EmptyState from '../components/common/EmptyState'
 
 export default function Checkout() {
-  const { items, subtotal, clearCart } = useCart()
+  const {
+    items,
+    subtotal,
+    clearCart,
+    coupon,
+    discountAmount,
+    applyCoupon,
+    removeCoupon,
+  } = useCart()
   const { user, profile, loading: authLoading } = useAuth()
   const { t } = useLang()
   const navigate = useNavigate()
@@ -19,6 +28,9 @@ export default function Checkout() {
   const [deliveryMethod, setDeliveryMethod] = useState('home_delivery')
   const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery')
   const [loading, setLoading] = useState(false)
+  const [promoInput, setPromoInput] = useState('')
+  const [validatingPromo, setValidatingPromo] = useState(false)
+  const [activePromos, setActivePromos] = useState([])
 
   const [form, setForm] = useState({
     full_name: profile?.full_name || '',
@@ -26,6 +38,35 @@ export default function Checkout() {
     address: profile?.address || '',
     notes: '',
   })
+
+  // Load available active promos
+  useEffect(() => {
+    bannerService.getActivePromos().then((promos) => {
+      setActivePromos(promos || [])
+    })
+  }, [])
+
+  // Re-verify coupon status on checkout mount (strict active check)
+  useEffect(() => {
+    if (coupon?.code) {
+      bannerService.validatePromoCode(coupon.code).then((res) => {
+        if (!res.valid) {
+          removeCoupon()
+          toast.error(t(
+            `"${coupon.code}" কুপনটির মেয়াদ শেষ হয়েছে বা ব্যানারটি নিষ্ক্রিয় করা হয়েছে।`,
+            `Coupon "${coupon.code}" is no longer active.`
+          ))
+        } else if (res.discountPercent !== coupon.discountPercent) {
+          applyCoupon({
+            code: res.promoCode,
+            discountPercent: res.discountPercent,
+            bannerTitle: res.bannerTitle,
+            bannerId: res.bannerId,
+          })
+        }
+      })
+    }
+  }, [])
 
   // Synchronize form when profile loads
   useEffect(() => {
@@ -41,7 +82,49 @@ export default function Checkout() {
   const [errors, setErrors] = useState({})
 
   const deliveryFee = calculateDeliveryFee(subtotal, deliveryMethod)
-  const total = subtotal + deliveryFee
+  const total = Math.max(0, subtotal - discountAmount + deliveryFee)
+
+  const handleApplyPromo = async (e) => {
+    e?.preventDefault()
+    const code = promoInput.trim().toUpperCase()
+    if (!code) {
+      toast.error(t('প্রোমোকোড লিখুন', 'Please enter a promo code'))
+      return
+    }
+
+    setValidatingPromo(true)
+    try {
+      const res = await bannerService.validatePromoCode(code)
+      if (!res.valid) {
+        toast.error(res.message || t('অবৈধ প্রোমোকোড', 'Invalid promo code'))
+        return
+      }
+
+      const calculatedSavings = Math.round((subtotal * res.discountPercent) / 100)
+      applyCoupon({
+        code: res.promoCode,
+        discountPercent: res.discountPercent,
+        bannerTitle: res.bannerTitle,
+        bannerId: res.bannerId,
+      })
+      setPromoInput('')
+      toast.success(
+        t(
+          `অভিনন্দন! "${res.promoCode}" কোড কার্যকর হয়েছে (${res.discountPercent}% ছাড় = ৳${calculatedSavings})`,
+          `Success! "${res.promoCode}" applied (${res.discountPercent}% off = ৳${calculatedSavings})`
+        )
+      )
+    } catch (err) {
+      toast.error(t('কুপন যাচাই করতে সমস্যা হয়েছে', 'Failed to validate coupon'))
+    } finally {
+      setValidatingPromo(false)
+    }
+  }
+
+  const handleRemovePromo = () => {
+    removeCoupon()
+    toast.success(t('প্রোমোকোড মুছে ফেলা হয়েছে', 'Promo code removed'))
+  }
 
   const validate = () => {
     const e = {}
@@ -190,16 +273,33 @@ export default function Checkout() {
         })
       }
 
-      // 2. Calculate delivery fee server-side
+      // 2. Validate promo code & calculate server-side discount
+      let serverDiscountAmount = 0
+      if (coupon?.code) {
+        const promoRes = await bannerService.validatePromoCode(coupon.code)
+        if (promoRes.valid) {
+          serverDiscountAmount = Math.round((serverSubtotal * promoRes.discountPercent) / 100)
+        } else {
+          removeCoupon()
+          toast.error(t(
+            `"${coupon.code}" কুপনটির মেয়াদ শেষ হয়েছে বা ব্যানারটি নিষ্ক্রিয় করা হয়েছে।`,
+            `Coupon "${coupon.code}" has expired or banner is inactive.`
+          ))
+          setLoading(false)
+          return
+        }
+      }
+
+      // 3. Calculate delivery fee server-side
       const serverDeliveryFee = deliveryMethod === 'home_delivery'
         ? (serverSubtotal >= 500 ? 0 : 50)
         : 0
-      const totalAmount = serverSubtotal + serverDeliveryFee
+      const totalAmount = Math.max(0, serverSubtotal - serverDiscountAmount + serverDeliveryFee)
 
-      // 3. Generate unique order number (e.g. TVS-MVT890)
+      // 4. Generate unique order number (e.g. TVS-MVT890)
       const orderNumber = `TVS-${Date.now().toString(36).toUpperCase()}`
 
-      // 4. Insert order with schema-resilient automatic fallback
+      // 5. Insert order with schema-resilient automatic fallback
       let order = null
       let currentPayload = {
         order_number: orderNumber,
@@ -220,11 +320,13 @@ export default function Checkout() {
         order_status: 'pending',
         subtotal: serverSubtotal,
         delivery_fee: serverDeliveryFee,
-        discount_amount: 0,
-        discount: 0,
+        discount_amount: serverDiscountAmount,
+        discount: serverDiscountAmount,
         total_amount: totalAmount,
         total: totalAmount,
-        notes: form.notes.trim(),
+        notes: coupon?.code
+          ? `${form.notes.trim()} [Promo: ${coupon.code} (${coupon.discountPercent}% off, -৳${serverDiscountAmount})]`.trim()
+          : form.notes.trim(),
       }
 
       // Automatically retry removing any column missing from Supabase schema cache
@@ -471,7 +573,78 @@ export default function Checkout() {
         </div>
 
         {/* Right: Order Summary */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-4">
+          {/* Promo Code Box */}
+          <div className="card p-4">
+            <h3 className="font-semibold text-brand-dark text-xs mb-2.5 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-primary" />
+              <span>{t('প্রোমোকোড / ব্যানার ডিসকাউন্ট', 'Promo Code / Banner Discount')}</span>
+            </h3>
+
+            {coupon ? (
+              <div className="flex items-center justify-between p-2.5 bg-brand-mint border border-primary/30 rounded-xl text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                  <div className="truncate">
+                    <span className="font-bold text-brand-dark font-mono">{coupon.code}</span>
+                    <span className="text-brand-dark ml-1 font-semibold text-[11px]">({coupon.discountPercent}% ছাড় কার্যকর)</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemovePromo}
+                  className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors shrink-0 ml-1"
+                  title="কুপন মুছুন"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase().replace(/\s+/g, ''))}
+                    placeholder={t('কোড লিখুন (যেমন: RAMADAN5)', 'Enter promo (e.g. RAMADAN5)')}
+                    className="flex-1 text-xs py-2 px-3 rounded-xl border border-outline-variant font-mono font-bold tracking-wider uppercase bg-surface outline-hidden focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyPromo}
+                    disabled={validatingPromo || !promoInput.trim()}
+                    className="btn-primary text-xs font-bold px-3 py-2 disabled:opacity-50 flex items-center justify-center shrink-0"
+                  >
+                    {validatingPromo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : t('প্রয়োগ', 'Apply')}
+                  </button>
+                </div>
+
+                {/* Available Active Promos */}
+                {activePromos.length > 0 && (
+                  <div className="pt-1">
+                    <p className="text-[10px] text-brand-muted mb-1 flex items-center gap-1 font-medium">
+                      <Sparkles className="w-3 h-3 text-amber-500" />
+                      <span>{t('বর্তমানে চালু থাকা অফারসমূহ:', 'Active banner offers:')}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {activePromos.map((p) => (
+                        <button
+                          key={p.code}
+                          type="button"
+                          onClick={() => setPromoInput(p.code)}
+                          className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
+                          title={`${p.title} (${p.discountPercent}% ছাড়)`}
+                        >
+                          🏷️ {p.code} ({p.discountPercent}%)
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="card p-5 sticky top-24">
             <h2 className="font-bold text-brand-dark mb-4">{t('অর্ডার সারসংক্ষেপ', 'Order Summary')}</h2>
             <div className="space-y-2 mb-4 max-h-60 overflow-y-auto pr-1">
@@ -497,6 +670,17 @@ export default function Checkout() {
                 <span className="text-brand-muted">{t('সাবটোটাল', 'Subtotal')}</span>
                 <span className="font-semibold">{formatCurrency(subtotal)}</span>
               </div>
+
+              {coupon && discountAmount > 0 && (
+                <div className="flex justify-between text-brand-fresh font-medium">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5" />
+                    <span>{t('ব্যানার ছাড়', 'Banner Discount')} ({coupon.code} - {coupon.discountPercent}%)</span>
+                  </span>
+                  <span className="font-bold">-{formatCurrency(discountAmount)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <span className="text-brand-muted">{t('ডেলিভারি', 'Delivery')}</span>
                 <span className="font-semibold text-brand-fresh">

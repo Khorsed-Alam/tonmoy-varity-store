@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, useRef } from 'react'
+import { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
 import { useAuth } from './AuthContext'
 
 export const CartContext = createContext(null)
@@ -100,21 +100,64 @@ export function CartProvider({ children }) {
   const removeItem = (productId) => dispatch({ type: 'REMOVE_ITEM', payload: productId })
   const updateQuantity = (productId, quantity) =>
     dispatch({ type: 'UPDATE_QUANTITY', payload: { product_id: productId, quantity } })
+  const [coupon, setCoupon] = useState(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const raw = sessionStorage.getItem('tvs_applied_coupon')
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  })
+
+  const applyCoupon = (couponData) => {
+    setCoupon(couponData)
+    try {
+      if (couponData) {
+        sessionStorage.setItem('tvs_applied_coupon', JSON.stringify(couponData))
+      } else {
+        sessionStorage.removeItem('tvs_applied_coupon')
+      }
+    } catch {}
+  }
+
+  const removeCoupon = () => {
+    setCoupon(null)
+    try {
+      sessionStorage.removeItem('tvs_applied_coupon')
+    } catch {}
+  }
+
   const clearCart = () => {
     try {
       localStorage.removeItem(activeCartKeyRef.current)
     } catch {
       // ignore
     }
+    removeCoupon()
     dispatch({ type: 'CLEAR_CART' })
   }
 
   const itemCount = state.items.reduce((sum, i) => sum + i.quantity, 0)
   const subtotal = state.items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const discountAmount =
+    coupon && coupon.discountPercent > 0 ? Math.round((subtotal * coupon.discountPercent) / 100) : 0
 
   return (
     <CartContext.Provider
-      value={{ items: state.items, itemCount, subtotal, addItem, removeItem, updateQuantity, clearCart }}
+      value={{
+        items: state.items,
+        itemCount,
+        subtotal,
+        coupon,
+        discountAmount,
+        applyCoupon,
+        removeCoupon,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+      }}
     >
       {children}
     </CartContext.Provider>

@@ -37,8 +37,8 @@ async function runTestSuite() {
     'Step 1a: Unregistered email is rejected and prompted to create account'
   )
 
-  // 1b. Request Password Reset for registered user
-  const testEmail = 'khorsedalam0472@gmail.com'
+  // 1b. Request Password Reset for registered user (e.g. admin@tonmoystore.com)
+  const testEmail = 'admin@tonmoystore.com'
   const reqRes = await requestPasswordReset({ email: testEmail, ip: '127.0.0.1' })
   assert(
     reqRes.success === true && reqRes.expiresIn === 120 && Boolean(reqRes.otpSession),

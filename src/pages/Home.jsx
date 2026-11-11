@@ -193,6 +193,26 @@ export default function Home() {
                     <span>{activeBanner.badge_text_bn}</span>
                   </div>
                 )}
+
+                {/* Promo Code Copy Pill */}
+                {activeBanner.promo_code && Number(activeBanner.discount_percent) > 0 && (
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      try {
+                        navigator.clipboard?.writeText(activeBanner.promo_code)
+                        toast.success(`প্রোমোকোড "${activeBanner.promo_code}" কপি হয়েছে! চেকআউটে ${activeBanner.discount_percent}% ছাড় পান`)
+                      } catch {}
+                    }}
+                    className="absolute bottom-2.5 right-2.5 sm:bottom-4 sm:right-4 z-20 bg-amber-500 hover:bg-amber-600 text-white text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg backdrop-blur-sm flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                    title="ক্লিক করে কোড কপি করুন"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">sell</span>
+                    <span>কোড: <b className="font-mono underline tracking-wider">{activeBanner.promo_code}</b> ({activeBanner.discount_percent}% ছাড়)</span>
+                    <span className="bg-white/25 text-[10px] px-1.5 py-0.5 rounded ml-0.5 font-bold">কপি</span>
+                  </div>
+                )}
               </Link>
             )}
 

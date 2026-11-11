@@ -17,6 +17,8 @@ export const DEFAULT_BANNERS = [
     button_text_bn: 'বাজার করুন',
     sort_order: 1,
     is_active: true,
+    promo_code: '',
+    discount_percent: 0,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000002',
@@ -32,6 +34,8 @@ export const DEFAULT_BANNERS = [
     button_text_bn: 'বাজার করুন',
     sort_order: 2,
     is_active: true,
+    promo_code: 'RAMADAN5',
+    discount_percent: 5,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000003',
@@ -47,6 +51,8 @@ export const DEFAULT_BANNERS = [
     button_text_bn: 'বাজার করুন',
     sort_order: 3,
     is_active: true,
+    promo_code: 'FRIDAY2',
+    discount_percent: 2,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000004',
@@ -61,7 +67,9 @@ export const DEFAULT_BANNERS = [
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
     sort_order: 4,
-    is_active: true,
+    is_active: false,
+    promo_code: 'EID5',
+    discount_percent: 5,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000005',
@@ -77,6 +85,8 @@ export const DEFAULT_BANNERS = [
     button_text_bn: 'বাজার করুন',
     sort_order: 5,
     is_active: true,
+    promo_code: 'NEWYEAR2',
+    discount_percent: 2,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000006',
@@ -91,7 +101,9 @@ export const DEFAULT_BANNERS = [
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
     sort_order: 6,
-    is_active: true,
+    is_active: false,
+    promo_code: 'PUJA3',
+    discount_percent: 3,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000007',
@@ -106,7 +118,9 @@ export const DEFAULT_BANNERS = [
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
     sort_order: 7,
-    is_active: true,
+    is_active: false,
+    promo_code: 'INDEPENDENCE3',
+    discount_percent: 3,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000008',
@@ -121,7 +135,9 @@ export const DEFAULT_BANNERS = [
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
     sort_order: 8,
-    is_active: true,
+    is_active: false,
+    promo_code: 'VICTORY3',
+    discount_percent: 3,
   },
   {
     id: 'b1000000-0000-0000-0000-000000000009',
@@ -136,9 +152,92 @@ export const DEFAULT_BANNERS = [
     button_text: 'Shop Now',
     button_text_bn: 'বাজার করুন',
     sort_order: 9,
-    is_active: true,
+    is_active: false,
+    promo_code: 'JULY24',
+    discount_percent: 2,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000010',
+    title: '2% Discount Pohela Boishakh',
+    title_bn: 'বাংলা নববর্ষ উপলক্ষে বিশেষ ছাড়',
+    subtitle: 'New shopping in the new year, stay healthy, stay well!',
+    subtitle_bn: 'নতুন বছরে নতুন কেনাকাটা, সুস্থ থাকুন, ভালো থাকুন!',
+    badge_text: 'Boishakh Special',
+    badge_text_bn: 'বৈশাখী ২% ছাড়',
+    image_url: '/images/banners/banner-boishakh-2discount.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 10,
+    is_active: false,
+    promo_code: 'BOISHAKH2',
+    discount_percent: 2,
+  },
+  {
+    id: 'b1000000-0000-0000-0000-000000000011',
+    title: '2% OFF International Mother Language Day',
+    title_bn: 'আন্তর্জাতিক মাতৃভাষা দিবস ২% ছাড়',
+    subtitle: 'Love for the Bengali language, special discount on grocery items!',
+    subtitle_bn: 'বাংলা ভাষার প্রতি ভালোবাসা, আমাদের সবার — গ্রোসারি পণ্যে বিশেষ ছাড়!',
+    badge_text: 'Language Day',
+    badge_text_bn: 'মাতৃভাষা দিবস ২% ছাড়',
+    image_url: '/images/banners/banner-language-day-2off.jpg',
+    link_url: '/shop',
+    button_text: 'Shop Now',
+    button_text_bn: 'বাজার করুন',
+    sort_order: 11,
+    is_active: false,
+    promo_code: 'EKUSHEY2',
+    discount_percent: 2,
   },
 ]
+
+/**
+ * Ensures a banner object always has promo_code and numeric discount_percent.
+ * Inferred automatically from title or badge if not explicitly configured.
+ */
+export function enrichBannerWithPromo(banner) {
+  if (!banner) return banner
+  let promoCode = (banner.promo_code || '').trim().toUpperCase()
+  let discountPercent =
+    banner.discount_percent !== undefined && banner.discount_percent !== null && !isNaN(Number(banner.discount_percent))
+      ? Number(banner.discount_percent)
+      : null
+
+  // If discount percentage is not explicitly stored, infer from badge or title (e.g. "৫% ছাড়")
+  if (discountPercent === null) {
+    const text = `${banner.badge_text_bn || ''} ${banner.title_bn || ''} ${banner.badge_text || ''} ${banner.title || ''}`
+    const match = text.match(/(\d+)\s*%/i) || text.match(/([০-৯]+)\s*%/i)
+    if (match) {
+      const numStr = match[1].replace(/[০-৯]/g, (d) => '০১২৩৪৫৬৭৮৯'.indexOf(d))
+      discountPercent = Number(numStr) || 0
+    } else {
+      discountPercent = 0
+    }
+  }
+
+  // If promo code is empty but discount exists, generate a sensible promo code
+  if (!promoCode && discountPercent > 0) {
+    const text = `${banner.title || ''} ${banner.badge_text || ''} ${banner.title_bn || ''}`.toUpperCase()
+    if (text.includes('RAMADAN') || text.includes('রমজান')) promoCode = `RAMADAN${discountPercent}`
+    else if (text.includes('FRIDAY') || text.includes('শুক্রবার')) promoCode = `FRIDAY${discountPercent}`
+    else if (text.includes('EID') || text.includes('ঈদ')) promoCode = `EID${discountPercent}`
+    else if (text.includes('NEW YEAR') || text.includes('নতুন বছর')) promoCode = `NEWYEAR${discountPercent}`
+    else if (text.includes('BOISHAKH') || text.includes('বৈশাখ')) promoCode = `BOISHAKH${discountPercent}`
+    else if (text.includes('PUJA') || text.includes('পূজো') || text.includes('পুজো')) promoCode = `PUJA${discountPercent}`
+    else if (text.includes('INDEPENDENCE') || text.includes('স্বাধীনতা')) promoCode = `INDEPENDENCE${discountPercent}`
+    else if (text.includes('VICTORY') || text.includes('বিজয়')) promoCode = `VICTORY${discountPercent}`
+    else if (text.includes('JULY') || text.includes('জুলাই')) promoCode = `JULY${discountPercent}`
+    else if (text.includes('LANGUAGE') || text.includes('ভাষা') || text.includes('একুশে')) promoCode = `EKUSHEY${discountPercent}`
+    else promoCode = `SAVE${discountPercent}`
+  }
+
+  return {
+    ...banner,
+    promo_code: promoCode,
+    discount_percent: discountPercent,
+  }
+}
 
 const STORAGE_KEY = 'tvs_custom_banners_v3'
 
@@ -231,8 +330,10 @@ export const bannerService = {
       setLocalBanners(combined)
     }
 
-    // Filter out any legacy unsplash URLs
-    combined = combined.filter(b => !b.image_url?.includes('images.unsplash.com'))
+    // Filter out any legacy unsplash URLs and enrich with promo fields
+    combined = combined
+      .filter(b => !b.image_url?.includes('images.unsplash.com'))
+      .map(enrichBannerWithPromo)
 
     // Filter active only if requested
     if (activeOnly) {
@@ -246,11 +347,82 @@ export const bannerService = {
   },
 
   /**
+   * Returns list of currently active promo codes from live active banners
+   */
+  async getActivePromos() {
+    const activeBanners = await this.getBanners({ activeOnly: true })
+    const seen = new Set()
+    const promos = []
+
+    for (const b of activeBanners) {
+      if (b.promo_code && Number(b.discount_percent) > 0 && !seen.has(b.promo_code)) {
+        seen.add(b.promo_code)
+        promos.push({
+          code: b.promo_code,
+          discountPercent: Number(b.discount_percent),
+          title: b.title_bn || b.title,
+          badge: b.badge_text_bn,
+          bannerId: b.id,
+        })
+      }
+    }
+
+    return promos
+  },
+
+  /**
+   * Validates a customer-entered promo code.
+   * Strict Rule: The promo code is ONLY valid if its corresponding banner is currently active (is_active = true).
+   * "banner joto din dashboard e show korbe toto khon discount available ta sara na"
+   */
+  async validatePromoCode(inputCode) {
+    if (!inputCode || typeof inputCode !== 'string') {
+      return { valid: false, message: 'প্রোমোকোড প্রদান করুন।' }
+    }
+
+    const clean = inputCode.trim().toUpperCase()
+    const allBanners = await this.getBanners({ activeOnly: false })
+
+    const matching = allBanners.find((b) => (b.promo_code || '').trim().toUpperCase() === clean)
+
+    if (!matching) {
+      return {
+        valid: false,
+        message: `"${clean}" কোনো সঠিক প্রোমোকোড নয়। সক্রিয় ব্যানারগুলোর প্রোমোকোড ব্যবহার করুন।`,
+      }
+    }
+
+    // Check if the banner is currently active / displayed on dashboard
+    if (!matching.is_active) {
+      return {
+        valid: false,
+        message: `"${clean}" অফারটির মেয়াদ শেষ হয়ে গেছে বা ব্যানারটি বর্তমানে সক্রিয় নেই।`,
+      }
+    }
+
+    const percent = Number(matching.discount_percent || 0)
+    if (percent <= 0) {
+      return {
+        valid: false,
+        message: `"${clean}" কোডে কোনো ছাড় নির্ধারণ করা নেই।`,
+      }
+    }
+
+    return {
+      valid: true,
+      promoCode: matching.promo_code,
+      discountPercent: percent,
+      bannerTitle: matching.title_bn || matching.title,
+      bannerId: matching.id,
+    }
+  },
+
+  /**
    * Create a new banner
    */
   async createBanner(bannerData) {
     const id = bannerData.id || `banner_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
-    const newBanner = {
+    const newBanner = enrichBannerWithPromo({
       ...bannerData,
       id,
       title: bannerData.title || bannerData.title_bn,
@@ -265,19 +437,27 @@ export const bannerService = {
       button_text_bn: bannerData.button_text_bn || 'বাজার করুন',
       sort_order: Number(bannerData.sort_order) || 1,
       is_active: bannerData.is_active !== false,
+      promo_code: (bannerData.promo_code || '').trim().toUpperCase(),
+      discount_percent: Number(bannerData.discount_percent) || 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    }
+    })
 
-    // 1. Try Supabase insert
+    // 1. Try Supabase insert with schema resilience
     try {
+      let insertPayload = { ...newBanner }
       const { data, error } = await supabaseClient
         .from('banners')
-        .insert([newBanner])
+        .insert([insertPayload])
         .select()
         .single()
 
-      if (!error && data) {
+      if (error && error.message?.includes('Could not find')) {
+        // Fallback without promo_code / discount_percent if columns not yet in DB
+        delete insertPayload.promo_code
+        delete insertPayload.discount_percent
+        await supabaseClient.from('banners').insert([insertPayload])
+      } else if (!error && data) {
         Object.assign(newBanner, data)
       }
     } catch (err) {
@@ -301,15 +481,24 @@ export const bannerService = {
   async updateBanner(id, updates) {
     const payload = {
       ...updates,
+      ...(updates.promo_code !== undefined ? { promo_code: updates.promo_code.trim().toUpperCase() } : {}),
+      ...(updates.discount_percent !== undefined ? { discount_percent: Number(updates.discount_percent) || 0 } : {}),
       updated_at: new Date().toISOString(),
     }
 
-    // 1. Try Supabase update
+    // 1. Try Supabase update with schema resilience
     try {
-      await supabaseClient
+      const dbPayload = { ...payload }
+      const { error } = await supabaseClient
         .from('banners')
-        .update(payload)
+        .update(dbPayload)
         .eq('id', id)
+
+      if (error && error.message?.includes('Could not find')) {
+        delete dbPayload.promo_code
+        delete dbPayload.discount_percent
+        await supabaseClient.from('banners').update(dbPayload).eq('id', id)
+      }
     } catch (err) {
       console.warn('Supabase banner update warning:', err)
     }
@@ -320,16 +509,15 @@ export const bannerService = {
     const updated = local.map(b => {
       if (b.id === id) {
         found = true
-        return { ...b, ...payload }
+        return enrichBannerWithPromo({ ...b, ...payload })
       }
       return b
     })
 
     if (!found) {
-      // If was from DEFAULT_BANNERS, add to local
       const def = DEFAULT_BANNERS.find(b => b.id === id)
       if (def) {
-        updated.push({ ...def, ...payload })
+        updated.push(enrichBannerWithPromo({ ...def, ...payload }))
       }
     }
 

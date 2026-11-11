@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Image as ImageIcon, Plus, Trash2, Edit2, CheckCircle2,
   AlertCircle, Eye, ArrowUp, ArrowDown, ExternalLink,
-  Sparkles, Upload, Link as LinkIcon, RefreshCw, X, ChevronLeft, ChevronRight, Sliders
+  Sparkles, Upload, Link as LinkIcon, RefreshCw, X, ChevronLeft, ChevronRight, Sliders, Tag
 } from 'lucide-react'
 import { bannerService, DEFAULT_BANNERS } from '../../services/bannerService'
 import { uploadService } from '../../services/uploadService'
@@ -24,6 +24,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'RAMADAN5',
+    discount_percent: 5,
   },
   {
     name: 'শুক্রবারে বিশেষ ছাড় (২%)',
@@ -37,6 +39,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'FRIDAY2',
+    discount_percent: 2,
   },
   {
     name: 'কোরবানী ঈদ বিশেষ ছাড় (৫%)',
@@ -50,6 +54,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'EID5',
+    discount_percent: 5,
   },
   {
     name: 'নতুন বছরের বিশেষ অফার (২%)',
@@ -63,6 +69,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'NEWYEAR2',
+    discount_percent: 2,
   },
   {
     name: 'বাংলা নববর্ষ বিশেষ ছাড় (২%)',
@@ -76,6 +84,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'BOISHAKH2',
+    discount_percent: 2,
   },
   {
     name: 'পুজো স্পেশাল সকল পণ্যে (৩%)',
@@ -89,6 +99,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'PUJA3',
+    discount_percent: 3,
   },
   {
     name: 'স্বাধীনতা দিবস উপলক্ষে (৩%)',
@@ -102,6 +114,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'INDEPENDENCE3',
+    discount_percent: 3,
   },
   {
     name: 'মহান বিজয় দিবসের অফার (৩%)',
@@ -115,6 +129,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'VICTORY3',
+    discount_percent: 3,
   },
   {
     name: 'জুলাই ২৪ গণঅভ্যুত্থান দিবস (২%)',
@@ -128,6 +144,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'JULY24',
+    discount_percent: 2,
   },
   {
     name: 'আন্তর্জাতিক মাতৃভাষা দিবস (২%)',
@@ -141,6 +159,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: 'EKUSHEY2',
+    discount_percent: 2,
   },
   {
     name: 'মেসার্স তন্ময় ভ্যারাইটি স্টোর অফিসিয়াল',
@@ -154,6 +174,8 @@ const PRESET_TEMPLATES = [
     link_url: '/shop',
     button_text_bn: 'বাজার করুন',
     button_text: 'Shop Now',
+    promo_code: '',
+    discount_percent: 0,
   },
 ]
 
@@ -234,6 +256,8 @@ export default function AdminBanners() {
       button_text: 'Shop Now',
       sort_order: (banners.length || 0) + 1,
       is_active: true,
+      promo_code: '',
+      discount_percent: 0,
     })
     setIsModalOpen(true)
   }
@@ -254,6 +278,8 @@ export default function AdminBanners() {
       button_text: banner.button_text || 'Shop Now',
       sort_order: banner.sort_order || 1,
       is_active: banner.is_active !== false,
+      promo_code: banner.promo_code || '',
+      discount_percent: Number(banner.discount_percent) || 0,
     })
     setIsModalOpen(true)
   }
@@ -272,6 +298,8 @@ export default function AdminBanners() {
       link_url: tpl.link_url,
       button_text_bn: tpl.button_text_bn,
       button_text: tpl.button_text,
+      promo_code: tpl.promo_code || '',
+      discount_percent: Number(tpl.discount_percent) || 0,
     }))
     toast.success(`"${tpl.name}" টেমপ্লেট নির্বাচন করা হয়েছে`)
   }
@@ -732,6 +760,25 @@ export default function AdminBanners() {
                         {banner.subtitle_bn}
                       </p>
                     )}
+                    {/* Promo Code & Discount Tag */}
+                    {banner.promo_code && Number(banner.discount_percent) > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                        <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md border font-mono ${
+                          banner.is_active
+                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-300 dark:border-gray-700'
+                        }`}>
+                          <Tag className="w-3 h-3 text-amber-600" />
+                          <span>কুপন: <b className="underline tracking-wider">{banner.promo_code}</b> ({banner.discount_percent}% ছাড়)</span>
+                        </span>
+                        {banner.is_active ? (
+                          <span className="text-[10px] text-green-700 dark:text-green-400 font-bold">● চেকআউটে সক্রিয়</span>
+                        ) : (
+                          <span className="text-[10px] text-gray-400 font-medium">○ ব্যানার লুকানো (অফার বন্ধ)</span>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex flex-wrap items-center gap-3 text-[11px] text-on-surface-variant">
                       <span className="flex items-center gap-1">
                         <LinkIcon className="w-3 h-3 text-primary" />
@@ -951,6 +998,68 @@ export default function AdminBanners() {
                   placeholder="যেমন: খাঁটি তেল, ডাল, চিনি ও মসলায় ২০% পর্যন্ত বিশেষ ছাড়!"
                   className="w-full text-xs py-2 px-3 rounded-xl border border-outline-variant/50 focus:border-primary outline-hidden bg-surface-container-lowest"
                 />
+              </div>
+
+              {/* Promo Code & Percentage Discount Control */}
+              <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
+                  <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span>কুপন কোড ও ছাড়ের শতাংশ (Promo Code & Discount %)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-on-surface block">
+                      প্রোমোকোড (যেমন: RAMADAN5, FRIDAY2)
+                    </label>
+                    <input
+                      type="text"
+                      value={form.promo_code || ''}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          promo_code: e.target.value.toUpperCase().replace(/\s+/g, ''),
+                        }))
+                      }
+                      placeholder="যেমন: RAMADAN5"
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-outline-variant/60 font-mono font-bold tracking-wider uppercase bg-surface-container-lowest text-on-surface outline-hidden focus:border-primary"
+                    />
+                    <p className="text-[10px] text-on-surface-variant">
+                      গ্রাহক কার্ট বা চেকআউট পেজে এই কোডটি লিখবে।
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-on-surface block">
+                      ছাড়ের পরিমাণ (% Discount)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={form.discount_percent ?? 0}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            discount_percent: Math.max(0, Math.min(100, Number(e.target.value) || 0)),
+                          }))
+                        }
+                        placeholder="যেমন: 5"
+                        className="w-full text-xs py-2 px-3 pr-8 rounded-xl border border-outline-variant/60 font-bold bg-surface-container-lowest text-on-surface outline-hidden focus:border-primary"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-on-surface-variant">
+                        %
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-on-surface-variant">
+                      যেমন: ৩% থেকে ৫% করলে গ্রাহকের মোট পণ্যের মূল্যে ৫% ছাড় হবে।
+                    </p>
+                  </div>
+                </div>
+                <div className="text-[10px] text-amber-800 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-900/30 p-2 rounded-lg leading-relaxed">
+                  💡 <b>নিয়ম:</b> ব্যানারটি যতদিন ড্যাশবোর্ডে <b>"প্রদর্শিত"</b> থাকবে, ততদিন গ্রাহক এই কোডটি ব্যবহার করতে পারবে। ব্যানার <b>"লুকানো"</b> থাকলে স্বয়ংক্রিয়ভাবে কুপনটি নিষ্ক্রিয় হয়ে যাবে।
+                </div>
               </div>
 
               {/* Link & Button Text */}
