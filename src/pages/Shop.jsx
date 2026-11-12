@@ -28,6 +28,7 @@ import { useCart } from '../context/CartContext'
 import { useLang } from '../context/LanguageContext'
 import { formatCurrency, getProductImageUrl } from '../lib/utils'
 import { useProductSync } from '../lib/syncEvents'
+import { matchProductSearch } from '../lib/searchUtils'
 import { DEFAULT_CATEGORIES, LEGACY_CATEGORY_MAP, ALLOWED_MAIN_SLUGS, CATEGORY_IMAGES } from '../data/categories'
 import toast from 'react-hot-toast'
 
@@ -378,18 +379,9 @@ export default function Shop() {
       })
     }
 
-    // 4. Search Query Filter (Searches name, name_bn, subcategory, child_subcategory, tag, category)
+    // 4. Search Query Filter (Universal: Bengali + English + Banglish)
     if (q.trim()) {
-      const query = q.toLowerCase().trim()
-      filtered = filtered.filter(p =>
-        (p.name && p.name.toLowerCase().includes(query)) ||
-        (p.name_bn && p.name_bn.toLowerCase().includes(query)) ||
-        (p.subcategory && p.subcategory.toLowerCase().includes(query)) ||
-        (p.child_subcategory && p.child_subcategory.toLowerCase().includes(query)) ||
-        (p.tag && p.tag.toLowerCase().includes(query)) ||
-        (p.categories?.name && p.categories.name.toLowerCase().includes(query)) ||
-        (p.categories?.name_bn && p.categories.name_bn.includes(query))
-      )
+      filtered = filtered.filter(p => matchProductSearch(p, q))
     }
 
     // 5. Stock Filter
@@ -426,6 +418,18 @@ export default function Shop() {
       }
     })
     setSearchParams(next)
+  }
+
+  // Handle Search Submission (Enter key or Search Button)
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault()
+    const target = document.getElementById('products-section')
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur()
+    }
   }
 
   // Voice Search Handler
@@ -501,25 +505,40 @@ export default function Shop() {
       <div className="sticky top-14 md:top-16 z-30 bg-surface/95 backdrop-blur-md px-3 sm:px-4 md:px-6 py-2.5 border-b border-outline-variant/30 shadow-[0_4px_12px_rgba(25,51,40,0.03)]">
         <div className="max-w-7xl mx-auto flex flex-col gap-2">
           {/* Search Bar Row */}
-          <div className="flex items-center gap-2 bg-surface-container-lowest rounded-xl px-3 py-1.5 shadow-sm border border-outline-variant/40">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center gap-2 bg-surface-container-lowest rounded-xl px-3 py-1.5 shadow-sm border border-outline-variant/40 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all"
+          >
             <Search className="w-5 h-5 text-outline flex-shrink-0" />
             <input
-              type="text"
+              type="search"
               value={q}
               onChange={(e) => updateParam({ q: e.target.value })}
-              placeholder={t('যেকোনো পণ্য খুঁজুন... (Search 500+ items)', 'Search 500+ items (চাল, ডাল, তেল...)')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearchSubmit(e)
+                }
+              }}
+              placeholder={t('যেকোনো পণ্য খুঁজুন... (চাল, ডাল, তেল / rice, oil...) — Enter চাপুন', 'Search 500+ items (চাল, ডাল, তেল / rice, oil...) — Press Enter')}
               className="w-full bg-transparent text-on-surface font-body-md text-sm placeholder:text-outline focus:outline-none"
             />
             {q && (
               <button
                 type="button"
                 onClick={() => updateParam({ q: '' })}
-                className="w-6 h-6 rounded-full hover:bg-surface-container flex items-center justify-center text-outline"
+                className="w-6 h-6 rounded-full hover:bg-surface-container flex items-center justify-center text-outline transition-colors"
                 aria-label="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
+            <button
+              type="submit"
+              className="px-3 py-1 bg-primary text-on-primary hover:bg-primary-container rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1 shadow-xs cursor-pointer active:scale-95"
+              title={t('খুঁজুন (Enter)', 'Search (Enter)')}
+            >
+              <span>{t('খুঁজুন', 'Search')}</span>
+            </button>
             <button
               type="button"
               onClick={handleVoiceSearch}
@@ -532,7 +551,7 @@ export default function Shop() {
             >
               <Mic className="w-4 h-4" />
             </button>
-          </div>
+          </form>
 
           {/* Quick Sort, Filters & Express Delivery Row */}
           <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-0.5">
@@ -1143,7 +1162,7 @@ export default function Shop() {
 
 
         {/* Right Feed: Sub-categories & Product Cards Listing */}
-        <section className="w-full flex-1 flex flex-col min-w-0 px-3 sm:px-4 md:px-6 pt-2 pb-16">
+        <section id="products-section" className="w-full flex-1 flex flex-col min-w-0 px-3 sm:px-4 md:px-6 pt-2 pb-16 scroll-mt-28">
           {/* 3-Tier Breadcrumbs Navigation */}
           <nav className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-2 px-1 overflow-x-auto no-scrollbar py-0.5" aria-label="Breadcrumb">
             <Link

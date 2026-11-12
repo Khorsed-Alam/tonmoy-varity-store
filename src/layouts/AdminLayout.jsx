@@ -65,8 +65,25 @@ export default function AdminLayout() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault()
-    if (!globalSearch.trim()) return
-    navigate(`/admin/orders?search=${encodeURIComponent(globalSearch.trim())}`)
+    const query = globalSearch.trim()
+    if (!query) return
+
+    const pathname = location.pathname
+    const isOrderRoute = pathname.startsWith('/admin/orders')
+    const isInventoryRoute = pathname.startsWith('/admin/inventory')
+    const isCustomerRoute = pathname.startsWith('/admin/customers')
+    const isOrderLike = /^ORD-|^[0-9]{3,}$|^[০-৯]{3,}$/i.test(query)
+
+    if (isOrderRoute || isOrderLike) {
+      navigate(`/admin/orders?search=${encodeURIComponent(query)}`)
+    } else if (isInventoryRoute) {
+      navigate(`/admin/inventory?search=${encodeURIComponent(query)}`)
+    } else if (isCustomerRoute) {
+      navigate(`/admin/customers?search=${encodeURIComponent(query)}`)
+    } else {
+      // Default: Product catalog search (Universal: Bengali + English + Banglish)
+      navigate(`/admin/products?q=${encodeURIComponent(query)}`)
+    }
   }
 
   const navItems = [
@@ -250,9 +267,19 @@ export default function AdminLayout() {
                 type="text"
                 value={globalSearch}
                 onChange={e => setGlobalSearch(e.target.value)}
-                placeholder="অর্ডার নম্বর, পণ্য বা ফোন নম্বর…"
-                className="w-full h-9 pl-9 pr-3 text-xs bg-surface-container rounded-xl text-on-surface placeholder:text-on-surface-variant/70 border-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="পণ্য, অর্ডার বা ফোন খুঁজুন… (Enter)"
+                className="w-full h-9 pl-9 pr-8 text-xs bg-surface-container rounded-xl text-on-surface placeholder:text-on-surface-variant/70 border-none focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
+              {globalSearch && (
+                <button
+                  type="button"
+                  onClick={() => setGlobalSearch('')}
+                  className="absolute right-2.5 text-on-surface-variant hover:text-on-surface"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </form>
           </div>
 

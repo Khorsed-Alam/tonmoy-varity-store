@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabaseClient as supabase } from '../../lib/supabaseClient'
 import { formatCurrency, getProductImageUrl } from '../../lib/utils'
 import { notifyProductChange, useProductSync } from '../../lib/syncEvents'
+import { matchProductSearch } from '../../lib/searchUtils'
 import { DEFAULT_CATEGORIES, ALLOWED_MAIN_SLUGS, LEGACY_CATEGORY_MAP } from '../../data/categories'
 import { uploadService } from '../../services/uploadService'
 import {
@@ -20,8 +22,24 @@ export default function Products() {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [search, setSearch] = useState(searchParams.get('q') || searchParams.get('search') || '')
   const [categoryFilter, setCategoryFilter] = useState('all')
+
+  // Reactive sync when URL query changes from top bar
+  useEffect(() => {
+    const q = searchParams.get('q') || searchParams.get('search') || ''
+    setSearch(q)
+  }, [searchParams])
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault()
+    if (search.trim()) {
+      setSearchParams({ q: search.trim() })
+    } else {
+      setSearchParams({})
+    }
+  }
   const [stockFilter, setStockFilter] = useState('all') // 'all' | 'low' | 'out'
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -469,15 +487,7 @@ export default function Products() {
     if (stockFilter === 'out' && p.stock_quantity > 0) return false
     if (stockFilter === 'low' && (p.stock_quantity === 0 || p.stock_quantity > 5)) return false
     if (!search.trim()) return true
-    const term = search.toLowerCase()
-    return (
-      p.name?.toLowerCase().includes(term) ||
-      p.name_bn?.includes(term) ||
-      p.categories?.name_bn?.includes(term) ||
-      p.subcategory?.toLowerCase().includes(term) ||
-      p.child_subcategory?.toLowerCase().includes(term) ||
-      p.tag?.toLowerCase().includes(term)
-    )
+    return matchProductSearch(p, search)
   })
 
   return (
@@ -506,16 +516,29 @@ export default function Products() {
       <div className="flex flex-col gap-3 bg-surface-container-lowest p-4 rounded-2xl shadow-sm border border-outline-variant/30">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Search Box */}
-          <div className="relative flex-1 min-w-[220px] max-w-md">
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[220px] max-w-md">
             <Search className="w-4 h-4 text-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="পণ্যের নাম দিয়ে খুঁজুন…"
-              className="w-full h-9 pl-9 pr-3 text-xs bg-surface-container rounded-xl text-on-surface placeholder:text-on-surface-variant/70 border-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder="পণ্য খুঁজুন… (চাল, ডাল, তেল / rice, oil...) — Enter"
+              className="w-full h-9 pl-9 pr-8 text-xs bg-surface-container rounded-xl text-on-surface placeholder:text-on-surface-variant/70 border-none focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
-          </div>
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('')
+                  setSearchParams({})
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </form>
 
           {/* Quick Stock Filters */}
           <div className="flex items-center gap-1.5 text-xs font-bold">

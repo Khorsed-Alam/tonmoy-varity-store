@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabaseClient as supabase } from '../../lib/supabaseClient'
 import { formatCurrency } from '../../lib/utils'
 import { notifyProductChange, useProductSync } from '../../lib/syncEvents'
+import { matchProductSearch } from '../../lib/searchUtils'
 import { inventoryService } from '../../services/inventoryService'
 import {
   Loader2, Save, Search, Warehouse, AlertTriangle,
@@ -11,9 +13,24 @@ import {
 import toast from 'react-hot-toast'
 
 export default function Inventory() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') || searchParams.get('q') || '')
+
+  useEffect(() => {
+    const q = searchParams.get('search') || searchParams.get('q') || ''
+    setSearch(q)
+  }, [searchParams])
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault()
+    if (search.trim()) {
+      setSearchParams({ search: search.trim() })
+    } else {
+      setSearchParams({})
+    }
+  }
   const [filter, setFilter] = useState('all') // 'all' | 'out' | 'low' | 'good'
   const [edits, setEdits] = useState({})
   const [saving, setSaving] = useState(false)
@@ -128,12 +145,7 @@ export default function Inventory() {
     if (filter === 'low' && (p.stock_quantity === 0 || p.stock_quantity > 5)) return false
     if (filter === 'good' && p.stock_quantity <= 5) return false
     if (!search.trim()) return true
-    const term = search.toLowerCase()
-    return (
-      p.name?.toLowerCase().includes(term) ||
-      p.name_bn?.includes(term) ||
-      p.categories?.name_bn?.includes(term)
-    )
+    return matchProductSearch(p, search)
   })
 
   const hasChanges = Object.keys(edits).length > 0
@@ -251,16 +263,29 @@ export default function Inventory() {
 
       {/* Search and Filters */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-surface-container-lowest p-4 rounded-2xl shadow-sm border border-outline-variant/30">
-        <div className="relative flex-1 min-w-[220px] max-w-md">
+        <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[220px] max-w-md">
           <Search className="w-4 h-4 text-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="পণ্যের নাম দিয়ে খুঁজুন…"
-            className="w-full h-9 pl-9 pr-3 text-xs bg-surface-container rounded-xl text-on-surface placeholder:text-on-surface-variant/70 border-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+            placeholder="মজুদ পণ্য খুঁজুন… (চাল, ডাল, তেল / rice, oil...) — Enter"
+            className="w-full h-9 pl-9 pr-8 text-xs bg-surface-container rounded-xl text-on-surface placeholder:text-on-surface-variant/70 border-none focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
-        </div>
+          {search && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('')
+                setSearchParams({})
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </form>
 
         <div className="flex items-center gap-1.5 text-xs font-bold">
           <button

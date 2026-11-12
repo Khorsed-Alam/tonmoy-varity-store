@@ -34,6 +34,21 @@ export default function Orders() {
   const [updatingId, setUpdatingId] = useState(null)
   const PAGE_SIZE = 15
 
+  // Reactive sync when search query in URL changes from AdminLayout top search bar
+  useEffect(() => {
+    const s = searchParams.get('search') || searchParams.get('q') || ''
+    setSearch(s)
+  }, [searchParams])
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault()
+    if (search.trim()) {
+      setSearchParams({ search: search.trim() })
+    } else {
+      setSearchParams({})
+    }
+  }
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -156,16 +171,29 @@ export default function Orders() {
       <div className="flex flex-col gap-3 bg-surface-container-lowest p-4 rounded-2xl shadow-sm border border-outline-variant/30">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Search Box */}
-          <div className="relative flex-1 min-w-[220px] max-w-md">
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[220px] max-w-md">
             <Search className="w-4 h-4 text-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
-              placeholder="অর্ডার নম্বর, গ্রাহকের নাম বা মোবাইল খুঁজুন…"
-              className="w-full h-9 pl-9 pr-3 text-xs bg-surface-container rounded-xl text-on-surface placeholder:text-on-surface-variant/70 border-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder="অর্ডার নম্বর, নাম বা ফোন নম্বর… (Enter)"
+              className="w-full h-9 pl-9 pr-8 text-xs bg-surface-container rounded-xl text-on-surface placeholder:text-on-surface-variant/70 border-none focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
-          </div>
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('')
+                  setSearchParams({})
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </form>
 
           <div className="text-xs text-on-surface-variant font-medium">
             মোট ফলাফল: <strong className="text-on-surface">{totalCount}</strong> টি অর্ডার

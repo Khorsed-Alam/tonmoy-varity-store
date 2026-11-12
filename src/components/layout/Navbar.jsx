@@ -84,7 +84,7 @@ export default function Navbar() {
                 type="search"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder={t('চাল, ডাল, তেল খুঁজুন… / Search rice, oil…', 'Search rice, lentils, oil…')}
+                placeholder={t('চাল, ডাল, তেল খুঁজুন… (Enter চাপুন)', 'Search rice, dal, oil… (Press Enter)')}
                 className="w-full pl-10 pr-4 py-2 rounded-full border border-outline-variant/60 bg-surface-container-lowest text-sm text-on-surface focus:border-primary focus:ring-2 focus:ring-secondary-container transition-all"
               />
             </div>
@@ -217,7 +217,7 @@ export default function Navbar() {
                   type="search"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder={t('পণ্য খুঁজুন…', 'Search products…')}
+                  placeholder={t('চাল, ডাল, তেল খুঁজুন… (Enter চাপুন)', 'Search products… (Press Enter)')}
                   className="input-field pl-10"
                 />
               </div>

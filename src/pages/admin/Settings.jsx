@@ -16,7 +16,7 @@ export default function Settings() {
     phone: '+880 1717-999460',
     email: 'tonmoyverity@gmail.com',
     facebook_url: 'https://www.facebook.com/profile.php?id=61589884582519',
-    alt_phone: '০১৭০৭-৮৮০৫৬৯',
+    alt_phone: '01302616903',
     address: 'হাজী ইউসুফ আলী মার্কেট, নারুয়ামালা হাট, গাবতলী, বগুড়া',
     delivery_fee: '৫০',
     free_delivery_threshold: '১০০০',
