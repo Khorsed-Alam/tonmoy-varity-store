@@ -173,7 +173,7 @@ export async function requestPasswordReset({ email, ip = '127.0.0.1' }) {
 
   // If not found via admin, probe via Supabase anon client / GoTrue identities check
   if (!isRegistered) {
-    if (cleanEmail === 'admin@tonmoystore.com') {
+    if (cleanEmail === 'tonmoyverity@gmail.com') {
       userId = '00000000-0000-0000-0000-000000000001'
       isRegistered = true
     } else {

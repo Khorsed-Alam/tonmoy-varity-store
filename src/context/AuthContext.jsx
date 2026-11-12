@@ -3,21 +3,50 @@ import { supabaseClient } from '../lib/supabaseClient'
 
 export const AuthContext = createContext(null)
 
-const DEMO_ADMIN_PROFILE = {
+export const SUPER_ADMIN_EMAIL = 'tonmoyverity@gmail.com'
+const ADMIN_SALT = 'tonmoy_varity_store_admin_secure_salt_2026'
+const ADMIN_PASS_HASH = '3b7c65e060f1f993a9b5f8240963ba3bbc89b68d22e1f1ec2453f8131348d54b'
+
+export const isSuperAdminEmail = (email) => {
+  return typeof email === 'string' && email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
+}
+
+export const SUPER_ADMIN_PROFILE = {
   id: '00000000-0000-0000-0000-000000000001',
-  full_name: 'মোঃ তৌহিদুল ইসলাম বিন্দু (স্বত্বাধিকারী ও অ্যাডমিন)',
-  phone: '০১৭১৭-৯৯৯৪৬০',
+  full_name: 'মোঃ তৌহিদুল ইসলাম বিন্দু (একমাত্র স্বত্বাধিকারী ও অ্যাডমিন)',
+  phone: '+880 1717-999460',
   address: 'হাজী ইউসুফ আলী মার্কেট, নারুয়ামালা হাট, গাবতলী',
   city: 'বগুড়া',
   area: 'নারুয়ামালা',
   role: 'admin',
-  email: 'admin@tonmoystore.com',
+  email: SUPER_ADMIN_EMAIL,
 }
 
-const DEMO_ADMIN_USER = {
+export const SUPER_ADMIN_USER = {
   id: '00000000-0000-0000-0000-000000000001',
-  email: 'admin@tonmoystore.com',
+  email: SUPER_ADMIN_EMAIL,
   user_metadata: { full_name: 'মোঃ তৌহিদুল ইসলাম বিন্দু' },
+}
+
+export async function verifyAdminPassword(password) {
+  if (!password || typeof password !== 'string') return false
+  try {
+    const enc = new TextEncoder()
+    const key = await crypto.subtle.importKey(
+      'raw',
+      enc.encode(ADMIN_SALT),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+    const signature = await crypto.subtle.sign('HMAC', key, enc.encode(password))
+    const hashHex = Array.from(new Uint8Array(signature))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    return hashHex === ADMIN_PASS_HASH
+  } catch (e) {
+    return false
+  }
 }
 
 export function AuthProvider({ children }) {
@@ -28,6 +57,13 @@ export function AuthProvider({ children }) {
 
   const fetchProfile = useCallback(async (userId, currentUser) => {
     try {
+      const userEmail = currentUser?.email || ''
+      if (isSuperAdminEmail(userEmail)) {
+        setProfile(SUPER_ADMIN_PROFILE)
+        setIsAdmin(true)
+        return
+      }
+
       const { data, error } = await supabaseClient
         .from('profiles')
         .select('*')
@@ -35,7 +71,8 @@ export function AuthProvider({ children }) {
         .single()
       if (!error && data) {
         setProfile(data)
-        setIsAdmin(data.role === 'admin')
+        // Strict Single-Admin Enforcement: Only tonmoyverity@gmail.com can ever hold admin privileges
+        setIsAdmin(data.role === 'admin' && isSuperAdminEmail(userEmail || data.email))
       } else {
         // Self-heal: ensure user record exists in profiles table
         const userMeta = currentUser?.user_metadata || {}
@@ -53,7 +90,7 @@ export function AuthProvider({ children }) {
           .single()
         if (inserted) {
           setProfile(inserted)
-          setIsAdmin(inserted.role === 'admin')
+          setIsAdmin(inserted.role === 'admin' && isSuperAdminEmail(userEmail || inserted.email))
         }
       }
     } catch (e) {
@@ -62,11 +99,11 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    // Check if demo admin is stored
-    const isDemoAdmin = localStorage.getItem('tvs_demo_admin')
-    if (isDemoAdmin === 'true') {
-      setUser(DEMO_ADMIN_USER)
-      setProfile(DEMO_ADMIN_PROFILE)
+    // Check if verified super admin session exists
+    const hasAdminSession = sessionStorage.getItem('tvs_super_admin_session')
+    if (hasAdminSession === 'true') {
+      setUser(SUPER_ADMIN_USER)
+      setProfile(SUPER_ADMIN_PROFILE)
       setIsAdmin(true)
       setLoading(false)
       return
@@ -85,7 +122,7 @@ export function AuthProvider({ children }) {
     })
 
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
-      if (localStorage.getItem('tvs_demo_admin') === 'true') {
+      if (sessionStorage.getItem('tvs_super_admin_session') === 'true') {
         return
       }
       setUser(session?.user ?? null)
@@ -152,15 +189,37 @@ export function AuthProvider({ children }) {
   }
 
   const signIn = async ({ email, password }) => {
-    if (email === 'admin@tonmoystore.com') {
-      try {
-        const res = await supabaseClient.auth.signInWithPassword({ email, password })
-        if (!res.error) return res
-      } catch (e) {
-        // Fallback to demo admin login below
+    const cleanEmail = (email || '').trim().toLowerCase()
+
+    // Strict Single-Admin Gate: tonmoyverity@gmail.com
+    if (isSuperAdminEmail(cleanEmail)) {
+      const isMasterValid = await verifyAdminPassword(password)
+
+      if (!isMasterValid) {
+        // Also verify if valid in Supabase
+        try {
+          const res = await supabaseClient.auth.signInWithPassword({ email: cleanEmail, password })
+          if (!res.error && res.data?.user) {
+            sessionStorage.setItem('tvs_super_admin_session', 'true')
+            setUser(res.data.user)
+            setProfile(SUPER_ADMIN_PROFILE)
+            setIsAdmin(true)
+            return res
+          }
+        } catch (_) {}
+
+        return {
+          data: null,
+          error: new Error('ভুল পাসওয়ার্ড! সঠিক অ্যাডমিন পাসওয়ার্ড প্রদান করুন।'),
+        }
       }
-      loginAsDemoAdmin()
-      return { data: { user: DEMO_ADMIN_USER }, error: null }
+
+      // Master password verified! Grant Super Admin Session
+      sessionStorage.setItem('tvs_super_admin_session', 'true')
+      setUser(SUPER_ADMIN_USER)
+      setProfile(SUPER_ADMIN_PROFILE)
+      setIsAdmin(true)
+      return { data: { user: SUPER_ADMIN_USER }, error: null }
     }
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password })
@@ -168,6 +227,7 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
+    sessionStorage.removeItem('tvs_super_admin_session')
     localStorage.removeItem('tvs_demo_admin')
     try {
       await supabaseClient.auth.signOut()
@@ -180,7 +240,7 @@ export function AuthProvider({ children }) {
   }
 
   const updateProfile = async (updates) => {
-    if (localStorage.getItem('tvs_demo_admin') === 'true') {
+    if (sessionStorage.getItem('tvs_super_admin_session') === 'true') {
       const updated = { ...profile, ...updates }
       setProfile(updated)
       return { data: updated, error: null }
@@ -236,7 +296,6 @@ export function AuthProvider({ children }) {
         signIn,
         signOut,
         updateProfile,
-        loginAsDemoAdmin,
         resetPasswordForEmail,
         verifyResetOtp,
         updatePassword,
