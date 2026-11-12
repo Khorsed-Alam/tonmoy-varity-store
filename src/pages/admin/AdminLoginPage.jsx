@@ -45,13 +45,13 @@ export default function AdminLoginPage() {
 
     setLoading(true)
     try {
-      const { error } = await signIn({ email: cleanEmail, password: cleanPassword })
+      const { error } = await signIn({ email: cleanEmail, password: cleanPassword, rememberDevice })
       if (error) {
         toast.error(error.message || 'লগইন ব্যর্থ। সঠিক মাস্টার পাসওয়ার্ড দিন।')
         return
       }
 
-      toast.success('স্বাগতম, মোঃ তৌহিদুল ইসলাম বিন্দু! 👋 (অ্যাডমিন কনসোল ভেরিফাইড)')
+      toast.success('স্বাগতম, মোঃ তৌহিদুল ইসলাম বিন্দু! 👋 (মাল্টি-ডিভাইস অ্যাডমিন সেশন সক্রিয়)')
       navigate('/admin')
     } catch (err) {
       toast.error('লগইনে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।')
@@ -134,12 +134,18 @@ export default function AdminLoginPage() {
                 </p>
               </div>
 
-              {/* Single-Admin Strict Security Notice */}
+              {/* Single-Admin Strict Security Notice & Multi-Device Badge */}
               <div className="mb-5 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div className="leading-relaxed text-left">
-                  <strong className="font-bold text-amber-800 dark:text-amber-300">একক স্বত্বাধিকারী সুরক্ষা:</strong>
-                  {' '}এই প্যানেলে শুধুমাত্র অনুমোদিত ইমেইল (<code>tonmoyverity@gmail.com</code>) এবং মাস্টার পাসওয়ার্ড দিয়ে প্রবেশ করা যাবে। কোনো ডেমো বা ডিরেক্ট বাইপাস উন্মুক্ত নেই।
+                <div className="leading-relaxed text-left space-y-1">
+                  <div>
+                    <strong className="font-bold text-amber-800 dark:text-amber-300">একক স্বত্বাধিকারী জিমেইল:</strong>
+                    {' '}শুধুমাত্র অনুমোদিত ইমেইল (<code>tonmoyverity@gmail.com</code>) ও মাস্টার কি দিয়ে প্রবেশ করতে হবে।
+                  </div>
+                  <div className="text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold flex items-center gap-1">
+                    <span>📱💻</span>
+                    <span>একই সাথে একাধিক ডিভাইসে (দোকানের পিসি, মোবাইল, ল্যাপটপ) একই জিমেইল দিয়ে সচল থাকা যাবে।</span>
+                  </div>
                 </div>
               </div>
 

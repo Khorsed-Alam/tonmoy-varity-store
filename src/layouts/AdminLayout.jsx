@@ -414,6 +414,9 @@ export default function AdminLayout() {
                           <Sparkles className="w-3 h-3 text-amber-500" />
                           <span>একমাত্র সুপার অ্যাডমিন (Owner)</span>
                         </span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold mt-0.5 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                          <span>📱💻 মাল্টি-ডিভাইস এক্সেস সচল</span>
+                        </span>
                       </div>
                     </div>
 

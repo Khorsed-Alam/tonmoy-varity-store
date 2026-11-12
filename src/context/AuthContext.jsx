@@ -79,6 +79,56 @@ export async function verifyAdminPassword(password) {
   return false
 }
 
+export function getStoredAdminSession() {
+  try {
+    // 1. Check tab-scoped sessionStorage
+    if (sessionStorage.getItem('tvs_super_admin_session') === 'true') {
+      return { valid: true }
+    }
+
+    // 2. Check persistent multi-device localStorage session
+    const raw = localStorage.getItem('tvs_super_admin_device_session')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed && parsed.verified === true && isSuperAdminEmail(parsed.email)) {
+        // Sync sessionStorage for active tab
+        sessionStorage.setItem('tvs_super_admin_session', 'true')
+        return { valid: true, session: parsed }
+      }
+    }
+  } catch (e) {
+    console.warn('Admin multi-device session check error:', e)
+  }
+  return { valid: false }
+}
+
+export function saveAdminSession({ email, rememberDevice = true }) {
+  if (!isSuperAdminEmail(email)) return false
+  
+  sessionStorage.setItem('tvs_super_admin_session', 'true')
+  
+  if (rememberDevice) {
+    const isMobile = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+    const deviceSession = {
+      email: SUPER_ADMIN_EMAIL,
+      role: 'admin',
+      verified: true,
+      deviceId: 'dev_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now(),
+      createdAt: Date.now(),
+      lastActive: Date.now(),
+      deviceType: isMobile ? 'Mobile' : 'Desktop/PC',
+    }
+    localStorage.setItem('tvs_super_admin_device_session', JSON.stringify(deviceSession))
+  }
+  return true
+}
+
+export function clearAdminSession() {
+  sessionStorage.removeItem('tvs_super_admin_session')
+  localStorage.removeItem('tvs_super_admin_device_session')
+  localStorage.removeItem('tvs_demo_admin')
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -129,9 +179,9 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    // Check if verified super admin session exists
-    const hasAdminSession = sessionStorage.getItem('tvs_super_admin_session')
-    if (hasAdminSession === 'true') {
+    // Check if verified super admin session exists on this device (multi-device support)
+    const adminSessionCheck = getStoredAdminSession()
+    if (adminSessionCheck.valid) {
       setUser(SUPER_ADMIN_USER)
       setProfile(SUPER_ADMIN_PROFILE)
       setIsAdmin(true)
@@ -152,7 +202,7 @@ export function AuthProvider({ children }) {
     })
 
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
-      if (sessionStorage.getItem('tvs_super_admin_session') === 'true') {
+      if (getStoredAdminSession().valid) {
         return
       }
       setUser(session?.user ?? null)
@@ -218,10 +268,10 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
-  const signIn = async ({ email, password }) => {
+  const signIn = async ({ email, password, rememberDevice = true }) => {
     const cleanEmail = (email || '').trim().toLowerCase()
 
-    // Strict Single-Admin Gate: tonmoyverity@gmail.com
+    // Strict Single-Admin Gate: ONLY tonmoyverity@gmail.com
     if (isSuperAdminEmail(cleanEmail)) {
       const isMasterValid = await verifyAdminPassword(password)
 
@@ -230,7 +280,7 @@ export function AuthProvider({ children }) {
         try {
           const res = await supabaseClient.auth.signInWithPassword({ email: cleanEmail, password })
           if (!res.error && res.data?.user) {
-            sessionStorage.setItem('tvs_super_admin_session', 'true')
+            saveAdminSession({ email: cleanEmail, rememberDevice })
             setUser(res.data.user)
             setProfile(SUPER_ADMIN_PROFILE)
             setIsAdmin(true)
@@ -244,8 +294,8 @@ export function AuthProvider({ children }) {
         }
       }
 
-      // Master password verified! Grant Super Admin Session
-      sessionStorage.setItem('tvs_super_admin_session', 'true')
+      // Master password verified! Grant Multi-device Super Admin Session
+      saveAdminSession({ email: cleanEmail, rememberDevice })
       setUser(SUPER_ADMIN_USER)
       setProfile(SUPER_ADMIN_PROFILE)
       setIsAdmin(true)
@@ -257,8 +307,7 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
-    sessionStorage.removeItem('tvs_super_admin_session')
-    localStorage.removeItem('tvs_demo_admin')
+    clearAdminSession()
     try {
       await supabaseClient.auth.signOut()
     } catch (e) {
@@ -270,7 +319,7 @@ export function AuthProvider({ children }) {
   }
 
   const updateProfile = async (updates) => {
-    if (sessionStorage.getItem('tvs_super_admin_session') === 'true') {
+    if (getStoredAdminSession().valid) {
       const updated = { ...profile, ...updates }
       setProfile(updated)
       return { data: updated, error: null }
