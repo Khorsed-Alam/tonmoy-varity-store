@@ -9,6 +9,7 @@ import {
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useProductSync, useOrderSync, useBannerSync } from '../lib/syncEvents'
+import toast from 'react-hot-toast'
 
 export default function AdminLayout() {
   const { signOut, profile } = useAuth()
@@ -20,6 +21,7 @@ export default function AdminLayout() {
   const [counts, setCounts] = useState({ products: 0, pendingOrders: 0, lowStock: 0 })
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState([])
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
 
   const fetchCounts = useCallback(async () => {
     try {
@@ -56,6 +58,7 @@ export default function AdminLayout() {
 
   const handleSignOut = async () => {
     await signOut()
+    toast.success('লগআউট সফল হয়েছে!')
     navigate('/admin/login')
   }
 
@@ -153,23 +156,31 @@ export default function AdminLayout() {
 
       {/* Footer Support & System Status */}
       <div className="p-4 flex flex-col gap-3 border-t border-outline-variant/20">
-        <div className="p-3 bg-surface-container rounded-xl flex items-center justify-between">
+        <a
+          href="tel:01302616903"
+          className="p-3 bg-surface-container hover:bg-surface-container-high rounded-xl flex items-center justify-between transition-colors cursor-pointer group"
+          title="ডেভেলপার হেল্পলাইনে কল করুন"
+        >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+            <div className="w-8 h-8 rounded-lg bg-surface-container-high group-hover:bg-primary group-hover:text-on-primary flex items-center justify-center text-primary transition-colors font-bold">
               📞
             </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-on-surface">হেল্পলাইন</span>
-              <span className="text-[11px] text-on-surface-variant">০১৭০৭-৮৮০৫৬৯</span>
+            <div className="flex flex-col text-left">
+              <span className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
+                ডেভেলপার হেল্পলাইন
+              </span>
+              <span className="text-[11px] text-on-surface-variant font-mono font-semibold">
+                01302616903
+              </span>
             </div>
           </div>
           <span className="text-[11px] text-secondary font-bold bg-secondary-container px-2 py-0.5 rounded-full">
             ২৪/৭
           </span>
-        </div>
+        </a>
 
         <div className="flex items-center justify-between px-1 text-xs text-on-surface-variant">
-          <span>ভার্সন ৩.২.৪</span>
+          <span>ভার্সন ১.০.১ (v1.0.1)</span>
           <span className="text-secondary flex items-center gap-1 font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
             ক্লাউড সিঙ্ক
@@ -320,19 +331,126 @@ export default function AdminLayout() {
 
             <div className="h-6 w-px bg-outline-variant/40 mx-0.5" />
 
-            {/* User Profile Pill */}
-            <div className="flex items-center gap-2 pl-1">
-              <div className="hidden sm:flex flex-col text-right">
-                <span className="text-xs font-bold text-on-surface leading-tight">
-                  {profile?.full_name || 'মোঃ তৌহিদুল ইসলাম বিন্দু'}
-                </span>
-                <span className="text-[10px] text-secondary font-semibold">
-                  {profile?.role === 'admin' ? 'প্রোপ্রাইটার ও সুপার অ্যাডমিন' : 'ম্যানেজার'}
-                </span>
-              </div>
-              <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-on-primary font-bold text-xs shadow-xs">
-                {profile?.full_name?.charAt(0) || 'ত'}
-              </div>
+            {/* User Profile Pill with Interactive Dropdown */}
+            <div className="relative pl-1">
+              <button
+                type="button"
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-surface-container transition-all cursor-pointer group"
+                title="প্রোফাইল ও অ্যাকাউন্ট মেনু"
+              >
+                <div className="hidden sm:flex flex-col text-right">
+                  <span className="text-xs font-bold text-on-surface leading-tight group-hover:text-primary transition-colors">
+                    {profile?.full_name || 'মোঃ তৌহিদুল ইসলাম বিন্দু'}
+                  </span>
+                  <span className="text-[10px] text-secondary font-semibold">
+                    {profile?.role === 'admin' ? 'প্রোপ্রাইটার ও সুপার অ্যাডমিন' : 'ম্যানেজার'}
+                  </span>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-primary group-hover:bg-primary-container flex items-center justify-center text-on-primary font-bold text-xs shadow-xs transition-colors ring-2 ring-transparent group-hover:ring-primary/20 shrink-0">
+                  {profile?.full_name?.charAt(0) || 'ত'}
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-on-surface-variant transition-transform duration-200 ${showUserDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {showUserDropdown && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowUserDropdown(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-72 bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/30 py-2 z-50 animate-fade-in font-sans text-xs">
+                    {/* Header Info */}
+                    <div className="px-4 py-3 border-b border-outline-variant/20 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary font-bold text-base shadow-xs shrink-0">
+                        {profile?.full_name?.charAt(0) || 'ত'}
+                      </div>
+                      <div className="flex flex-col min-w-0 text-left">
+                        <span className="font-bold text-on-surface text-sm truncate">
+                          {profile?.full_name || 'মোঃ তৌহিদুল ইসলাম বিন্দু'}
+                        </span>
+                        <span className="text-[11px] text-on-surface-variant truncate">
+                          tonmoyverity@gmail.com
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-primary font-bold mt-0.5">
+                          <Sparkles className="w-3 h-3 text-amber-500" />
+                          <span>একমাত্র সুপার অ্যাডমিন (Owner)</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quick Menu Links */}
+                    <div className="py-1.5 px-1 space-y-0.5 text-left">
+                      <NavLink
+                        to="/admin/settings"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-on-surface hover:bg-surface-container transition-colors"
+                      >
+                        <Settings className="w-4 h-4 text-primary" />
+                        <span className="font-semibold">দোকান ও সিস্টেম সেটিংস</span>
+                      </NavLink>
+
+                      <NavLink
+                        to="/admin/products"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-on-surface hover:bg-surface-container transition-colors"
+                      >
+                        <Package className="w-4 h-4 text-primary" />
+                        <span>পণ্য ও স্টক পরিচালনা</span>
+                      </NavLink>
+
+                      <NavLink
+                        to="/admin/orders"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-on-surface hover:bg-surface-container transition-colors"
+                      >
+                        <ShoppingBag className="w-4 h-4 text-primary" />
+                        <span>অর্ডার তালিকা ({counts.pendingOrders} নতুন)</span>
+                      </NavLink>
+
+                      <a
+                        href="/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-on-surface hover:bg-surface-container transition-colors"
+                      >
+                        <Store className="w-4 h-4 text-secondary" />
+                        <span>পাবলিক স্টোর দেখুন (Live Storefront)</span>
+                      </a>
+                    </div>
+
+                    {/* Developer Support & Version */}
+                    <div className="px-3 py-2 mx-1 my-1 bg-surface-container rounded-xl text-[11px] flex flex-col gap-1 text-on-surface-variant text-left">
+                      <div className="flex items-center justify-between font-medium">
+                        <span>সফটওয়্যার ভার্সন:</span>
+                        <span className="font-bold text-on-surface">v1.0.1</span>
+                      </div>
+                      <div className="flex items-center justify-between font-medium">
+                        <span>ডেভেলপার হেল্পলাইন:</span>
+                        <a href="tel:01302616903" className="font-bold text-primary hover:underline">
+                          01302616903
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Logout Button */}
+                    <div className="pt-1.5 px-1 border-t border-outline-variant/20">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowUserDropdown(false)
+                          handleSignOut()
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-error hover:bg-error-container/30 transition-colors font-bold cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>লগআউট করুন (Sign Out)</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>
