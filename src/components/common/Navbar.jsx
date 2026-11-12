@@ -38,11 +38,11 @@ export default function Navbar() {
             <div key={idx} className="flex items-center gap-6 sm:gap-10 shrink-0 px-4 sm:px-6">
               <div className="flex items-center gap-1.5 font-medium">
                 <span className="material-symbols-outlined text-[15px] sm:text-[16px] text-amber-300">electric_moped</span>
-                <span>{t('🛵 আশেপাশের এলাকায় ৬০ মিনিটে ফ্রি ডেলিভারি! (৳৫০০+ অর্ডারে)', '🛵 Free 60-min delivery nearby! (Orders ৳500+)')}</span>
+                <span>{t('🛵 আশেপাশের এলাকায় ৬০ মিনিটে ফ্রি ডেলিভারি! (৳১০০০+ অর্ডারে)', '🛵 Free 60-min delivery nearby! (Orders ৳1000+)')}</span>
               </div>
               <span className="text-white/40">•</span>
-              <a href="tel:01717999460" className="flex items-center gap-1 bg-white/15 hover:bg-white/25 px-2 py-0.5 rounded text-white font-semibold transition-colors shrink-0">
-                <span>📞 {t('০১৭১৭-৯৯৯৪৬০', '01717-999460')}</span>
+              <a href="tel:+8801717999460" className="flex items-center gap-1 bg-white/15 hover:bg-white/25 px-2 py-0.5 rounded text-white font-semibold transition-colors shrink-0">
+                <span>📞 {t('+৮৮০ ১৭১৭-৯৯৯৪৬০', '+880 1717-999460')}</span>
               </a>
               <span className="text-white/40">•</span>
               <span className="text-white/90 font-medium">{t('মেসার্স তন্ময় ভ্যারাইটি স্টোর — নারুয়ামালা হাট, গাবতলী, বগুড়া', 'M/S Tonmoy Varity Store — Naruamala Haat, Gabtoli, Bogura')}</span>

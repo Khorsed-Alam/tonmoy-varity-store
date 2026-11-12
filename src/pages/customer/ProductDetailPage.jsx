@@ -518,9 +518,9 @@ export default function ProductDetailPage() {
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>{t('আরও পণ্য দেখুন', 'Explore more')}</span>
               </Link>
-              <a href="tel:01717999460" className="flex items-center gap-1 text-primary hover:underline">
+              <a href="tel:+8801717999460" className="flex items-center gap-1 text-primary hover:underline">
                 <PhoneCall className="w-3.5 h-3.5" />
-                <span>{t('ফোনে অর্ডার: ০১৭১৭-৯৯৯৪৬০', 'Order: 01717-999460')}</span>
+                <span>{t('ফোনে অর্ডার: +৮৮০ ১৭১৭-৯৯৯৪৬০', 'Order: +880 1717-999460')}</span>
               </a>
             </div>
           </div>

@@ -32,11 +32,30 @@ export default function Footer() {
               <strong>{t('প্রোপাইটার:', 'Proprietor:')}</strong> {t('মোঃ তৌহিদুল ইসলাম বিন্দু', 'Md. Touhidul Islam Bindu')}
             </div>
             <div className="flex gap-3 mt-4">
-              <a href="https://wa.me/8801717999460" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+              <a
+                href="https://wa.me/8801717999460"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="WhatsApp: +880 1717-999460"
+                className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors"
+              >
                 <Phone className="w-4 h-4" />
               </a>
-              <a href="#" className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+              <a
+                href="https://www.facebook.com/profile.php?id=61589884582519"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Facebook: Tonmoy Varity Store"
+                className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors"
+              >
                 <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href="mailto:tonmoyverity@gmail.com"
+                title="Email: tonmoyverity@gmail.com"
+                className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors"
+              >
+                <Mail className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -58,7 +77,7 @@ export default function Footer() {
             <h3 className="font-semibold text-white mb-4">{t('ডেলিভারি তথ্য', 'Delivery Info')}</h3>
             <ul className="space-y-2 text-sm text-white/70">
               <li>{t('হোম ডেলিভারি: ৩০-৬০ মিনিট', 'Home Delivery: 30-60 min')}</li>
-              <li>{t('৳৫০০+ অর্ডারে ফ্রি ডেলিভারি', 'Free delivery over ৳500')}</li>
+              <li>{t('৳১০০০+ অর্ডারে ফ্রি ডেলিভারি', 'Free delivery over ৳1000')}</li>
               <li>{t('দোকান থেকে সহজ পিকআপ', 'Store Pickup available')}</li>
               <li>{t('ক্যাশ অন ডেলিভারি', 'Cash on Delivery')}</li>
               <li>{t('দোকানে এসে নগদ পেমেন্ট', 'Pay at Store Counter')}</li>
@@ -67,7 +86,7 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="font-semibold text-white mb-4">{t('দোকানের ঠিকানা', 'Store Address')}</h3>
+            <h3 className="font-semibold text-white mb-4">{t('দোকানের ঠিকানা ও যোগাযোগ', 'Store Address & Contact')}</h3>
             <ul className="space-y-3 text-sm text-white/70">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-secondary-fixed" />
@@ -75,11 +94,22 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 shrink-0 text-secondary-fixed" />
-                <a href="tel:01717999460" className="hover:underline">01717-999460 (WhatsApp)</a>
+                <a href="tel:+8801717999460" className="hover:underline">+880 1717-999460 (WhatsApp)</a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 shrink-0 text-secondary-fixed" />
-                <span>info@tonmoystore.com</span>
+                <a href="mailto:tonmoyverity@gmail.com" className="hover:underline">tonmoyverity@gmail.com</a>
+              </li>
+              <li className="flex items-center gap-2">
+                <Facebook className="w-4 h-4 shrink-0 text-secondary-fixed" />
+                <a
+                  href="https://www.facebook.com/profile.php?id=61589884582519"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline truncate text-xs"
+                >
+                  facebook.com/tonmoyverity
+                </a>
               </li>
             </ul>
           </div>

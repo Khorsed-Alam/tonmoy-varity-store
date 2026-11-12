@@ -13,11 +13,13 @@ export default function Settings() {
     store_name: 'তন্ময় ভ্যারাইটি স্টোর',
     store_name_en: 'Tonmoy Varity Store',
     proprietor: 'মোঃ তৌহিদুল ইসলাম বিন্দু',
-    phone: '০১৭১৭-৯৯৯৪৬০',
+    phone: '+880 1717-999460',
+    email: 'tonmoyverity@gmail.com',
+    facebook_url: 'https://www.facebook.com/profile.php?id=61589884582519',
     alt_phone: '০১৭০৭-৮৮০৫৬৯',
     address: 'হাজী ইউসুফ আলী মার্কেট, নারুয়ামালা হাট, গাবতলী, বগুড়া',
     delivery_fee: '৫০',
-    free_delivery_threshold: '৫০০',
+    free_delivery_threshold: '১০০০',
     min_order_amount: '১০০',
     open_hours: 'শনিবার – শুক্রবার: সকাল ৭:৩০ – রাত ১০:৩০',
     home_delivery_enabled: true,
@@ -123,6 +125,30 @@ export default function Settings() {
                 type="text"
                 value={settings.alt_phone}
                 onChange={e => setSettings(s => ({ ...s, alt_phone: e.target.value }))}
+                className="w-full h-10 px-3.5 bg-surface-container rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-on-surface mb-1 flex items-center gap-1">
+                দোকানের অফিসিয়াল ইমেইল
+              </label>
+              <input
+                type="email"
+                value={settings.email}
+                onChange={e => setSettings(s => ({ ...s, email: e.target.value }))}
+                className="w-full h-10 px-3.5 bg-surface-container rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-on-surface mb-1 flex items-center gap-1">
+                ফেসবুক পেজ লিংক
+              </label>
+              <input
+                type="url"
+                value={settings.facebook_url}
+                onChange={e => setSettings(s => ({ ...s, facebook_url: e.target.value }))}
                 className="w-full h-10 px-3.5 bg-surface-container rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>

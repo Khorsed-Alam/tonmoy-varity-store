@@ -4,7 +4,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Lock, Tag, CheckCircle2, L
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LanguageContext'
-import { formatCurrency, calculateDeliveryFee, getProductImageUrl } from '../lib/utils'
+import { formatCurrency, calculateDeliveryFee, getProductImageUrl, FREE_DELIVERY_THRESHOLD } from '../lib/utils'
 import EmptyState from '../components/common/EmptyState'
 import { supabaseClient as supabase } from '../lib/supabaseClient'
 import { bannerService } from '../services/bannerService'
@@ -285,9 +285,9 @@ export default function Cart() {
                 </span>
               </div>
 
-              {subtotal < 500 && (
+              {subtotal < FREE_DELIVERY_THRESHOLD && (
                 <p className="text-xs text-brand-muted bg-brand-mint p-2.5 rounded-lg">
-                  {t(`আরো ৳${500 - subtotal} কেনাকাটা করলে ফ্রি ডেলিভারি!`, `Spend ৳${500 - subtotal} more for free delivery!`)}
+                  {t(`আরো ৳${FREE_DELIVERY_THRESHOLD - subtotal} কেনাকাটা করলে ফ্রি ডেলিভারি!`, `Spend ৳${FREE_DELIVERY_THRESHOLD - subtotal} more for free delivery!`)}
                 </p>
               )}
 

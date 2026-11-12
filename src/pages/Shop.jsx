@@ -1692,9 +1692,9 @@ export default function Shop() {
                   </span>
                 </div>
                 <span className="text-[11px] text-on-primary-container truncate">
-                  {subtotal >= 500
+                  {subtotal >= 1000
                     ? t('🛵 ফ্রি ডেলিভারি প্রযোজ্য!', '🛵 Free delivery applicable!')
-                    : t(`ফ্রি ডেলিভারি পেতে আর ${formatCurrency(500 - subtotal)} বাকি`, `Add ${formatCurrency(500 - subtotal)} more for free delivery`)}
+                    : t(`ফ্রি ডেলিভারি পেতে আর ${formatCurrency(1000 - subtotal)} বাকি`, `Add ${formatCurrency(1000 - subtotal)} more for free delivery`)}
                 </span>
               </div>
             </div>

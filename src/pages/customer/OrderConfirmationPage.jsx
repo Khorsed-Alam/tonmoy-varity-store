@@ -250,8 +250,8 @@ export default function OrderConfirmationPage() {
               </div>
               <p className="text-[11px] text-on-surface-variant leading-relaxed">
                 {t(
-                  'আমাদের প্রতিনিধি আপনার সাথে ফোনে যোগাযোগ করতে পারে। কোনো প্রয়োজনে কল করুন: ০১৭১৭-৯৯৯৪৬০।',
-                  'Our delivery team may call you to verify the location. Store counter: 01717-999460.'
+                  'আমাদের প্রতিনিধি আপনার সাথে ফোনে যোগাযোগ করতে পারে। কোনো প্রয়োজনে কল করুন: +৮৮০ ১৭১৭-৯৯৯৪৬০।',
+                  'Our delivery team may call you to verify the location. Store counter: +880 1717-999460.'
                 )}
               </p>
             </div>

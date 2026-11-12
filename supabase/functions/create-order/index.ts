@@ -93,7 +93,7 @@ serve(async (req) => {
 
     // --- Delivery Fee Calculation (SERVER SIDE) ---
     const DELIVERY_FEE = 50
-    const FREE_DELIVERY_THRESHOLD = 500
+    const FREE_DELIVERY_THRESHOLD = 1000
     let delivery_fee = 0
     if (delivery_method === "home_delivery") {
       delivery_fee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE

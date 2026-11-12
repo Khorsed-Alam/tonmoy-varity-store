@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LanguageContext'
 import { supabaseClient as supabase } from '../lib/supabaseClient'
-import { formatCurrency, calculateDeliveryFee, getProductImageUrl, DELIVERY_FEE } from '../lib/utils'
+import { formatCurrency, calculateDeliveryFee, getProductImageUrl, DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from '../lib/utils'
 import { notifyOrderChange, notifyProductChange } from '../lib/syncEvents'
 import { bannerService } from '../services/bannerService'
 import { Truck, Store, MapPin, Phone, User, CreditCard, Loader2, Tag, CheckCircle2, Sparkles, X } from 'lucide-react'
@@ -296,7 +296,7 @@ export default function Checkout() {
 
       // 3. Calculate delivery fee server-side
       const serverDeliveryFee = deliveryMethod === 'home_delivery'
-        ? (serverSubtotal >= 500 ? 0 : 50)
+        ? (serverSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE)
         : 0
       const totalAmount = Math.max(0, serverSubtotal - serverDiscountAmount + serverDeliveryFee)
 
@@ -488,7 +488,7 @@ export default function Checkout() {
             </h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { value: 'home_delivery', icon: Truck, labelBN: 'হোম ডেলিভারি', labelEN: 'Home Delivery', descBN: `৳${DELIVERY_FEE} (৳৫০০+ ফ্রি)`, descEN: `৳${DELIVERY_FEE} (Free over ৳500)` },
+                { value: 'home_delivery', icon: Truck, labelBN: 'হোম ডেলিভারি', labelEN: 'Home Delivery', descBN: `৳${DELIVERY_FEE} (৳১০০০+ ফ্রি)`, descEN: `৳${DELIVERY_FEE} (Free over ৳1000)` },
                 { value: 'store_pickup', icon: Store, labelBN: 'স্টোর পিকআপ', labelEN: 'Store Pickup', descBN: 'সরাসরি স্টোর থেকে নিন', descEN: 'Collect from store directly' },
               ].map(({ value, icon: Icon, labelBN, labelEN, descBN, descEN }) => (
                 <label

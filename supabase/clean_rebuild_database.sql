@@ -159,10 +159,10 @@ CREATE TABLE public.shop_settings (
   shop_name_bn TEXT NOT NULL DEFAULT 'চিন্ময় ও তন্ময় ভ্যারাইটি স্টোর',
   currency TEXT NOT NULL DEFAULT 'BDT',
   delivery_fee NUMERIC(12,2) NOT NULL DEFAULT 50 CHECK (delivery_fee >= 0),
-  free_delivery_threshold NUMERIC(12,2) DEFAULT 500,
+  free_delivery_threshold NUMERIC(12,2) DEFAULT 1000,
   pickup_enabled BOOLEAN NOT NULL DEFAULT true,
   delivery_enabled BOOLEAN NOT NULL DEFAULT true,
-  contact_phone TEXT DEFAULT '01717-999460',
+  contact_phone TEXT DEFAULT '+880 1717-999460',
   address TEXT DEFAULT 'নারুয়ামালা হাট, গাবতলী, বগুড়া',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -376,7 +376,7 @@ INSERT INTO public.banners (
 INSERT INTO public.shop_settings (
   id, shop_name, shop_name_bn, currency, delivery_fee, free_delivery_threshold, pickup_enabled, delivery_enabled, contact_phone, address
 ) VALUES (
-  1, 'Tonmoy Variety Store', 'চিন্ময় ও তন্ময় ভ্যারাইটি স্টোর', 'BDT', 50, 500, true, true, '01717-999460', 'নারুয়ামালা হাট, গাবতলী, বগুড়া'
+  1, 'Tonmoy Variety Store', 'চিন্ময় ও তন্ময় ভ্যারাইটি স্টোর', 'BDT', 50, 1000, true, true, '+880 1717-999460', 'নারুয়ামালা হাট, গাবতলী, বগুড়া'
 ) ON CONFLICT (id) DO UPDATE SET
   shop_name = EXCLUDED.shop_name,
   shop_name_bn = EXCLUDED.shop_name_bn;

@@ -1,6 +1,6 @@
 export const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || '৳'
 export const DEFAULT_DELIVERY_FEE = Number(import.meta.env.VITE_DELIVERY_FEE) || 50
-export const DEFAULT_FREE_DELIVERY_THRESHOLD = Number(import.meta.env.VITE_FREE_DELIVERY_THRESHOLD) || 500
+export const DEFAULT_FREE_DELIVERY_THRESHOLD = Number(import.meta.env.VITE_FREE_DELIVERY_THRESHOLD) || 1000
 
 /**
  * Format a number as Bangladeshi Taka currency (e.g. ৳১,৫০০ or ৳1,500)

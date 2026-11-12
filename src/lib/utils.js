@@ -43,7 +43,7 @@ export const PAYMENT_METHODS = {
 
 // Delivery fee calculation
 export const DELIVERY_FEE = Number(import.meta.env.VITE_DELIVERY_FEE) || 50
-export const FREE_DELIVERY_THRESHOLD = Number(import.meta.env.VITE_FREE_DELIVERY_THRESHOLD) || 500
+export const FREE_DELIVERY_THRESHOLD = Number(import.meta.env.VITE_FREE_DELIVERY_THRESHOLD) || 1000
 
 export const calculateDeliveryFee = (subtotal, deliveryMethod) => {
   if (deliveryMethod === 'store_pickup') return 0
