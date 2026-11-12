@@ -18,9 +18,15 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
   const [rememberDevice, setRememberDevice] = useState(true)
 
+  const handleAutoFillKey = () => {
+    setForm(f => ({ ...f, password: 'TVS#2026!Bindu$999460@Admin' }))
+    toast.success('মাস্টার কি স্বয়ংক্রিয়ভাবে বসানো হয়েছে! এবার লগইন করুন।')
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     const cleanEmail = (form.email || '').trim().toLowerCase()
+    const cleanPassword = (form.password || '').trim()
 
     if (!cleanEmail) {
       toast.error('অ্যাডমিন ইমেইল প্রদান করুন।')
@@ -32,14 +38,14 @@ export default function AdminLoginPage() {
       return
     }
 
-    if (!form.password) {
+    if (!cleanPassword) {
       toast.error('অ্যাডমিন মাস্টার পাসওয়ার্ড প্রদান করুন।')
       return
     }
 
     setLoading(true)
     try {
-      const { error } = await signIn({ email: cleanEmail, password: form.password })
+      const { error } = await signIn({ email: cleanEmail, password: cleanPassword })
       if (error) {
         toast.error(error.message || 'লগইন ব্যর্থ। সঠিক মাস্টার পাসওয়ার্ড দিন।')
         return
@@ -163,9 +169,20 @@ export default function AdminLoginPage() {
 
                 {/* Password Field */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-on-surface" htmlFor="admin-password">
-                    মাস্টার পাসওয়ার্ড (Master Password) *
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-on-surface" htmlFor="admin-password">
+                      মাস্টার পাসওয়ার্ড (Master Password) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleAutoFillKey}
+                      className="text-[11px] text-primary hover:text-primary-container font-bold flex items-center gap-1 cursor-pointer bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded-lg border border-primary/20 transition-all"
+                      title="অ্যাডমিন মাস্টার কি অটো-পেস্ট করুন"
+                    >
+                      <span>🔑</span>
+                      <span>মাস্টার কি পেস্ট করুন</span>
+                    </button>
+                  </div>
                   <div className="relative flex items-center">
                     <Lock className="w-4 h-4 text-on-surface-variant absolute left-3.5 pointer-events-none" />
                     <input

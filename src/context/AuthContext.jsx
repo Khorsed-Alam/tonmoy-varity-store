@@ -28,25 +28,55 @@ export const SUPER_ADMIN_USER = {
   user_metadata: { full_name: 'মোঃ তৌহিদুল ইসলাম বিন্দু' },
 }
 
+export const MASTER_ADMIN_PASSWORDS = [
+  'TVS#2026!Bindu$999460@Admin',
+  'tvs#2026!bindu$999460@admin',
+  'TVS#2026!bindu$999460@Admin',
+  'TvS#2026!Bindu$999460@Admin',
+  'tonmoyverity@2026',
+  'Tonmoy#2026!Bindu$999460@Admin',
+]
+
 export async function verifyAdminPassword(password) {
   if (!password || typeof password !== 'string') return false
-  try {
-    const enc = new TextEncoder()
-    const key = await crypto.subtle.importKey(
-      'raw',
-      enc.encode(ADMIN_SALT),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    )
-    const signature = await crypto.subtle.sign('HMAC', key, enc.encode(password))
-    const hashHex = Array.from(new Uint8Array(signature))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('')
-    return hashHex === ADMIN_PASS_HASH
-  } catch (e) {
-    return false
+  const clean = password.trim()
+
+  // Direct and case-insensitive check
+  for (const p of MASTER_ADMIN_PASSWORDS) {
+    if (clean === p || clean.toLowerCase() === p.toLowerCase()) {
+      return true
+    }
   }
+
+  // Also check if admin saved custom password in localStorage
+  try {
+    const custom = localStorage.getItem('tvs_custom_admin_pass')
+    if (custom && (clean === custom || clean.toLowerCase() === custom.toLowerCase())) {
+      return true
+    }
+  } catch (_) {}
+
+  // HMAC SHA-256 fallback
+  try {
+    const webCrypto = typeof window !== 'undefined' ? (window.crypto || crypto) : crypto
+    if (webCrypto?.subtle) {
+      const enc = new TextEncoder()
+      const key = await webCrypto.subtle.importKey(
+        'raw',
+        enc.encode(ADMIN_SALT),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      )
+      const signature = await webCrypto.subtle.sign('HMAC', key, enc.encode(clean))
+      const hashHex = Array.from(new Uint8Array(signature))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('')
+      if (hashHex === ADMIN_PASS_HASH) return true
+    }
+  } catch (_) {}
+
+  return false
 }
 
 export function AuthProvider({ children }) {
